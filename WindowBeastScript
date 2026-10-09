@@ -3,6 +3,8 @@ Library.CurrentKeyExpire = nil
 
 -- Preset Icon Registry (Hanya Logo & Settings)
 Library.Icons = {
+                ["lucide-plane"] = "rbxassetid://10734922971",
+                ["lucide-play"] = "rbxassetid://10734923549",
     ["Logo"]        = "rbxassetid://107391174248131",
     ["Settings"]    = "rbxassetid://10734950309",
     ["lucide-fingerprint"] = "rbxassetid://10723375250",
