@@ -5,6 +5,7 @@ Library.CurrentKeyExpire = nil
 Library.Icons = {
     ["Logo"]        = "rbxassetid://107391174248131",
     ["Settings"]    = "rbxassetid://10734950309",
+    ["lucide-fingerprint"] = "rbxassetid://10723375250",
     ["Gear"]        = "rbxassetid://10734950309"
 }
 
