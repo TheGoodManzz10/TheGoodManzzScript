@@ -1,4 +1,5 @@
 local Library = {}
+Library.CurrentKeyExpire = nil
 
 -- Preset Icon Registry (Hanya Logo & Settings)
 Library.Icons = {
@@ -25,7 +26,9 @@ local Translations = {
         UITrans        = "Transparansi UI",
         BGTrans        = "Transparansi BG",
         TextStyle      = "Gaya Text / Font",
-        LangSelect     = "Pilih Bahasa / Language"
+        LangSelect     = "Pilih Bahasa / Language",
+        KeyTimerTitle  = "Sisa Durasi Key",
+        NoKeyActive    = "Tanpa Key / Key Bebas"
     },
     English = {
         NotifTitle     = "Notification",
@@ -43,7 +46,9 @@ local Translations = {
         UITrans        = "UI Transparency",
         BGTrans        = "BG Transparency",
         TextStyle      = "Text Style / Font",
-        LangSelect     = "Language / Bahasa"
+        LangSelect     = "Language / Bahasa",
+        KeyTimerTitle  = "Key Expiration Timer",
+        NoKeyActive    = "No Key Active"
     }
 }
 
@@ -279,7 +284,6 @@ local function makeResizable(frame, handle, minWidth, minHeight)
     end)
 end
 
--- DUKUNGAN ELEMEN FLEXIBEL: TEXT SAJA, ICON SAJA, ATAU KEDUANYA
 local function createButton(parent, text, icon, callback)
     if type(icon) == "function" then
         callback = icon
@@ -658,13 +662,14 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     end)
 end
 
--- MANAJEMEN PENYIMPANAN KEY LOKAL (FILE SAVING FOR EXPIRATION)
+-- PENYIMPANAN DATA KEY & KONTROL WAKTU
 local keySaveFileName = "DarkGradient_KeySave.json"
 
 local function saveKeyData(keyVal, durationHours)
     if not writefile then return end
     durationHours = tonumber(durationHours) or 24
     local expireTimestamp = os.time() + (durationHours * 3600)
+    Library.CurrentKeyExpire = expireTimestamp
     local data = {
         Key = keyVal,
         Expire = expireTimestamp
@@ -674,15 +679,16 @@ local function saveKeyData(keyVal, durationHours)
     end)
 end
 
-local function isKeySaveValid(validKeys)
+local function isKeySaveValid(allAllowedKeys)
     if not (readfile and isfile and isfile(keySaveFileName)) then return false end
     local success, result = pcall(function()
         return HttpService:JSONDecode(readfile(keySaveFileName))
     end)
     if success and type(result) == "table" and result.Expire and result.Key then
         if os.time() < tonumber(result.Expire) then
-            for _, k in ipairs(validKeys) do
+            for _, k in ipairs(allAllowedKeys) do
                 if tostring(result.Key) == tostring(k) then
+                    Library.CurrentKeyExpire = tonumber(result.Expire)
                     return true
                 end
             end
@@ -698,11 +704,16 @@ local function showKeySystemUI(keySettings, onSuccess)
     local keySubtitle = keySettings.Subtitle or L("KeySub")
     local keyNote = keySettings.Note or L("KeyNote")
     local keyLink = keySettings.KeyLink or ""
-    local durationHours = tonumber(keySettings.Duration) or 24 -- Durasi Key dalam Jam (Default 24 Jam)
-    local validKeys = type(keySettings.Key) == "table" and keySettings.Key or {keySettings.Key or "GOODMANZKEY"}
+    local durationHours = tonumber(keySettings.Duration) or 24
 
-    -- CEK PENYIMPANAN KUNCI (LOGIN ULANG TANPA MINTA KEY LAGI)
-    if isKeySaveValid(validKeys) then
+    local validKeys = type(keySettings.Key) == "table" and keySettings.Key or {keySettings.Key or "GOODMANZKEY"}
+    local secretKeys = type(keySettings.SecretKey) == "table" and keySettings.SecretKey or {keySettings.SecretKey or "GOODMANZ-SECRET"}
+
+    local allAllowedKeys = {}
+    for _, k in ipairs(validKeys) do table.insert(allAllowedKeys, k) end
+    for _, sk in ipairs(secretKeys) do table.insert(allAllowedKeys, sk) end
+
+    if isKeySaveValid(allAllowedKeys) then
         if onSuccess then onSuccess() end
         return
     end
@@ -795,19 +806,9 @@ local function showKeySystemUI(keySettings, onSuccess)
         GetKeyBtn.MouseButton1Click:Connect(function()
             if setclipboard then
                 setclipboard(keyLink)
-                Library:Notify({
-                    Title = L("KeyTitle"),
-                    Content = L("KeyCopied"),
-                    Type = "Info",
-                    Duration = 3
-                })
+                Library:Notify({ Title = L("KeyTitle"), Content = L("KeyCopied"), Type = "Info", Duration = 3 })
             else
-                Library:Notify({
-                    Title = L("KeyTitle"),
-                    Content = L("KeyCopyErr"),
-                    Type = "Error",
-                    Duration = 3
-                })
+                Library:Notify({ Title = L("KeyTitle"), Content = L("KeyCopyErr"), Type = "Error", Duration = 3 })
             end
         end)
     end
@@ -827,16 +828,29 @@ local function showKeySystemUI(keySettings, onSuccess)
     local function checkKey()
         local entered = KeyInput.Text
         local isValid = false
+        local isSecret = false
 
-        for _, k in ipairs(validKeys) do
-            if entered == tostring(k) then
+        for _, sk in ipairs(secretKeys) do
+            if entered == tostring(sk) then
                 isValid = true
+                isSecret = true
                 break
             end
         end
 
+        if not isValid then
+            for _, k in ipairs(validKeys) do
+                if entered == tostring(k) then
+                    isValid = true
+                    break
+                end
+            end
+        end
+
         if isValid then
-            saveKeyData(entered, durationHours)
+            local saveDuration = isSecret and 876000 or durationHours
+            saveKeyData(entered, saveDuration)
+
             Library:Notify({
                 Title = L("KeyTitle"),
                 Content = L("KeyValid"),
@@ -1149,16 +1163,73 @@ function Library:CreateWindow(config)
             return sld
         end
 
+        function Group:AddLabel(text)
+            local LblFrame = Instance.new("Frame")
+            LblFrame.Size = UDim2.new(1, 0, 0, 28)
+            LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+            LblFrame.Parent = ContentHolder
+
+            Instance.new("UICorner", LblFrame).CornerRadius = UDim.new(0, 6)
+            local Stroke = Instance.new("UIStroke", LblFrame)
+            Stroke.Color = Color3.fromRGB(255, 255, 255)
+            Stroke.Transparency = 0.9
+
+            local Lbl = Instance.new("TextLabel")
+            Lbl.Size = UDim2.new(1, -12, 1, 0)
+            Lbl.Position = UDim2.new(0, 6, 0, 0)
+            Lbl.BackgroundTransparency = 1
+            Lbl.Text = tostring(text or "")
+            Lbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+            Lbl.TextSize = 12
+            Lbl.Font = Enum.Font.GothamBold
+            Lbl.TextXAlignment = Enum.TextXAlignment.Center
+            Lbl.Parent = LblFrame
+
+            task.defer(updateGroupSize)
+            return Lbl
+        end
+
         task.defer(updateGroupSize)
         return Group
     end
 
-    -- ITEM PENGATURAN KUSUS (LANGUAGES, TRANSPARENCY, FONTS)
+    -- POPULASI ITEM SETTINGS (COUNTDOWN TIMER, TRANSPARENCY, LANGUAGE, FONT)
+    -- 1. COUNTDOWN TIMER SISA DURASI KEY (BERJALAN MUNDUR)
+    local TimerGroup = buildGroupInContainer(SettingsContainer, L("KeyTimerTitle"), "Settings", false)
+    local TimerLabel = TimerGroup:AddLabel("Calculating...")
+
+    task.spawn(function()
+        while ScreenGui and ScreenGui.Parent do
+            if Library.CurrentKeyExpire then
+                local diff = Library.CurrentKeyExpire - os.time()
+                if diff > 800000 * 3600 then
+                    TimerLabel.Text = "Infinity / Permanen"
+                    TimerLabel.TextColor3 = Color3.fromRGB(155, 89, 182)
+                elseif diff <= 0 then
+                    TimerLabel.Text = "Expired / Kadaluarsa"
+                    TimerLabel.TextColor3 = Color3.fromRGB(231, 76, 60)
+                else
+                    local hours = math.floor(diff / 3600)
+                    local mins = math.floor((diff % 3600) / 60)
+                    local secs = math.floor(diff % 60)
+                    TimerLabel.Text = string.format("%02d Jam %02d Mnt %02d Detik", hours, mins, secs)
+                    TimerLabel.TextColor3 = Color3.fromRGB(46, 204, 113)
+                end
+            else
+                TimerLabel.Text = L("NoKeyActive")
+                TimerLabel.TextColor3 = Color3.fromRGB(160, 160, 170)
+            end
+            task.wait(1)
+        end
+    end)
+
+    -- 2. TRANSPARANSI
     local TransGroup = buildGroupInContainer(SettingsContainer, L("UITrans"), "Settings", false)
-    local TransSlider = TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
+    TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
     end)
 
+    -- 3. PEMILIHAN BAHASA
     local LangGroup = buildGroupInContainer(SettingsContainer, L("LangSelect"), "Settings", false)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
@@ -1169,6 +1240,7 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
+    -- 4. PEMILIHAN FONT
     local FontGroup = buildGroupInContainer(SettingsContainer, L("TextStyle"), "Settings", false)
     for fontName, enumFont in pairs(Fonts) do
         FontGroup:AddButton(fontName, nil, function()
