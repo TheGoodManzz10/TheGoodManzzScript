@@ -1,30 +1,27 @@
 local Library = {}
 
--- Daftar Icon Registri Lengkap
+-- Daftar Icon Lucide Terpilih yang Relevan & Nyambung dengan Fitur
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
-    ["lucide-sliders"]          = "rbxassetid://10734963400",
-    ["lucide-languages"]        = "rbxassetid://10723417703",
-    ["lucide-type"]             = "rbxassetid://10747364761",
-    ["lucide-palette"]          = "rbxassetid://10734910430",
-    ["lucide-paint-bucket"]     = "rbxassetid://10734909847",
-    ["lucide-music"]            = "rbxassetid://10734905958",
-    ["lucide-menu"]             = "rbxassetid://10734887784",
-    ["lucide-x"]                = "rbxassetid://10747384394",
-    ["lucide-code"]             = "rbxassetid://10709810463",
-    ["lucide-user"]             = "rbxassetid://10747373176",
-    ["lucide-zap"]              = "rbxassetid://10734883986",
+    ["SpinOuter"]               = "rbxassetid://109694296016043",
+    ["lucide-fingerprint"]      = "rbxassetid://10723375250", -- Verifikasi Sidik Jari
+    ["lucide-shield"]           = "rbxassetid://10734951847", -- Info Key & Keamanan
+    ["lucide-search"]           = "rbxassetid://10734943674", -- Cari Script Scriptblox
+    ["lucide-sliders"]          = "rbxassetid://10734963400", -- Pengaturan Ukuran & Transparansi
+    ["lucide-alarm-clock"]      = "rbxassetid://10734984606", -- Waktu Bermain
+    ["lucide-user"]             = "rbxassetid://10747373176", -- Informasi Pemain / Profil
+    ["lucide-navigation"]       = "rbxassetid://10734906744", -- Performa & Aksi Cepat
+    ["lucide-code"]             = "rbxassetid://10709810463", -- Script Populer
+    ["lucide-palette"]          = "rbxassetid://10734910430", -- Warna Teks
+    ["lucide-paint-bucket"]     = "rbxassetid://10734909847", -- Tema UI
+    ["lucide-music"]            = "rbxassetid://10734905958", -- Musik & Audio
+    ["lucide-languages"]        = "rbxassetid://10723417703", -- Pilihan Bahasa
+    ["lucide-type"]             = "rbxassetid://10747364761", -- Gaya Text / Font
+    ["lucide-zap"]              = "rbxassetid://10734883986", -- Fitur AI / Kecepatan
     ["lucide-chevron-up"]       = "rbxassetid://10709791523",
     ["lucide-chevron-down"]     = "rbxassetid://10709790948",
-    ["SpinOuter"]               = "rbxassetid://109694296016043",
-    ["lucide-alarm-clock"]      = "rbxassetid://10709752630",
-    ["lucide-navigation"]       = "rbxassetid://10734906744",
-    ["lucide-info"]             = "rbxassetid://10723415903",
-    ["lucide-key"]              = "rbxassetid://10723346959",
-    ["lucide-search"]           = "rbxassetid://10734941499",
-    ["lucide-bot"]              = "rbxassetid://10734883986",
-    ["lucide-fingerprint"]      = "rbxassetid://10723375250"
+    ["lucide-x"]                = "rbxassetid://10747384394"
 }
 
 -- SISTEM BAHASA DENGAN TRANSLATION LENGKAP
@@ -95,7 +92,6 @@ local function updateAllTranslations()
     end
 end
 
--- 10 GAYA TEXT / FONT
 local Fonts = {
     ["Gotham Bold"]      = Enum.Font.GothamBold,
     ["Gotham"]           = Enum.Font.Gotham,
@@ -329,20 +325,6 @@ function Library:Notify(options)
         closeTween.Completed:Connect(function() Card:Destroy() end)
     end)
 end
-
--- LOOP NOTIFIKASI OTOMATIS SETIAP 4-5 MENIT
-task.spawn(function()
-    while task.wait(math.random(240, 300)) do
-        if ScreenGui and ScreenGui.Parent then
-            Library:Notify({
-                Title = "Dark Hub Community",
-                Content = "Suka Dengan library ini? Bergabunglah dengan kami untuk mendapatkan kenyamanan lebih",
-                Type = "Info",
-                Duration = 6
-            })
-        end
-    end
-end)
 
 local function makeDraggable(frame, handle)
     handle = handle or frame
@@ -825,20 +807,17 @@ function Library:CreateWindow(config)
     local text3 = config.Text3 or "Menyiapkan Ui"
     local flashText = config.FlashText or "GOODMANZ"
 
-    -- KONFIGURASI KEY SYSTEM
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
     local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", DurationDays = 365, DurationText = "Permanen" } }
     local keyGetUrl = KeySystemConfig.KeyURL or "https://discord.gg/yourlink"
     local saveFileName = "WindowBeastKey.json"
 
-    -- KONFIGURASI AI SYSTEM (TRUE/FALSE)
     local AiSystemConfig = config.AiSystem or {}
     local isAiEnabled = (AiSystemConfig.Enabled ~= false)
     local openRouterApiKey = AiSystemConfig.ApiKey or "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"
     local openRouterUrl = AiSystemConfig.Url or "https://openrouter.ai/api/v1/chat/completions"
 
-    -- KONFIGURASI BATAS SCRIPTBLOX (8 - 25)
     local scriptbloxLimit = math.clamp(config.ScriptbloxLimit or 15, 8, 25)
 
     local currentActiveKey = "Tidak ada"
@@ -847,7 +826,6 @@ function Library:CreateWindow(config)
 
     local Window = {}
 
-    -- FUNGSI MEMULAI CREATION UI UTAMA
     local function startMainUI()
         local Main = Instance.new("Frame")
         Main.Name = "Main"
@@ -998,7 +976,6 @@ function Library:CreateWindow(config)
             SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 8)
         end)
 
-        -- PANEL CHAT AI (WHATSAPP STYLE)
         local AiContainer, AiChatScroll, AiTextBox, AiSendBtn
         if isAiEnabled then
             AiContainer = Instance.new("Frame")
@@ -1397,7 +1374,8 @@ function Library:CreateWindow(config)
             FloatingContainer.Visible = false
         end)
 
-        local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", false)
+        -- ICON RELEVAN: Lucide-Shield untuk keamanan/key info
+        local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-shield", false)
         local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
         local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
 
@@ -1414,6 +1392,7 @@ function Library:CreateWindow(config)
             end
         end)
 
+        -- ICON RELEVAN: Lucide-Search untuk pencarian scriptblox
         local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
 
         local SearchBoxFrame = Instance.new("Frame")
@@ -1553,6 +1532,7 @@ function Library:CreateWindow(config)
             end
         end)
 
+        -- ICON RELEVAN: Lucide-Sliders untuk pengaturan tombol
         local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
         FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
             FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
@@ -1567,6 +1547,7 @@ function Library:CreateWindow(config)
             Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
         end)
 
+        -- ICON RELEVAN: Lucide-Alarm-Clock untuk waktu bermain
         local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
         local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
         local startTime = tick()
@@ -1584,7 +1565,8 @@ function Library:CreateWindow(config)
             end
         end)
 
-        local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
+        -- ICON RELEVAN: Lucide-User untuk informasi profil player
+        local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-user", false)
         
         local AvatarFrame = Instance.new("Frame")
         AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
@@ -1625,6 +1607,7 @@ function Library:CreateWindow(config)
         PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
         PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
+        -- ICON RELEVAN: Lucide-Navigation untuk performa
         local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
         
         PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
@@ -1681,6 +1664,7 @@ function Library:CreateWindow(config)
             end
         end)
 
+        -- ICON RELEVAN: Lucide-Code untuk script populer
         local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
 
         local popularScriptsList = {
@@ -1712,6 +1696,7 @@ function Library:CreateWindow(config)
             end)
         end
 
+        -- ICON RELEVAN: Lucide-Palette untuk warna teks
         local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
         
         TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
@@ -1727,6 +1712,7 @@ function Library:CreateWindow(config)
             end)
         end
 
+        -- ICON RELEVAN: Lucide-Paint-Bucket untuk tema UI
         local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
         ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
@@ -1742,6 +1728,7 @@ function Library:CreateWindow(config)
             end)
         end
 
+        -- ICON RELEVAN: Lucide-Music untuk musik
         local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
         
         local currentSound = Instance.new("Sound")
@@ -1835,6 +1822,7 @@ function Library:CreateWindow(config)
             end
         end)
 
+        -- ICON RELEVAN: Lucide-Languages untuk bahasa
         local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
         LangGroup:AddButton("Bahasa Indonesia", nil, function()
             currentLang = "Indonesian"
@@ -1847,11 +1835,13 @@ function Library:CreateWindow(config)
             Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
         end)
 
+        -- ICON RELEVAN: Lucide-Sliders untuk transparansi UI
         local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
         TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
             Main.BackgroundTransparency = val / 100
         end)
 
+        -- ICON RELEVAN: Lucide-Type untuk gaya font text
         local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
         for fontName, enumFont in pairs(Fonts) do
             FontGroup:AddButton(fontName, nil, function()
@@ -1966,7 +1956,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- LAYAR HITAM & PEMINDAIAN SIDIK JARI 5 DETIK
+    -- LAYAR HITAM & SISTEM KETUK 5 KALI (TAP 5 TIMES)
     -- ==========================================
     task.spawn(function()
         local LockScreen = Instance.new("Frame")
@@ -2001,7 +1991,7 @@ function Library:CreateWindow(config)
         LockInfoLbl.Size = UDim2.new(1, -40, 0, 30)
         LockInfoLbl.Position = UDim2.new(0, 20, 0.5, 45)
         LockInfoLbl.BackgroundTransparency = 1
-        LockInfoLbl.Text = "Tekan dan tahan ikon sidik jari selama 5 detik dengan jempol"
+        LockInfoLbl.Text = "Ketuk ikon sidik jari ini sebanyak 5 kali untuk membuka"
         LockInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
         LockInfoLbl.TextSize = 11
         LockInfoLbl.Font = Enum.Font.Gotham
@@ -2010,57 +2000,38 @@ function Library:CreateWindow(config)
         LockInfoLbl.ZIndex = 10000000
         LockInfoLbl.Parent = LockScreen
 
-        local holdingFinger = false
-        local holdCounter = 0
-        local requiredHoldSeconds = 5.0
+        local tapCount = 0
+        local targetTaps = 5
         local isUnlocked = false
 
-        local function startHolding()
+        FingerprintBtn.MouseButton1Click:Connect(function()
             if isUnlocked then return end
-            holdingFinger = true
-            holdCounter = 0
-        end
+            tapCount = tapCount + 1
+            local remaining = targetTaps - tapCount
 
-        local function stopHolding()
-            if isUnlocked then return end
-            holdingFinger = false
-            holdCounter = 0
-            LockInfoLbl.Text = "Tekan dan tahan ikon sidik jari selama 5 detik dengan jempol"
-        end
+            -- Animasi klik bounce pada ikon sidik jari
+            TweenService:Create(FingerprintBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 115, 0, 115)}):Play()
+            task.delay(0.1, function()
+                TweenService:Create(FingerprintBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 100, 0, 100)}):Play()
+            end)
 
-        FingerprintBtn.MouseButton1Down:Connect(startHolding)
-        FingerprintBtn.MouseButton1Up:Connect(stopHolding)
-        FingerprintBtn.TouchStarted:Connect(startHolding)
-        FingerprintBtn.TouchEnded:Connect(stopHolding)
+            if remaining > 0 then
+                LockInfoLbl.Text = string.format("Ketuk %d kali lagi untuk membuka...", remaining)
+                LockInfoLbl.TextColor3 = Color3.fromRGB(241, 196, 15)
+            else
+                isUnlocked = true
+                LockInfoLbl.Text = "Verifikasi Sidik Jari Berhasil!"
+                LockInfoLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
 
-        local lockConn
-        lockConn = RunService.RenderStepped:Connect(function(dt)
-            if isUnlocked then 
-                if lockConn then lockConn:Disconnect() end
-                return 
-            end
-            if holdingFinger then
-                holdCounter = holdCounter + dt
-                local remain = math.max(0, requiredHoldSeconds - holdCounter)
-                LockInfoLbl.Text = string.format("Memindai sidik jari... (%.1f detik lagi)", remain)
-                
-                if holdCounter >= requiredHoldSeconds then
-                    isUnlocked = true
-                    holdingFinger = false
-                    LockInfoLbl.Text = "Verifikasi Sidik Jari Berhasil!"
-                    LockInfoLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-                    
-                    TweenService:Create(LockScreen, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
-                    TweenService:Create(FingerprintBtn, TweenInfo.new(0.6), {ImageTransparency = 1}):Play()
-                    TweenService:Create(LockTitle, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
-                    TweenService:Create(LockInfoLbl, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
-                    
-                    task.delay(0.6, function()
-                        LockScreen:Destroy()
-                        startMainUI()
-                    end)
-                    if lockConn then lockConn:Disconnect() end
-                end
+                TweenService:Create(LockScreen, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
+                TweenService:Create(FingerprintBtn, TweenInfo.new(0.6), {ImageTransparency = 1}):Play()
+                TweenService:Create(LockTitle, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
+                TweenService:Create(LockInfoLbl, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
+
+                task.delay(0.6, function()
+                    LockScreen:Destroy()
+                    startMainUI()
+                end)
             end
         end)
     end)
