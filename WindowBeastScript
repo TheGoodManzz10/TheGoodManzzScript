@@ -4,7 +4,23 @@ local Library = {}
 Library.Icons = {
     ["Logo"]                = "rbxassetid://107391174248131",
     ["Settings"]            = "rbxassetid://10734950309",
+    ["Fingerprint"]         = "rbxassetid://10723375250", -- lucide-fingerprint
+    ["Search"]              = "rbxassetid://10734943674", -- lucide-search
+    ["Key"]                 = "rbxassetid://10723416652", -- lucide-key
+    ["Sliders"]             = "rbxassetid://10734963400", -- lucide-sliders
+    ["Languages"]           = "rbxassetid://10723417703", -- lucide-languages
+    ["Type"]                = "rbxassetid://10747364761", -- lucide-type
+    ["Palette"]             = "rbxassetid://10734910430", -- lucide-palette
+    ["PaintBucket"]         = "rbxassetid://10734909847", -- lucide-paint-bucket
+    ["Music"]               = "rbxassetid://10734905958", -- lucide-music
+    ["Code"]                = "rbxassetid://10709810463", -- lucide-code
+    ["User"]                = "rbxassetid://10747373176", -- lucide-user
+    ["Gauge"]               = "rbxassetid://10723395708", -- lucide-gauge
+    ["AlarmClock"]          = "rbxassetid://10709752630", -- lucide-alarm-clock
+    ["ChevronUp"]           = "rbxassetid://10709791523",
+    ["ChevronDown"]         = "rbxassetid://10709790948",
     ["SpinOuter"]           = "rbxassetid://109694296016043",
+    ["Close"]               = "rbxassetid://10747384394",
     ["lucide-accessibility"] = "rbxassetid://10709751939",
     ["lucide-activity"] = "rbxassetid://10709752035",
     ["lucide-air-vent"] = "rbxassetid://10709752131",
@@ -987,7 +1003,7 @@ local function updateGlobalThemeColor(color)
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "IntroBlackScreen" then
+            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "IntroMatrixScreen" then
                 if obj.BackgroundTransparency < 1 then
                     if obj.Name == "Main" then
                         obj.BackgroundColor3 = color
@@ -1021,7 +1037,7 @@ RunService.RenderStepped:Connect(function()
         
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "IntroBlackScreen" then
+                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "IntroMatrixScreen" then
                     if obj.BackgroundTransparency < 1 and obj.Name ~= "Main" then
                         local h, s, v = rgbColor:ToHSV()
                         obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v - 0.2, 0, 1))
@@ -1127,7 +1143,6 @@ function Library:Notify(options)
     end)
 end
 
--- LOOP NOTIFIKASI OTOMATIS SETIAP 4-5 MENIT
 task.spawn(function()
     while task.wait(math.random(240, 300)) do
         if ScreenGui and ScreenGui.Parent then
@@ -1570,10 +1585,11 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BigText.ZIndex = 1000000
             BigText.Parent = Flash
 
+            -- PERBAIKAN BUG ANIMASI TEKS SATU-SATU (AMAN & TIDAK CRASH)
             task.spawn(function()
                 for i = 1, #targetFlashText do
                     BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(1)
+                    task.wait(0.12)
                 end
             end)
 
@@ -1598,7 +1614,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                 Size = UDim2.new(0, targetWidth, 0, 4)
             }):Play()
 
-            task.delay(10.0, function()
+            task.delay(3.0, function()
                 local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
                 TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
                 fadeTween:Play()
@@ -1622,7 +1638,6 @@ function Library:CreateWindow(config)
     local text3 = config.Text3 or "Menyiapkan Ui"
     flashText = config.FlashText or "GOODMANZ"
 
-    -- KONFIGURASI KEY SYSTEM
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
     local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", DurationDays = 365, DurationText = "Permanen" } }
@@ -1675,9 +1690,6 @@ function Library:CreateWindow(config)
         end
     end
 
-    -- ==========================================
-    -- FUNGSI UTAMA UNTUK MENJALANKAN KEY / LOADING
-    -- ==========================================
     local function startLoadingOrKeySystem()
         if isKeySystemEnabled then
             local isAlreadyValid = checkSavedKeyValid()
@@ -1813,7 +1825,6 @@ function Library:CreateWindow(config)
                         task.wait(1)
                         KeyFrame:Destroy()
                         
-                        -- Lanjut ke animasi eksekusi setelah key verified
                         playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
                             TweenService:Create(mainWindowRef, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                                 Size = UDim2.new(0, 240, 0, 270)
@@ -1832,7 +1843,6 @@ function Library:CreateWindow(config)
                     end
                 end)
             else
-                -- Key sudah valid tersimpan, langsung lanjut animasi eksekusi
                 playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
                     TweenService:Create(mainWindowRef, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                         Size = UDim2.new(0, 240, 0, 270)
@@ -1847,7 +1857,6 @@ function Library:CreateWindow(config)
                 end)
             end
         else
-            -- Tanpa Key System, langsung animasi eksekusi
             playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
                 TweenService:Create(mainWindowRef, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, 240, 0, 270)
@@ -1864,44 +1873,124 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- LAYAR HITAM PENUH DENGAN ICON 5 KALI KLIK
+    -- LAYAR HACKER MATRIX (ANGKA 1 & 0) + TAHAN 2 DETIK
     -- ==========================================
-    local IntroBlackScreen = Instance.new("Frame")
-    IntroBlackScreen.Name = "IntroBlackScreen"
-    IntroBlackScreen.Size = UDim2.new(1, 0, 1, 0)
-    IntroBlackScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    IntroBlackScreen.BorderSizePixel = 0
-    IntroBlackScreen.ZIndex = 999999
-    IntroBlackScreen.Parent = ScreenGui
+    local IntroMatrixScreen = Instance.new("Frame")
+    IntroMatrixScreen.Name = "IntroMatrixScreen"
+    IntroMatrixScreen.Size = UDim2.new(1, 0, 1, 0)
+    IntroMatrixScreen.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
+    IntroMatrixScreen.BorderSizePixel = 0
+    IntroMatrixScreen.ZIndex = 999999
+    IntroMatrixScreen.Parent = ScreenGui
+
+    -- Label Hujan Angka Matrix (1 dan 0) Biru
+    local MatrixRainLbl = Instance.new("TextLabel")
+    MatrixRainLbl.Size = UDim2.new(1, 0, 1, 0)
+    MatrixRainLbl.BackgroundTransparency = 1
+    MatrixRainLbl.TextColor3 = Color3.fromRGB(0, 170, 255)
+    MatrixRainLbl.TextSize = 14
+    MatrixRainLbl.Font = Enum.Font.Code
+    MatrixRainLbl.TextXAlignment = Enum.TextXAlignment.Center
+    MatrixRainLbl.TextYAlignment = Enum.TextYAlignment.Top
+    MatrixRainLbl.TextWrapped = true
+    MatrixRainLbl.ZIndex = 1000000
+    MatrixRainLbl.Parent = IntroMatrixScreen
+
+    -- Info Petunjuk di Layar Matrix
+    local InfoMatrixLbl = Instance.new("TextLabel")
+    InfoMatrixLbl.Size = UDim2.new(1, -40, 0, 50)
+    InfoMatrixLbl.Position = UDim2.new(0, 20, 0.15, 0)
+    InfoMatrixLbl.BackgroundTransparency = 1
+    InfoMatrixLbl.Text = "TEKAN 5 KALI & TAHAN ICON 2 DETIK\nUNTUK MEMBUKA SISTEM"
+    InfoMatrixLbl.TextColor3 = Color3.fromRGB(0, 220, 255)
+    InfoMatrixLbl.TextSize = 13
+    InfoMatrixLbl.Font = Enum.Font.GothamBold
+    InfoMatrixLbl.TextXAlignment = Enum.TextXAlignment.Center
+    InfoMatrixLbl.TextWrapped = true
+    InfoMatrixLbl.ZIndex = 1000002
+    InfoMatrixLbl.Parent = IntroMatrixScreen
+
+    -- Counter Klik Text
+    local CounterInfoLbl = Instance.new("TextLabel")
+    CounterInfoLbl.Size = UDim2.new(1, -40, 0, 30)
+    CounterInfoLbl.Position = UDim2.new(0, 20, 0.75, 0)
+    CounterInfoLbl.BackgroundTransparency = 1
+    CounterInfoLbl.Text = "Klik: 0 / 5"
+    CounterInfoLbl.TextColor3 = Color3.fromRGB(150, 200, 255)
+    CounterInfoLbl.TextSize = 12
+    CounterInfoLbl.Font = Enum.Font.GothamMedium
+    CounterInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
+    CounterInfoLbl.ZIndex = 1000002
+    CounterInfoLbl.Parent = IntroMatrixScreen
+
+    -- Loop Animasi Hujan Angka Matrix
+    task.spawn(function()
+        local charset = {"1", "0", "1", "0", "1", "0", "0", "1", "0", "1"}
+        while IntroMatrixScreen and IntroMatrixScreen.Parent do
+            local lines = {}
+            for i = 1, 22 do
+                local line = ""
+                for j = 1, 45 do
+                    line = line .. charset[math.random(1, #charset)] .. " "
+                end
+                table.insert(lines, line)
+            end
+            MatrixRainLbl.Text = table.concat(lines, "\n")
+            task.wait(0.08)
+        end
+    end)
 
     local CenterFingerBtn = Instance.new("ImageButton")
     CenterFingerBtn.Size = UDim2.new(0, 90, 0, 90)
     CenterFingerBtn.Position = UDim2.new(0.5, -45, 0.5, -45)
-    CenterFingerBtn.BackgroundTransparency = 1
+    CenterFingerBtn.BackgroundColor3 = Color3.fromRGB(10, 25, 45)
     CenterFingerBtn.Image = Library.Icons["Fingerprint"]
-    CenterFingerBtn.ZIndex = 1000000
-    CenterFingerBtn.Parent = IntroBlackScreen
+    CenterFingerBtn.ZIndex = 1000001
+    CenterFingerBtn.Parent = IntroMatrixScreen
+    Instance.new("UICorner", CenterFingerBtn).CornerRadius = UDim.new(1, 0)
 
     local clickCount = 0
     local requiredClicks = 5
+    local isHolding = false
 
-    CenterFingerBtn.MouseButton1Click:Connect(function()
-        clickCount = clickCount + 1
+    CenterFingerBtn.MouseButton1Down:Connect(function()
+        isHolding = true
+        local holdStart = tick()
         
-        -- Efek animasi kecil saat diklik
-        TweenService:Create(CenterFingerBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 75, 0, 75)}):Play()
-        task.wait(0.1)
-        TweenService:Create(CenterFingerBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 90, 0, 90)}):Play()
+        task.spawn(function()
+            while isHolding do
+                local elapsedHold = tick() - holdStart
+                if elapsedHold >= 2.0 then
+                    isHolding = false
+                    if clickCount >= requiredClicks then
+                        CounterInfoLbl.Text = "Akses Diterima!"
+                        local fadeOut = TweenService:Create(IntroMatrixScreen, TweenInfo.new(0.6), {BackgroundTransparency = 1})
+                        fadeOut:Play()
+                        fadeOut.Completed:Connect(function()
+                            IntroMatrixScreen:Destroy()
+                            startLoadingOrKeySystem()
+                        end)
+                    else
+                        CounterInfoLbl.Text = "Belum 5 kali klik! (Klik: " .. clickCount .. "/5)"
+                    end
+                    break
+                end
+                task.wait(0.1)
+            end
+        end)
+    end)
 
-        if clickCount >= requiredClicks then
-            -- Hilangkan layar hitam dengan mulus lalu jalankan key/loading
-            local fadeOut = TweenService:Create(IntroBlackScreen, TweenInfo.new(0.6), {BackgroundTransparency = 1})
-            TweenService:Create(CenterFingerBtn, TweenInfo.new(0.6), {ImageTransparency = 1}):Play()
-            fadeOut:Play()
-            fadeOut.Completed:Connect(function()
-                IntroBlackScreen:Destroy()
-                startLoadingOrKeySystem()
-            end)
+    CenterFingerBtn.MouseButton1Up:Connect(function()
+        if isHolding then
+            isHolding = false
+            clickCount = clickCount + 1
+            if clickCount <= requiredClicks then
+                CounterInfoLbl.Text = "Klik: " .. clickCount .. " / 5 (Tahan 2 detik pada klik ke-5)"
+            end
+            
+            TweenService:Create(CenterFingerBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 75, 0, 75)}):Play()
+            task.wait(0.1)
+            TweenService:Create(CenterFingerBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 90, 0, 90)}):Play()
         end
     end)
 
@@ -2044,7 +2133,7 @@ function Library:CreateWindow(config)
     local normalHeight = 270
 
     SettingsBtn.MouseButton1Click:Connect(function()
-        if isMinimized then return end -- Tombol settings terkunci saat minimized
+        if isMinimized then return end
         showingSettings = not showingSettings
         Container.Visible = not showingSettings
         SettingsContainer.Visible = showingSettings
@@ -2054,9 +2143,6 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
-    -- ==========================================================
-    -- FUNGSI PEMBUATAN GROUP / SECTION (SCROLL DI DALAM SCROLL)
-    -- ==========================================================
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
@@ -2231,9 +2317,6 @@ function Library:CreateWindow(config)
         {"Magenta", Color3.fromRGB(255, 0, 255)}
     }
 
-    -- ==========================================
-    -- FLOATING ICON
-    -- ==========================================
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
     FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
@@ -2276,9 +2359,6 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
-    -- ==========================================
-    -- PENGATURAN SETTINGS (DENGAN ICON PILIHAN)
-    -- ==========================================
     local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "Key", false)
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
@@ -2296,7 +2376,6 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- SCRIPTBLOX SEARCH (DENGAN SLIDER 8-25)
     local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "Search", true)
 
     local scriptLimit = 10 
@@ -2441,7 +2520,6 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- UKURAN TOMBOL HIDE/SHOW
     local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "Sliders", false)
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
@@ -2456,7 +2534,6 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
     end)
 
-    -- WAKTU BERMAIN
     local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "AlarmClock", false)
     local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
     local startTime = tick()
@@ -2474,7 +2551,6 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- PROFIL PLAYER
     local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "User", false)
     
     local AvatarFrame = Instance.new("Frame")
@@ -2516,7 +2592,6 @@ function Library:CreateWindow(config)
     PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
     PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-    -- PERFORMA
     local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "Gauge", false)
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
@@ -2573,7 +2648,6 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- SCRIPT POPULER
     local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "Code", true)
 
     local popularScriptsList = {
@@ -2605,7 +2679,6 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- WARNA TEKS
     local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "Palette", true)
     
     TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
@@ -2621,7 +2694,6 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- TEMA UI
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "PaintBucket", true)
 
     ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
@@ -2637,7 +2709,6 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- MUSIK
     local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "Music", true)
     
     local currentSound = Instance.new("Sound")
@@ -2731,7 +2802,6 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- BAHASA
     local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "Languages", false)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
@@ -2744,7 +2814,6 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    -- TRANSPARANSI UI & FONT
     local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "Sliders", false)
     TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
