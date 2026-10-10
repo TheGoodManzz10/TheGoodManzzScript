@@ -2093,6 +2093,107 @@ function Library:CreateWindow(config)
         end)
     end
 
+---------------------------------------------------------
+-- OTOMATIS BUAT GRUP MUSIK DI SETTINGS LIBRARY
+---------------------------------------------------------
+local MusicService = {
+    CurrentSound = nil,
+    IsPlaying = false,
+    IsLooped = true,
+    SelectedID = "142376088"
+}
+
+local MusicList = {
+    ["Raining Tacos"] = "142376088",
+    ["Phonc - Interworld"] = "6943807203",
+    ["Never Gonna Give You Up"] = "9048375328",
+    ["Elevator Music"] = "1848354536"
+}
+
+-- Buat grup khusus musik secara otomatis di dalam tab Settings
+local MusicGroup = Window:AddGroup("Musik Background / Music Player", "lucide-music")
+
+if not MusicService.CurrentSound then
+    MusicService.CurrentSound = Instance.new("Sound")
+    MusicService.CurrentSound.Name = "LibraryBackgroundMusic"
+    MusicService.CurrentSound.Looped = MusicService.IsLooped
+    MusicService.CurrentSound.Volume = 0.5
+    MusicService.CurrentSound.Parent = game:GetService("SoundService")
+end
+
+local SongNames = {}
+for name, _ in pairs(MusicList) do
+    table.insert(SongNames, name)
+end
+
+-- 1. Dropdown Pilih Lagu
+local MusicDropdown = MusicGroup:AddDropdown("Select Music / Pilih Musik", SongNames, "Raining Tacos", function(selected)
+    if MusicList[selected] then
+        MusicService.SelectedID = MusicList[selected]
+        Library:Notify({ Title = "Music Selected / Musik Dipilih", Content = selected, Type = "Success", Duration = 2 })
+        
+        if MusicService.IsPlaying then
+            MusicService.CurrentSound.SoundId = "rbxassetid://" .. MusicService.SelectedID
+            MusicService.CurrentSound:Play()
+        end
+    end
+end)
+
+-- 2. Input Custom ID (Otomatis Tersimpan ke List Dropdown)
+MusicGroup:AddInput("Custom Music ID", "Masukkan ID Roblox / Enter ID...", function(text)
+    if text and text ~= "" and tonumber(text) then
+        local cleanID = tostring(tonumber(text))
+        local customName = "Custom (" .. cleanID .. ")"
+        
+        MusicList[customName] = cleanID
+        MusicService.SelectedID = cleanID
+        
+        if MusicDropdown and MusicDropdown.UpdateValues then
+            local UpdatedNames = {}
+            for name, _ in pairs(MusicList) do
+                table.insert(UpdatedNames, name)
+            end
+            MusicDropdown:UpdateValues(UpdatedNames, customName)
+        end
+
+        Library:Notify({ Title = "Custom ID Saved / ID Tersimpan", Content = customName, Type = "Success", Duration = 2 })
+        
+        if MusicService.IsPlaying then
+            MusicService.CurrentSound.SoundId = "rbxassetid://" .. MusicService.SelectedID
+            MusicService.CurrentSound:Play()
+        end
+    else
+        Library:Notify({ Title = "Invalid ID / ID Tidak Valid", Content = "Please enter numbers only / Harap masukkan angka saja!", Type = "Error", Duration = 2 })
+    end
+end)
+
+-- 3. Toggle Play / Stop Music
+MusicGroup:AddToggle("Play Music / Putar Musik", "lucide-music", false, function(state)
+    MusicService.IsPlaying = state
+    
+    if MusicService.IsPlaying then
+        MusicService.CurrentSound.SoundId = "rbxassetid://" .. MusicService.SelectedID
+        MusicService.CurrentSound.Looped = MusicService.IsLooped
+        MusicService.CurrentSound:Play()
+        Library:Notify({ Title = "Music / Musik", Content = "Playing / Lagu Diputar!", Type = "Success", Duration = 2 })
+    else
+        MusicService.CurrentSound:Stop()
+        Library:Notify({ Title = "Music / Musik", Content = "Stopped / Lagu Dimatikan", Type = "Warning", Duration = 2 })
+    end
+end)
+
+-- 4. Toggle Loop Music (On/Off)
+MusicGroup:AddToggle("Loop Music / Ulangi Musik", "lucide-repeat", true, function(state)
+    MusicService.IsLooped = state
+    if MusicService.CurrentSound then
+        MusicService.CurrentSound.Looped = state
+    end
+    
+    local statusEng = state and "Enabled" or "Disabled"
+    local statusIndo = state and "Aktif" or "Nonaktif"
+    Library:Notify({ Title = "Loop Music / Ulangi Musik", Content = statusEng .. " / " .. statusIndo, Type = "Info", Duration = 2 })
+end)
+
     local ResizeGrip = Instance.new("Frame")
     ResizeGrip.Name = "ResizeGrip"
     ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
@@ -2218,108 +2319,6 @@ function Library:CreateWindow(config)
     Window.AddSection = Window.AddGroup
 
     return Window
-end
-
--- =========================================================
--- SYSTEM MUSIC PLAYER (SINKRON DI LIBRARY)
--- =========================================================
-local MusicService = {
-    CurrentSound = nil,
-    IsPlaying = false,
-    IsLooped = true, -- Default status Loop: ON
-    SelectedID = "142376088" -- Default ID Raining Tacos
-}
-
-local MusicList = {
-    ["Raining Tacos"] = "142376088",
-    ["Phonc - Interworld"] = "6943807203",
-    ["Never Gonna Give You Up"] = "9048375328",
-    ["Elevator Music"] = "1848354536"
-}
-
-function Library:InitMusicSystem(ParentContainer)
-    if not MusicService.CurrentSound then
-        MusicService.CurrentSound = Instance.new("Sound")
-        MusicService.CurrentSound.Name = "LibraryBackgroundMusic"
-        MusicService.CurrentSound.Looped = MusicService.IsLooped
-        MusicService.CurrentSound.Volume = 0.5
-        MusicService.CurrentSound.Parent = game:GetService("SoundService")
-    end
-
-    local SongNames = {}
-    for name, _ in pairs(MusicList) do
-        table.insert(SongNames, name)
-    end
-
-    -- 1. Dropdown Pilih Lagu
-    local MusicDropdown = ParentContainer:AddDropdown("Pilih Musik", SongNames, "Raining Tacos", function(selected)
-        if MusicList[selected] then
-            MusicService.SelectedID = MusicList[selected]
-            Library:Notify({ Title = "Music Selected", Content = selected, Type = "Success", Duration = 2 })
-            
-            if MusicService.IsPlaying then
-                MusicService.CurrentSound.SoundId = "rbxassetid://" .. MusicService.SelectedID
-                MusicService.CurrentSound:Play()
-            end
-        end
-    end)
-
-    -- 2. Input Custom ID (Otomatis Tersimpan ke List Dropdown)
-    ParentContainer:AddInput("Custom Music ID", "Masukkan ID Roblox...", function(text)
-        if text and text ~= "" and tonumber(text) then
-            local cleanID = tostring(tonumber(text))
-            local customName = "Custom (" .. cleanID .. ")"
-            
-            -- Simpan ke daftar lagu
-            MusicList[customName] = cleanID
-            MusicService.SelectedID = cleanID
-            
-            -- Update pilihan di Dropdown jika method UpdateValues didukung library
-            if MusicDropdown and MusicDropdown.UpdateValues then
-                local UpdatedNames = {}
-                for name, _ in pairs(MusicList) do
-                    table.insert(UpdatedNames, name)
-                end
-                MusicDropdown:UpdateValues(UpdatedNames, customName)
-            end
-
-            Library:Notify({ Title = "Custom ID Saved", Content = "Tersimpan: " .. customName, Type = "Success", Duration = 2 })
-            
-            -- Jika musik sedang On, langsung ganti lagu secara real-time
-            if MusicService.IsPlaying then
-                MusicService.CurrentSound.SoundId = "rbxassetid://" .. MusicService.SelectedID
-                MusicService.CurrentSound:Play()
-            end
-        else
-            Library:Notify({ Title = "Invalid ID", Content = "Harap masukkan angka ID saja!", Type = "Error", Duration = 2 })
-        end
-    end)
-
-    -- 3. Toggle Play / Stop Music
-    ParentContainer:AddToggle("Play Background Music", "lucide-music", false, function(state)
-        MusicService.IsPlaying = state
-        
-        if MusicService.IsPlaying then
-            MusicService.CurrentSound.SoundId = "rbxassetid://" .. MusicService.SelectedID
-            MusicService.CurrentSound.Looped = MusicService.IsLooped
-            MusicService.CurrentSound:Play()
-            Library:Notify({ Title = "Music", Content = "Lagu Diputar!", Type = "Success", Duration = 2 })
-        else
-            MusicService.CurrentSound:Stop()
-            Library:Notify({ Title = "Music", Content = "Lagu Dimatikan", Type = "Warning", Duration = 2 })
-        end
-    end)
-
-    -- 4. Toggle Loop Music (On/Off)
-    ParentContainer:AddToggle("Loop Music", "lucide-repeat", true, function(state)
-        MusicService.IsLooped = state
-        if MusicService.CurrentSound then
-            MusicService.CurrentSound.Looped = state
-        end
-        
-        local status = state and "Aktif" or "Nonaktif"
-        Library:Notify({ Title = "Loop Music", Content = "Loop " .. status, Type = "Info", Duration = 2 })
-    end)
 end
 
 return Library
