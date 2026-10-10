@@ -1465,27 +1465,29 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                 end
             end)
 
--- 1. Buat Frame garis bawah secara otomatis (posisi di bawah teks flashbang)
-local Underline = Instance.new("Frame")
-Underline.Name = "TextUnderline"
-Underline.Size = UDim2.new(0, 0, 0, 3) -- Mulai dari lebar 0
-Underline.Position = UDim2.new(0.5, 0, 0.7, 0) -- Sesuaikan posisi di bawah teks
-Underline.AnchorPoint = Vector2.new(0.5, 0)
-Underline.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Warna garis (bisa disesuaikan)
-Underline.BorderSizePixel = 0
-Underline.Parent = FlashScreenFrame -- Masukkan ke frame intro kamu
+    -- ==========================================
+    -- PASTE KODE GARIS BAWAH (HITAM PEKAT)
+    -- ==========================================
+    local Underline = Instance.new("Frame")
+    Underline.Name = "TextUnderline"
+    Underline.Size = UDim2.new(0, 0, 0, 4) -- Mulai dari lebar 0
+    Underline.Position = UDim2.new(0.5, 0, 1, 10) -- Posisikan di bawah BigText
+    Underline.AnchorPoint = Vector2.new(0.5, 0)
+    Underline.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- HITAM PEKAT
+    Underline.BorderSizePixel = 0
+    Underline.ZIndex = 1000001
+    Underline.Parent = BigText -- Di-parent langsung ke BigText
 
--- Tambahkan UICorner biar ujung garisnya agak melengkung estetik
-local UnderlineCorner = Instance.new("UICorner")
-UnderlineCorner.CornerRadius = UDim.new(1, 0)
-UnderlineCorner.Parent = Underline
+    local UnderlineCorner = Instance.new("UICorner")
+    UnderlineCorner.CornerRadius = UDim.new(1, 0)
+    UnderlineCorner.Parent = Underline
 
--- 2. Jalankan Tween garisnya melebar setelah teks selesai diketik
-task.delay(0.1, function()
+    task.wait(0.05)
+    local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
+
     TweenService:Create(Underline, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 180, 0, 3) -- Ubah angka 180 sesuai panjang teksnya nanti
+        Size = UDim2.new(0, targetWidth, 0, 4)
     }):Play()
-end)
 
             task.delay(10.0, function()
                 local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
