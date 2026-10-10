@@ -818,7 +818,8 @@ function Library:CreateWindow(config)
     local openRouterApiKey = AiSystemConfig.ApiKey or "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"
     local openRouterUrl = AiSystemConfig.Url or "https://openrouter.ai/api/v1/chat/completions"
 
-    local scriptbloxLimit = math.clamp(config.ScriptbloxLimit or 15, 8, 25)
+    -- Variabel limit scriptblox dinamis (bisa diatur lewat slider di dalam grup)
+    local currentScriptbloxLimit = math.clamp(config.ScriptbloxLimit or 15, 8, 25)
 
     local currentActiveKey = "Tidak ada"
     local currentKeyDurationText = "Tidak ada"
@@ -1095,7 +1096,9 @@ function Library:CreateWindow(config)
                             Method = "POST",
                             Headers = {
                                 ["Authorization"] = "Bearer " .. openRouterApiKey,
-                                ["Content-Type"] = "application/json"
+                                ["Content-Type"] = "application/json",
+                                ["HTTP-Referer"] = "https://roblox.com",
+                                ["X-Title"] = "Window Beast Hub"
                             },
                             Body = requestBody
                         })
@@ -1104,8 +1107,11 @@ function Library:CreateWindow(config)
                             local decoded = HttpService:JSONDecode(res.Body)
                             if decoded and decoded.choices and decoded.choices[1] and decoded.choices[1].message then
                                 addChatMessage("Beast AI", decoded.choices[1].message.content)
+                            elseif decoded and decoded.error then
+                                local errMsg = type(decoded.error) == "table" and (decoded.error.message or "Unknown OpenRouter Error") or tostring(decoded.error)
+                                addChatMessage("Beast AI", "API Error: " .. errMsg)
                             else
-                                addChatMessage("Beast AI", "Maaf, gagal memproses respon dari AI.")
+                                addChatMessage("Beast AI", "Respon Server: " .. tostring(res.Body))
                             end
                         else
                             addChatMessage("Beast AI", "Gagal menghubungkan ke server OpenRouter.")
@@ -1125,10 +1131,12 @@ function Library:CreateWindow(config)
             end)
         end
 
+        local isMinimized = false
         local showingSettings = false
         local showingAi = false
 
         SettingsBtn.MouseButton1Click:Connect(function()
+            if isMinimized then return end -- Tidak bisa diklik saat minimize
             showingSettings = not showingSettings
             showingAi = false
             Container.Visible = not showingSettings
@@ -1145,6 +1153,7 @@ function Library:CreateWindow(config)
 
         if AiBtn then
             AiBtn.MouseButton1Click:Connect(function()
+                if isMinimized then return end -- Tidak bisa diklik saat minimize
                 showingAi = not showingAi
                 showingSettings = false
                 Container.Visible = not showingAi
@@ -1374,7 +1383,6 @@ function Library:CreateWindow(config)
             FloatingContainer.Visible = false
         end)
 
-        -- ICON RELEVAN: Lucide-Shield untuk keamanan/key info
         local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-shield", false)
         local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
         local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
@@ -1392,8 +1400,13 @@ function Library:CreateWindow(config)
             end
         end)
 
-        -- ICON RELEVAN: Lucide-Search untuk pencarian scriptblox
+        -- SEARCH SCRIPTBLOX DENGAN SLIDER JUMLAH SCRIPT DI DALAMNYA
         local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
+
+        -- SLIDER ATUR JUMLAH SCRIPT (8 - 25)
+        ScriptbloxGroup:AddSlider("Jumlah Script Ditampilkan", "lucide-sliders", 8, 25, currentScriptbloxLimit, function(val)
+            currentScriptbloxLimit = val
+        end)
 
         local SearchBoxFrame = Instance.new("Frame")
         SearchBoxFrame.Size = UDim2.new(1, 0, 0, 32)
@@ -1454,7 +1467,7 @@ function Library:CreateWindow(config)
 
                     if data and data.result and data.result.scripts and #data.result.scripts > 0 then
                         for i, item in ipairs(data.result.scripts) do
-                            if i > scriptbloxLimit then break end
+                            if i > currentScriptbloxLimit then break end
 
                             local scriptTitle = item.title or "No Title"
                             local rawScript = item.script or ""
@@ -1532,7 +1545,6 @@ function Library:CreateWindow(config)
             end
         end)
 
-        -- ICON RELEVAN: Lucide-Sliders untuk pengaturan tombol
         local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
         FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
             FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
@@ -1547,7 +1559,6 @@ function Library:CreateWindow(config)
             Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
         end)
 
-        -- ICON RELEVAN: Lucide-Alarm-Clock untuk waktu bermain
         local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
         local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
         local startTime = tick()
@@ -1565,7 +1576,6 @@ function Library:CreateWindow(config)
             end
         end)
 
-        -- ICON RELEVAN: Lucide-User untuk informasi profil player
         local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-user", false)
         
         local AvatarFrame = Instance.new("Frame")
@@ -1607,7 +1617,6 @@ function Library:CreateWindow(config)
         PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
         PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-        -- ICON RELEVAN: Lucide-Navigation untuk performa
         local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
         
         PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
@@ -1664,7 +1673,6 @@ function Library:CreateWindow(config)
             end
         end)
 
-        -- ICON RELEVAN: Lucide-Code untuk script populer
         local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
 
         local popularScriptsList = {
@@ -1696,7 +1704,6 @@ function Library:CreateWindow(config)
             end)
         end
 
-        -- ICON RELEVAN: Lucide-Palette untuk warna teks
         local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
         
         TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
@@ -1712,7 +1719,6 @@ function Library:CreateWindow(config)
             end)
         end
 
-        -- ICON RELEVAN: Lucide-Paint-Bucket untuk tema UI
         local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
         ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
@@ -1728,7 +1734,6 @@ function Library:CreateWindow(config)
             end)
         end
 
-        -- ICON RELEVAN: Lucide-Music untuk musik
         local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
         
         local currentSound = Instance.new("Sound")
@@ -1822,7 +1827,6 @@ function Library:CreateWindow(config)
             end
         end)
 
-        -- ICON RELEVAN: Lucide-Languages untuk bahasa
         local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
         LangGroup:AddButton("Bahasa Indonesia", nil, function()
             currentLang = "Indonesian"
@@ -1835,13 +1839,11 @@ function Library:CreateWindow(config)
             Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
         end)
 
-        -- ICON RELEVAN: Lucide-Sliders untuk transparansi UI
         local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
         TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
             Main.BackgroundTransparency = val / 100
         end)
 
-        -- ICON RELEVAN: Lucide-Type untuk gaya font text
         local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
         for fontName, enumFont in pairs(Fonts) do
             FontGroup:AddButton(fontName, nil, function()
@@ -1897,7 +1899,6 @@ function Library:CreateWindow(config)
             })
         end)
 
-        local isMinimized = false
         local normalHeight = 270
 
         MinBtn.MouseButton1Click:Connect(function()
@@ -2009,7 +2010,6 @@ function Library:CreateWindow(config)
             tapCount = tapCount + 1
             local remaining = targetTaps - tapCount
 
-            -- Animasi klik bounce pada ikon sidik jari
             TweenService:Create(FingerprintBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 115, 0, 115)}):Play()
             task.delay(0.1, function()
                 TweenService:Create(FingerprintBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 100, 0, 100)}):Play()
