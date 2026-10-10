@@ -23,7 +23,8 @@ Library.Icons = {
     ["lucide-info"]             = "rbxassetid://10723415903",
     ["lucide-key"]              = "rbxassetid://10723346959",
     ["lucide-search"]           = "rbxassetid://10734941499",
-    ["lucide-bot"]              = "rbxassetid://10734883986"
+    ["lucide-bot"]              = "rbxassetid://10734883986",
+    ["lucide-fingerprint"]      = "rbxassetid://10723375250"
 }
 
 -- SISTEM BAHASA DENGAN TRANSLATION LENGKAP
@@ -189,7 +190,7 @@ local function updateGlobalThemeColor(color)
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
+            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "LockScreen" then
                 if obj.BackgroundTransparency < 1 then
                     if obj.Name == "Main" then
                         obj.BackgroundColor3 = color
@@ -223,7 +224,7 @@ RunService.RenderStepped:Connect(function()
         
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
+                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "LockScreen" then
                     if obj.BackgroundTransparency < 1 and obj.Name ~= "Main" then
                         local h, s, v = rgbColor:ToHSV()
                         obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v - 0.2, 0, 1))
@@ -822,14 +823,23 @@ function Library:CreateWindow(config)
     local text1 = config.Text1 or ("by:" .. authorText)
     local text2 = config.Text2 or "Injeksi Game"
     local text3 = config.Text3 or "Menyiapkan Ui"
-    flashText = config.FlashText or "GOODMANZ"
+    local flashText = config.FlashText or "GOODMANZ"
 
-    -- KONFIGURASI KEY SYSTEM DARI LUAR
+    -- KONFIGURASI KEY SYSTEM
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
     local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", DurationDays = 365, DurationText = "Permanen" } }
     local keyGetUrl = KeySystemConfig.KeyURL or "https://discord.gg/yourlink"
     local saveFileName = "WindowBeastKey.json"
+
+    -- KONFIGURASI AI SYSTEM (TRUE/FALSE)
+    local AiSystemConfig = config.AiSystem or {}
+    local isAiEnabled = (AiSystemConfig.Enabled ~= false) -- Default true jika tidak diatur false
+    local openRouterApiKey = AiSystemConfig.ApiKey or "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"
+    local openRouterUrl = AiSystemConfig.Url or "https://openrouter.ai/api/v1/chat/completions"
+
+    -- KONFIGURASI BATAS SCRIPTBLOX (8 - 25)
+    local scriptbloxLimit = math.clamp(config.ScriptbloxLimit or 15, 8, 25)
 
     local currentActiveKey = "Tidak ada"
     local currentKeyDurationText = "Tidak ada"
@@ -837,11 +847,111 @@ function Library:CreateWindow(config)
 
     local Window = {}
 
+    -- ==========================================
+    -- FASE 1: LAYAR HITAM & VERIFIKASI SIDIK JARI 5 DETIK
+    -- ==========================================
+    local LockScreen = Instance.new("Frame")
+    LockScreen.Name = "LockScreen"
+    LockScreen.Size = UDim2.new(1, 0, 1, 0)
+    LockScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    LockScreen.BorderSizePixel = 0
+    LockScreen.ZIndex = 9999999
+    LockScreen.Parent = ScreenGui
+
+    local FingerprintBtn = Instance.new("ImageButton")
+    FingerprintBtn.Size = UDim2.new(0, 100, 0, 100)
+    FingerprintBtn.Position = UDim2.new(0.5, -50, 0.5, -60)
+    FingerprintBtn.BackgroundTransparency = 1
+    FingerprintBtn.Image = Library.Icons["lucide-fingerprint"]
+    FingerprintBtn.ZIndex = 10000000
+    FingerprintBtn.Parent = LockScreen
+
+    local LockTitle = Instance.new("TextLabel")
+    LockTitle.Size = UDim2.new(1, -40, 0, 25)
+    LockTitle.Position = UDim2.new(0, 20, 0.5, -100)
+    LockTitle.BackgroundTransparency = 1
+    LockTitle.Text = titleText .. " - Keamanan Sidik Jari"
+    LockTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    LockTitle.TextSize = 15
+    LockTitle.Font = Enum.Font.GothamBold
+    LockTitle.TextXAlignment = Enum.TextXAlignment.Center
+    LockTitle.ZIndex = 10000000
+    LockTitle.Parent = LockScreen
+
+    local LockInfoLbl = Instance.new("TextLabel")
+    LockInfoLbl.Size = UDim2.new(1, -40, 0, 30)
+    LockInfoLbl.Position = UDim2.new(0, 20, 0.5, 45)
+    LockInfoLbl.BackgroundTransparency = 1
+    LockInfoLbl.Text = "Tekan dan tahan ikon sidik jari selama 5 detik dengan jempol"
+    LockInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
+    LockInfoLbl.TextSize = 11
+    LockInfoLbl.Font = Enum.Font.Gotham
+    LockInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
+    LockInfoLbl.TextWrapped = true
+    LockInfoLbl.ZIndex = 10000000
+    LockInfoLbl.Parent = LockScreen
+
+    local holdingFinger = false
+    local holdCounter = 0
+    local requiredHoldSeconds = 5.0
+    local isUnlocked = false
+
+    local function startHolding()
+        if isUnlocked then return end
+        holdingFinger = true
+        holdCounter = 0
+    end
+
+    local function stopHolding()
+        if isUnlocked then return end
+        holdingFinger = false
+        holdCounter = 0
+        LockInfoLbl.Text = "Tekan dan tahan ikon sidik jari selama 5 detik dengan jempol"
+    end
+
+    FingerprintBtn.MouseButton1Down:Connect(startHolding)
+    FingerprintBtn.MouseButton1Up:Connect(stopHolding)
+    FingerprintBtn.TouchStarted:Connect(startHolding)
+    FingerprintBtn.TouchEnded:Connect(stopHolding)
+
+    local lockConn
+    lockConn = RunService.RenderStepped:Connect(function(dt)
+        if isUnlocked then 
+            if lockConn then lockConn:Disconnect() end
+            return 
+        end
+        if holdingFinger then
+            holdCounter = holdCounter + dt
+            local remain = math.max(0, requiredHoldSeconds - holdCounter)
+            LockInfoLbl.Text = string.format("Memindai sidik jari... (%.1f detik lagi)", remain)
+            
+            if holdCounter >= requiredHoldSeconds then
+                isUnlocked = true
+                holdingFinger = false
+                LockInfoLbl.Text = "Verifikasi Sidik Jari Berhasil!"
+                LockInfoLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+                
+                TweenService:Create(LockScreen, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
+                TweenService:Create(FingerprintBtn, TweenInfo.new(0.6), {ImageTransparency = 1}):Play()
+                TweenService:Create(LockTitle, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
+                TweenService:Create(LockInfoLbl, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
+                
+                task.delay(0.6, function()
+                    LockScreen:Destroy()
+                end)
+                if lockConn then lockConn:Disconnect() end
+            end
+        end
+    end)
+
+    -- Tunggu sampai user selesai menahan sidik jari selama 5 detik
+    repeat task.wait() until isUnlocked
+
     -- HELPER UTAMA SAVE/READ KEY SYSTEM
     local function parseDurationSeconds(keyData)
         if keyData.DurationSeconds then return keyData.DurationSeconds end
         if keyData.DurationDays then return keyData.DurationDays * 86400 end
-        return 86400 -- Default 1 Hari
+        return 86400
     end
 
     local function checkSavedKeyValid()
@@ -879,7 +989,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- SISTEM KEY UI (AUTO SAVE & EXPIRE CHECK)
+    -- FASE 2: SISTEM KEY UI (AUTO SAVE & EXPIRE CHECK)
     -- ==========================================
     if isKeySystemEnabled then
         local isAlreadyValid = checkSavedKeyValid()
@@ -1070,8 +1180,13 @@ function Library:CreateWindow(config)
         HeaderIcon.Parent = Header
     end
 
+    -- Hitung posisi tombol header berdasarkan status AI (enabled/disabled)
+    local rightOffsetMinBtn = isAiEnabled and 125 or 100
+    local rightOffsetAiBtn = 100
+    local rightOffsetSetBtn = 75
+
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, mainLogo and -150 or -140, 1, 0)
+    Title.Size = UDim2.new(1, mainLogo and -(isAiEnabled and 150 or 125) or -(isAiEnabled and 140 or 115), 1, 0)
     Title.Position = UDim2.new(0, mainLogo and 34 or 12, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = titleText
@@ -1084,24 +1199,27 @@ function Library:CreateWindow(config)
 
     local MinBtn = Instance.new("ImageButton")
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
-    MinBtn.Position = UDim2.new(1, -125, 0, 7)
+    MinBtn.Position = UDim2.new(1, -rightOffsetMinBtn, 0, 7)
     MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     MinBtn.Image = Library.Icons["lucide-chevron-up"]
     MinBtn.Parent = Header
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
 
-    -- TOMBOL AI BARU (DI SEBELAH TOMBOL SETTINGS)
-    local AiBtn = Instance.new("ImageButton")
-    AiBtn.Size = UDim2.new(0, 22, 0, 22)
-    AiBtn.Position = UDim2.new(1, -100, 0, 7)
-    AiBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    AiBtn.Image = Library.Icons["lucide-zap"]
-    AiBtn.Parent = Header
-    Instance.new("UICorner", AiBtn).CornerRadius = UDim.new(0, 6)
+    -- TOMBOL AI (HANYA MUNCUL JIKA isAiEnabled == true)
+    local AiBtn
+    if isAiEnabled then
+        AiBtn = Instance.new("ImageButton")
+        AiBtn.Size = UDim2.new(0, 22, 0, 22)
+        AiBtn.Position = UDim2.new(1, -rightOffsetAiBtn, 0, 7)
+        AiBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        AiBtn.Image = Library.Icons["lucide-zap"]
+        AiBtn.Parent = Header
+        Instance.new("UICorner", AiBtn).CornerRadius = UDim.new(0, 6)
+    end
 
     local SettingsBtn = Instance.new("ImageButton")
     SettingsBtn.Size = UDim2.new(0, 22, 0, 22)
-    SettingsBtn.Position = UDim2.new(1, -75, 0, 7)
+    SettingsBtn.Position = UDim2.new(1, -rightOffsetSetBtn, 0, 7)
     SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     SettingsBtn.Image = Library.Icons["Settings"]
     SettingsBtn.Parent = Header
@@ -1168,160 +1286,155 @@ function Library:CreateWindow(config)
         SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 8)
     end)
 
-    -- ==========================================
-    -- FITUR BARU: PANEL CHAT AI (GAYA WHATSAPP)
-    -- ==========================================
-    local AiContainer = Instance.new("Frame")
-    AiContainer.Name = "AiContainer"
-    AiContainer.Size = UDim2.new(1, -16, 1, -44)
-    AiContainer.Position = UDim2.new(0, 8, 0, 38)
-    AiContainer.BackgroundTransparency = 1
-    AiContainer.Visible = false
-    AiContainer.Parent = Main
+    -- PANEL CHAT AI (WHATSAPP STYLE)
+    local AiContainer, AiChatScroll, AiTextBox, AiSendBtn
+    if isAiEnabled then
+        AiContainer = Instance.new("Frame")
+        AiContainer.Name = "AiContainer"
+        AiContainer.Size = UDim2.new(1, -16, 1, -44)
+        AiContainer.Position = UDim2.new(0, 8, 0, 38)
+        AiContainer.BackgroundTransparency = 1
+        AiContainer.Visible = false
+        AiContainer.Parent = Main
 
-    local AiChatScroll = Instance.new("ScrollingFrame")
-    AiChatScroll.Size = UDim2.new(1, 0, 1, -38)
-    AiChatScroll.Position = UDim2.new(0, 0, 0, 0)
-    AiChatScroll.BackgroundTransparency = 1
-    AiChatScroll.BorderSizePixel = 0
-    AiChatScroll.ScrollBarThickness = 2
-    AiChatScroll.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
-    AiChatScroll.ClipsDescendants = true
-    AiChatScroll.Parent = AiContainer
+        AiChatScroll = Instance.new("ScrollingFrame")
+        AiChatScroll.Size = UDim2.new(1, 0, 1, -38)
+        AiChatScroll.Position = UDim2.new(0, 0, 0, 0)
+        AiChatScroll.BackgroundTransparency = 1
+        AiChatScroll.BorderSizePixel = 0
+        AiChatScroll.ScrollBarThickness = 2
+        AiChatScroll.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+        AiChatScroll.ClipsDescendants = true
+        AiChatScroll.Parent = AiContainer
 
-    local AiChatLayout = Instance.new("UIListLayout")
-    AiChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    AiChatLayout.Padding = UDim.new(0, 6)
-    AiChatLayout.Parent = AiChatScroll
+        local AiChatLayout = Instance.new("UIListLayout")
+        AiChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        AiChatLayout.Padding = UDim.new(0, 6)
+        AiChatLayout.Parent = AiChatScroll
 
-    AiChatLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        AiChatScroll.CanvasSize = UDim2.new(0, 0, 0, AiChatLayout.AbsoluteContentSize.Y + 6)
-        AiChatScroll.CanvasPosition = Vector2.new(0, AiChatLayout.AbsoluteContentSize.Y)
-    end)
+        AiChatLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            AiChatScroll.CanvasSize = UDim2.new(0, 0, 0, AiChatLayout.AbsoluteContentSize.Y + 6)
+            AiChatScroll.CanvasPosition = Vector2.new(0, AiChatLayout.AbsoluteContentSize.Y)
+        end)
 
-    local AiInputFrame = Instance.new("Frame")
-    AiInputFrame.Size = UDim2.new(1, 0, 0, 32)
-    AiInputFrame.Position = UDim2.new(0, 0, 1, -32)
-    AiInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    AiInputFrame.Parent = AiContainer
-    Instance.new("UICorner", AiInputFrame).CornerRadius = UDim.new(0, 6)
+        local AiInputFrame = Instance.new("Frame")
+        AiInputFrame.Size = UDim2.new(1, 0, 0, 32)
+        AiInputFrame.Position = UDim2.new(0, 0, 1, -32)
+        AiInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+        AiInputFrame.Parent = AiContainer
+        Instance.new("UICorner", AiInputFrame).CornerRadius = UDim.new(0, 6)
 
-    local AiTextBox = Instance.new("TextBox")
-    AiTextBox.Size = UDim2.new(0.75, -5, 1, 0)
-    AiTextBox.Position = UDim2.new(0, 8, 0, 0)
-    AiTextBox.BackgroundTransparency = 1
-    AiTextBox.PlaceholderText = "Tanya AI sesuatu..."
-    AiTextBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
-    AiTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    AiTextBox.TextSize = 11
-    AiTextBox.Font = currentFont
-    AiTextBox.TextXAlignment = Enum.TextXAlignment.Left
-    AiTextBox.Parent = AiInputFrame
+        AiTextBox = Instance.new("TextBox")
+        AiTextBox.Size = UDim2.new(0.75, -5, 1, 0)
+        AiTextBox.Position = UDim2.new(0, 8, 0, 0)
+        AiTextBox.BackgroundTransparency = 1
+        AiTextBox.PlaceholderText = "Tanya AI sesuatu..."
+        AiTextBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
+        AiTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+        AiTextBox.TextSize = 11
+        AiTextBox.Font = currentFont
+        AiTextBox.TextXAlignment = Enum.TextXAlignment.Left
+        AiTextBox.Parent = AiInputFrame
 
-    local AiSendBtn = Instance.new("TextButton")
-    AiSendBtn.Size = UDim2.new(0.25, -8, 1, -6)
-    AiSendBtn.Position = UDim2.new(0.75, 2, 0, 3)
-    AiSendBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-    AiSendBtn.Text = "Kirim"
-    AiSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    AiSendBtn.TextSize = 10
-    AiSendBtn.Font = Enum.Font.GothamBold
-    AiSendBtn.Parent = AiInputFrame
-    Instance.new("UICorner", AiSendBtn).CornerRadius = UDim.new(0, 4)
+        AiSendBtn = Instance.new("TextButton")
+        AiSendBtn.Size = UDim2.new(0.25, -8, 1, -6)
+        AiSendBtn.Position = UDim2.new(0.75, 2, 0, 3)
+        AiSendBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+        AiSendBtn.Text = "Kirim"
+        AiSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        AiSendBtn.TextSize = 10
+        AiSendBtn.Font = Enum.Font.GothamBold
+        AiSendBtn.Parent = AiInputFrame
+        Instance.new("UICorner", AiSendBtn).CornerRadius = UDim.new(0, 4)
 
-    local function addChatMessage(sender, text)
-        local isUser = (sender == "You")
-        
-        local MsgBubble = Instance.new("Frame")
-        MsgBubble.Size = UDim2.new(1, 0, 0, 0)
-        MsgBubble.BackgroundColor3 = isUser and Color3.fromRGB(37, 100, 60) or Color3.fromRGB(28, 28, 36)
-        MsgBubble.Parent = AiChatScroll
-        Instance.new("UICorner", MsgBubble).CornerRadius = UDim.new(0, 6)
+        local function addChatMessage(sender, text)
+            local MsgBubble = Instance.new("Frame")
+            MsgBubble.Size = UDim2.new(1, 0, 0, 0)
+            MsgBubble.BackgroundColor3 = (sender == "You") and Color3.fromRGB(37, 100, 60) or Color3.fromRGB(28, 28, 36)
+            MsgBubble.Parent = AiChatScroll
+            Instance.new("UICorner", MsgBubble).CornerRadius = UDim.new(0, 6)
 
-        local MsgLbl = Instance.new("TextLabel")
-        MsgLbl.Size = UDim2.new(1, -12, 1, -12)
-        MsgLbl.Position = UDim2.new(0, 6, 0, 6)
-        MsgLbl.BackgroundTransparency = 1
-        MsgLbl.Text = "<b>" .. sender .. ":</b> " .. text
-        MsgLbl.RichText = true
-        MsgLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-        MsgLbl.TextSize = 10
-        MsgLbl.Font = Enum.Font.Gotham
-        MsgLbl.TextXAlignment = Enum.TextXAlignment.Left
-        MsgLbl.TextYAlignment = Enum.TextYAlignment.Top
-        MsgLbl.TextWrapped = true
-        MsgLbl.Parent = MsgBubble
+            local MsgLbl = Instance.new("TextLabel")
+            MsgLbl.Size = UDim2.new(1, -12, 1, -12)
+            MsgLbl.Position = UDim2.new(0, 6, 0, 6)
+            MsgLbl.BackgroundTransparency = 1
+            MsgLbl.Text = "<b>" .. sender .. ":</b> " .. text
+            MsgLbl.RichText = true
+            MsgLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+            MsgLbl.TextSize = 10
+            MsgLbl.Font = Enum.Font.Gotham
+            MsgLbl.TextXAlignment = Enum.TextXAlignment.Left
+            MsgLbl.TextYAlignment = Enum.TextYAlignment.Top
+            MsgLbl.TextWrapped = true
+            MsgLbl.Parent = MsgBubble
 
-        local textHeight = game:GetService("TextService"):GetTextSize(
-            sender .. ": " .. text,
-            10,
-            Enum.Font.Gotham,
-            Vector2.new(190, 9999)
-        ).Y
+            local textHeight = game:GetService("TextService"):GetTextSize(
+                sender .. ": " .. text,
+                10,
+                Enum.Font.Gotham,
+                Vector2.new(190, 9999)
+            ).Y
 
-        MsgBubble.Size = UDim2.new(1, 0, 0, math.max(28, textHeight + 14))
-    end
+            MsgBubble.Size = UDim2.new(1, 0, 0, math.max(28, textHeight + 14))
+        end
 
-    addChatMessage("Beast AI", "Halo! Ada yang bisa saya bantu tentang script?")
+        addChatMessage("Beast AI", "Halo! Asisten AI siap membantu script Anda.")
 
-    local openRouterApiKey = "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"
-    local openRouterUrl = "https://openrouter.ai/api/v1/chat/completions"
+        local function sendAiRequest(promptText)
+            if promptText == "" then return end
+            addChatMessage("You", promptText)
+            AiTextBox.Text = ""
 
-    local function sendAiRequest(promptText)
-        if promptText == "" then return end
-        addChatMessage("You", promptText)
-        AiTextBox.Text = ""
+            task.spawn(function()
+                local requestFunc = (syn and syn.request) or (http and http.request) or http_request or request
+                if not requestFunc then
+                    addChatMessage("Beast AI", "Error: Executor Anda tidak mendukung HTTP Request!")
+                    return
+                end
 
-        task.spawn(function()
-            local requestFunc = (syn and syn.request) or (http and http.request) or http_request or request
-            
-            if not requestFunc then
-                addChatMessage("Beast AI", "Error: Executor Anda tidak mendukung HTTP Request!")
-                return
-            end
-
-            local requestBody = HttpService:JSONEncode({
-                model = "meta-llama/llama-3.1-8b-instruct:free",
-                messages = {
-                    { role = "system", content = "Kamu adalah asisten AI ramah dari Window Beast Hub yang membantu seputar game Roblox." },
-                    { role = "user", content = promptText }
-                }
-            })
-
-            pcall(function()
-                local res = requestFunc({
-                    Url = openRouterUrl,
-                    Method = "POST",
-                    Headers = {
-                        ["Authorization"] = "Bearer " .. openRouterApiKey,
-                        ["Content-Type"] = "application/json"
-                    },
-                    Body = requestBody
+                local requestBody = HttpService:JSONEncode({
+                    model = "meta-llama/llama-3.1-8b-instruct:free",
+                    messages = {
+                        { role = "system", content = "Kamu adalah asisten AI ramah dari Window Beast Hub yang membantu seputar game Roblox." },
+                        { role = "user", content = promptText }
+                    }
                 })
 
-                if res and res.Body then
-                    local decoded = HttpService:JSONDecode(res.Body)
-                    if decoded and decoded.choices and decoded.choices[1] and decoded.choices[1].message then
-                        addChatMessage("Beast AI", decoded.choices[1].message.content)
+                pcall(function()
+                    local res = requestFunc({
+                        Url = openRouterUrl,
+                        Method = "POST",
+                        Headers = {
+                            ["Authorization"] = "Bearer " .. openRouterApiKey,
+                            ["Content-Type"] = "application/json"
+                        },
+                        Body = requestBody
+                    })
+
+                    if res and res.Body then
+                        local decoded = HttpService:JSONDecode(res.Body)
+                        if decoded and decoded.choices and decoded.choices[1] and decoded.choices[1].message then
+                            addChatMessage("Beast AI", decoded.choices[1].message.content)
+                        else
+                            addChatMessage("Beast AI", "Maaf, gagal memproses respon dari AI.")
+                        end
                     else
-                        addChatMessage("Beast AI", "Maaf, gagal memproses respon dari AI.")
+                        addChatMessage("Beast AI", "Gagal menghubungkan ke server OpenRouter.")
                     end
-                else
-                    addChatMessage("Beast AI", "Gagal menghubungkan ke server OpenRouter.")
-                end
+                end)
             end)
+        end
+
+        AiSendBtn.MouseButton1Click:Connect(function()
+            sendAiRequest(AiTextBox.Text)
+        end)
+
+        AiTextBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                sendAiRequest(AiTextBox.Text)
+            end
         end)
     end
-
-    AiSendBtn.MouseButton1Click:Connect(function()
-        sendAiRequest(AiTextBox.Text)
-    end)
-
-    AiTextBox.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            sendAiRequest(AiTextBox.Text)
-        end
-    end)
 
     local showingSettings = false
     local showingAi = false
@@ -1331,26 +1444,30 @@ function Library:CreateWindow(config)
         showingAi = false
         Container.Visible = not showingSettings
         SettingsContainer.Visible = showingSettings
-        AiContainer.Visible = false
+        if AiContainer then AiContainer.Visible = false end
 
         TweenService:Create(SettingsBtn, TweenInfo.new(0.2), {
             ImageColor3 = showingSettings and Color3.fromRGB(52, 152, 219) or Color3.fromRGB(255, 255, 255)
         }):Play()
-        TweenService:Create(AiBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+        if AiBtn then
+            TweenService:Create(AiBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+        end
     end)
 
-    AiBtn.MouseButton1Click:Connect(function()
-        showingAi = not showingAi
-        showingSettings = false
-        Container.Visible = not showingAi
-        SettingsContainer.Visible = false
-        AiContainer.Visible = showingAi
+    if AiBtn then
+        AiBtn.MouseButton1Click:Connect(function()
+            showingAi = not showingAi
+            showingSettings = false
+            Container.Visible = not showingAi
+            SettingsContainer.Visible = false
+            if AiContainer then AiContainer.Visible = showingAi end
 
-        TweenService:Create(AiBtn, TweenInfo.new(0.2), {
-            ImageColor3 = showingAi and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(255, 255, 255)
-        }):Play()
-        TweenService:Create(SettingsBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
-    end)
+            TweenService:Create(AiBtn, TweenInfo.new(0.2), {
+                ImageColor3 = showingAi and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(255, 255, 255)
+            }):Play()
+            TweenService:Create(SettingsBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+        end)
+    end
 
     -- ==========================================================
     -- FUNGSI PEMBUATAN GROUP / SECTION (SCROLL DI DALAM SCROLL)
@@ -1529,9 +1646,7 @@ function Library:CreateWindow(config)
         {"Magenta", Color3.fromRGB(255, 0, 255)}
     }
 
-    -- ==========================================
-    -- FLOATING ICON & NAGA (BISA DIATUR UKURAN)
-    -- ==========================================
+    -- FLOATING ICON & NAGA
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
     FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
@@ -1574,9 +1689,7 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
-    -- ==========================================
-    -- FITUR BARU: DISPLAY INFORMASI KEY DI SETTINGS
-    -- ==========================================
+    -- DISPLAY INFORMASI KEY DI SETTINGS
     local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", false)
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
@@ -1594,9 +1707,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- FITUR: SEARCH SCRIPTBLOX DI PENGATURAN
-    -- ==========================================
+    -- SEARCH SCRIPTBLOX (MENGGUNAKAN SCRIPTBLOX LIMIT CONFIG)
     local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
 
     local SearchBoxFrame = Instance.new("Frame")
@@ -1658,7 +1769,7 @@ function Library:CreateWindow(config)
 
                 if data and data.result and data.result.scripts and #data.result.scripts > 0 then
                     for i, item in ipairs(data.result.scripts) do
-                        if i > 8 then break end
+                        if i > scriptbloxLimit then break end
 
                         local scriptTitle = item.title or "No Title"
                         local rawScript = item.script or ""
@@ -1736,9 +1847,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- FITUR: PENGATURAN UKURAN TOMBOL HIDE/SHOW
-    -- ==========================================
+    -- PENGATURAN UKURAN TOMBOL HIDE/SHOW
     local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
@@ -1753,9 +1862,7 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
     end)
 
-    -- ==========================================
-    -- FITUR: WAKTU BERMAIN (Play Time Tracker)
-    -- ==========================================
+    -- WAKTU BERMAIN (Play Time Tracker)
     local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
     local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
     local startTime = tick()
@@ -1773,9 +1880,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- FITUR: PROFIL PLAYER & AVATAR LOBBY
-    -- ==========================================
+    -- PROFIL PLAYER & AVATAR LOBBY
     local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
     
     local AvatarFrame = Instance.new("Frame")
@@ -1817,9 +1922,7 @@ function Library:CreateWindow(config)
     PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
     PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-    -- ==========================================
-    -- FITUR: PERFORMA & TAMBAHAN
-    -- ==========================================
+    -- PERFORMA & TAMBAHAN
     local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
@@ -1876,9 +1979,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- FITUR: SCRIPT POPULER (15 SCRIPT)
-    -- ==========================================
+    -- SCRIPT POPULER (15 SCRIPT)
     local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
 
     local popularScriptsList = {
@@ -1910,9 +2011,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- ==========================================
-    -- FITUR: WARNA TEKS
-    -- ==========================================
+    -- WARNA TEKS
     local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
     
     TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
@@ -1928,9 +2027,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- ==========================================
-    -- FITUR: TEMA BACKGROUND UI
-    -- ==========================================
+    -- TEMA BACKGROUND UI
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
     ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
@@ -1946,9 +2043,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- ==========================================
-    -- FITUR: GRUP MUSIK
-    -- ==========================================
+    -- GRUP MUSIK
     local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
     
     local currentSound = Instance.new("Sound")
@@ -2042,9 +2137,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- FITUR: PILIH BAHASA
-    -- ==========================================
+    -- PILIH BAHASA
     local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
@@ -2057,9 +2150,6 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    -- ==========================================
-    -- PENGATURAN LAINNYA
-    -- ==========================================
     local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
     TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
@@ -2129,7 +2219,7 @@ function Library:CreateWindow(config)
             normalHeight = Main.AbsoluteSize.Y
             Container.Visible = false
             SettingsContainer.Visible = false
-            AiContainer.Visible = false
+            if AiContainer then AiContainer.Visible = false end
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
@@ -2144,7 +2234,7 @@ function Library:CreateWindow(config)
             task.delay(0.2, function()
                 Container.Visible = not showingSettings and not showingAi
                 SettingsContainer.Visible = showingSettings
-                AiContainer.Visible = showingAi
+                if AiContainer then AiContainer.Visible = showingAi end
             end)
         end
     end)
