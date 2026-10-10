@@ -844,7 +844,9 @@ local Translations = {
         TextStyle      = "Gaya Text / Font",
         LangSelect     = "Pilih Bahasa / Language",
         KeyTimerTitle  = "Sisa Durasi Key",
-        NoKeyActive    = "Tanpa Key / Key Bebas"
+        NoKeyActive    = "Tanpa Key / Key Bebas",
+        TextColorGroup = "Pilih Warna Teks",
+        MusicGroup     = "Grup Musik"
     },
     English = {
         NotifTitle     = "Notification",
@@ -864,7 +866,9 @@ local Translations = {
         TextStyle      = "Text Style / Font",
         LangSelect     = "Language / Bahasa",
         KeyTimerTitle  = "Key Expiration Timer",
-        NoKeyActive    = "No Key Active"
+        NoKeyActive    = "No Key Active",
+        TextColorGroup = "Text Color",
+        MusicGroup     = "Music Group"
     }
 }
 
@@ -888,6 +892,8 @@ local Fonts = {
 }
 
 local currentFont = Enum.Font.GothamMedium
+local currentTextColor = Color3.fromRGB(255, 255, 255)
+local isRgbTextActive = false
 
 local function getIconId(icon)
     if not icon or type(icon) ~= "string" or icon == "" then return nil end
@@ -905,6 +911,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
+local SoundService = game:GetService("SoundService")
 
 local TargetParent
 pcall(function()
@@ -933,6 +940,35 @@ ScreenGui.Name = "DarkGradientLibrary"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = TargetParent
+
+-- Fungsi update warna teks global
+local function updateGlobalTextColor(color)
+    currentTextColor = color
+    isRgbTextActive = false
+    for _, obj in ipairs(ScreenGui:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            -- Kecualikan elemen tertentu jika perlu (seperti tombol status/notifikasi khusus)
+            if obj.Name ~= "StatusColor" then
+                obj.TextColor3 = color
+            end
+        end
+    end
+end
+
+-- RGB Loop untuk teks
+RunService.RenderStepped:Connect(function()
+    if isRgbTextActive then
+        local hue = tick() % 5 / 5
+        local rgbColor = Color3.fromHSV(hue, 1, 1)
+        for _, obj in ipairs(ScreenGui:GetDescendants()) do
+            if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                if obj.Name ~= "StatusColor" then
+                    obj.TextColor3 = rgbColor
+                end
+            end
+        end
+    end
+end)
 
 local NotifHolder = Instance.new("Frame")
 NotifHolder.Name = "NotifHolder"
@@ -991,7 +1027,7 @@ function Library:Notify(options)
     TitleLbl.Position = UDim2.new(0, 18, 0, 6)
     TitleLbl.BackgroundTransparency = 1
     TitleLbl.Text = title
-    TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
     TitleLbl.TextSize = 12
     TitleLbl.Font = Enum.Font.GothamBold
     TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
@@ -1142,7 +1178,7 @@ local function createButton(parent, text, icon, callback)
         BtnLbl.Position = UDim2.new(0, xOffset, 0, 0)
         BtnLbl.BackgroundTransparency = 1
         BtnLbl.Text = text
-        BtnLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        BtnLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
         BtnLbl.TextSize = 12
         BtnLbl.Font = currentFont
         BtnLbl.TextXAlignment = iconId and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center
@@ -1199,7 +1235,7 @@ local function createToggle(parent, text, icon, default, callback)
         Label.Position = UDim2.new(0, xOffset, 0, 0)
         Label.BackgroundTransparency = 1
         Label.Text = text
-        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Label.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
         Label.TextSize = 12
         Label.Font = currentFont
         Label.TextXAlignment = Enum.TextXAlignment.Left
@@ -1284,7 +1320,7 @@ local function createSlider(parent, text, icon, min, max, default, callback)
         Label.Position = UDim2.new(0, xOffset, 0, 4)
         Label.BackgroundTransparency = 1
         Label.Text = text
-        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Label.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
         Label.TextSize = 12
         Label.Font = currentFont
         Label.TextXAlignment = Enum.TextXAlignment.Left
@@ -1349,7 +1385,6 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     return SliderFrame
 end
 
--- ANIMASI SPINNER & FLASHBANG FULL WHITE (10 DETIK)
 local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
     local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 8)
 
@@ -1465,29 +1500,26 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                 end
             end)
 
-    -- ==========================================
-    -- PASTE KODE GARIS BAWAH (HITAM PEKAT)
-    -- ==========================================
-    local Underline = Instance.new("Frame")
-    Underline.Name = "TextUnderline"
-    Underline.Size = UDim2.new(0, 0, 0, 4) -- Mulai dari lebar 0
-    Underline.Position = UDim2.new(0.5, 0, 1, 10) -- Posisikan di bawah BigText
-    Underline.AnchorPoint = Vector2.new(0.5, 0)
-    Underline.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- HITAM PEKAT
-    Underline.BorderSizePixel = 0
-    Underline.ZIndex = 1000001
-    Underline.Parent = BigText -- Di-parent langsung ke BigText
+            local Underline = Instance.new("Frame")
+            Underline.Name = "TextUnderline"
+            Underline.Size = UDim2.new(0, 0, 0, 4)
+            Underline.Position = UDim2.new(0.5, 0, 1, 10)
+            Underline.AnchorPoint = Vector2.new(0.5, 0)
+            Underline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            Underline.BorderSizePixel = 0
+            Underline.ZIndex = 1000001
+            Underline.Parent = BigText
 
-    local UnderlineCorner = Instance.new("UICorner")
-    UnderlineCorner.CornerRadius = UDim.new(1, 0)
-    UnderlineCorner.Parent = Underline
+            local UnderlineCorner = Instance.new("UICorner")
+            UnderlineCorner.CornerRadius = UDim.new(1, 0)
+            UnderlineCorner.Parent = Underline
 
-    task.wait(0.05)
-    local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
+            task.wait(0.05)
+            local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
 
-    TweenService:Create(Underline, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, targetWidth, 0, 4)
-    }):Play()
+            TweenService:Create(Underline, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, targetWidth, 0, 4)
+            }):Play()
 
             task.delay(10.0, function()
                 local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
@@ -1502,7 +1534,6 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     end)
 end
 
--- PENYIMPANAN DATA KEY & KONTROL WAKTU
 local keySaveFileName = "DarkGradient_KeySave.json"
 
 local function saveKeyData(keyVal, durationHours)
@@ -1537,7 +1568,6 @@ local function isKeySaveValid(allAllowedKeys)
     return false
 end
 
--- SISTEM KEY UI
 local function showKeySystemUI(keySettings, onSuccess)
     keySettings = keySettings or {}
     local keyTitle = keySettings.Title or L("KeyTitle")
@@ -1787,20 +1817,19 @@ function Library:CreateWindow(config)
     Title.Position = UDim2.new(0, mainLogo and 34 or 12, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = titleText
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextColor3 = currentTextColor
     Title.TextSize = 13
     Title.Font = Enum.Font.GothamBold
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.TextTruncate = Enum.TextTruncate.AtEnd
     Title.Parent = Header
 
-    -- TOMBOL HEADER (- | ⚙ | ❐ | ✕)
     local MinBtn = Instance.new("TextButton")
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
     MinBtn.Position = UDim2.new(1, -100, 0, 7)
     MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     MinBtn.Text = "-"
-    MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MinBtn.TextColor3 = currentTextColor
     MinBtn.TextSize = 13
     MinBtn.Font = Enum.Font.GothamBold
     MinBtn.Parent = Header
@@ -1827,13 +1856,12 @@ function Library:CreateWindow(config)
     CloseBtn.Position = UDim2.new(1, -25, 0, 7)
     CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     CloseBtn.Text = "✕"
-    CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseBtn.TextColor3 = currentTextColor
     CloseBtn.TextSize = 10
     CloseBtn.Font = Enum.Font.GothamBold
     CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
-    -- PANEL UTAMA
     local Container = Instance.new("ScrollingFrame")
     Container.Name = "MainContainer"
     Container.Size = UDim2.new(1, -16, 1, -44)
@@ -1854,7 +1882,6 @@ function Library:CreateWindow(config)
         Container.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 8)
     end)
 
-    -- PANEL PENGATURAN
     local SettingsContainer = Instance.new("ScrollingFrame")
     SettingsContainer.Name = "SettingsContainer"
     SettingsContainer.Size = UDim2.new(1, -16, 1, -44)
@@ -1934,7 +1961,7 @@ function Library:CreateWindow(config)
             TitleLbl.Position = UDim2.new(0, xOffset, 0, 0)
             TitleLbl.BackgroundTransparency = 1
             TitleLbl.Text = groupName
-            TitleLbl.TextColor3 = Color3.fromRGB(240, 240, 250)
+            TitleLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
             TitleLbl.TextSize = 12
             TitleLbl.Font = currentFont
             TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
@@ -2033,8 +2060,164 @@ function Library:CreateWindow(config)
         return Group
     end
 
-    -- POPULASI ITEM SETTINGS (COUNTDOWN TIMER, TRANSPARENCY, LANGUAGE, FONT)
-    -- 1. COUNTDOWN TIMER SISA DURASI KEY (BERJALAN MUNDUR)
+    -- ==========================================
+    -- FITUR BARU 1: GRUP PILIH WARNA TEKS (25 Warna + 1 RGB)
+    -- ==========================================
+    local TextColorGroup = buildGroupInContainer(SettingsContainer, L("TextColorGroup"), "Settings", true)
+    
+    -- Opsi RGB
+    TextColorGroup:AddButton("🌈 RGB Rainbow (Berubah Warna Warni)", nil, function()
+        isRgbTextActive = true
+        Library:Notify({ Title = "Warna Teks", Content = "Mode RGB Rainbow Diaktifkan!", Type = "Success", Duration = 2 })
+    end)
+
+    -- 25 Warna Pilihan Solid
+    local colorList = {
+        {"Putih (White)", Color3.fromRGB(255, 255, 255)},
+        {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
+        {"Hijau (Green)", Color3.fromRGB(46, 204, 113)},
+        {"Biru (Blue)", Color3.fromRGB(52, 152, 219)},
+        {"Kuning (Yellow)", Color3.fromRGB(241, 196, 15)},
+        {"Ungu (Purple)", Color3.fromRGB(155, 89, 182)},
+        {"Oranye (Orange)", Color3.fromRGB(230, 126, 34)},
+        {"Pink", Color3.fromRGB(255, 105, 180)},
+        {"Cyan", Color3.fromRGB(0, 255, 255)},
+        {"Lime", Color3.fromRGB(0, 255, 0)},
+        {"Magenta", Color3.fromRGB(255, 0, 255)},
+        {"Gold", Color3.fromRGB(255, 215, 0)},
+        {"Silver", Color3.fromRGB(192, 192, 192)},
+        {"Teal", Color3.fromRGB(0, 128, 128)},
+        {"Navy", Color3.fromRGB(0, 0, 128)},
+        {"Maroon", Color3.fromRGB(128, 0, 0)},
+        {"Olive", Color3.fromRGB(128, 128, 0)},
+        {"Aqua", Color3.fromRGB(0, 255, 255)},
+        {"Coral", Color3.fromRGB(255, 127, 80)},
+        {"Crimson", Color3.fromRGB(220, 20, 60)},
+        {"Indigo", Color3.fromRGB(75, 0, 130)},
+        {"Salmon", Color3.fromRGB(250, 128, 114)},
+        {"Turquoise", Color3.fromRGB(64, 224, 208)},
+        {"Violet", Color3.fromRGB(238, 130, 238)},
+        {"Chocolate", Color3.fromRGB(210, 105, 30)}
+    }
+
+    for _, cInfo in ipairs(colorList) do
+        local name, col = cInfo[1], cInfo[2]
+        TextColorGroup:AddButton(name, nil, function()
+            updateGlobalTextColor(col)
+            Library:Notify({ Title = "Warna Teks", Content = "Warna diubah ke " .. name, Type = "Success", Duration = 2 })
+        end)
+    end
+
+
+    -- ==========================================
+    -- FITUR BARU 2: GRUP MUSIK (Player, 4 Lagu Awal, Custom ID & Simpan)
+    -- ==========================================
+    local MusicGroup = buildGroupInContainer(SettingsContainer, L("MusicGroup"), "Settings", true)
+    
+    -- Setup objek Sound
+    local currentSound = Instance.new("Sound")
+    currentSound.Parent = SoundService
+    
+    local selectedSongId = "142376088" -- Default dari foto (Raining Tacos)
+    local isMusicPlaying = false
+    local isMusicLoop = false
+
+    local NowPlayingLbl = MusicGroup:AddLabel("Lagu Aktif: Raining Tacos (142376088)")
+
+    -- Tabel Daftar Lagu (Default + Custom yang tersimpan)
+    local musicDatabase = {
+        {Name = "Raining Tacos", Id = "142376088"},
+        {Name = "Spooky Scary Skeletons", Id = "148677707"},
+        {Name = "Megalovania", Id = "183884457"},
+        {Name = "Crab Rave", Id = "248737242"}
+    }
+
+    local function playSelectedMusic()
+        currentSound.SoundId = "rbxassetid://" .. selectedSongId
+        currentSound.Looped = isMusicLoop
+        if isMusicPlaying then
+            currentSound:Stop()
+            currentSound:Play()
+        end
+    end
+
+    -- Tombol Pilih Lagu Default
+    for _, song in ipairs(musicDatabase) do
+        MusicGroup:AddButton("🎵 " .. song.Name, nil, function()
+            selectedSongId = song.Id
+            NowPlayingLbl.Text = "Lagu Aktif: " .. song.Name .. " (" .. song.Id .. ")"
+            playSelectedMusic()
+            Library:Notify({ Title = "Musik", Content = "Memilih lagu: " .. song.Name, Type = "Success" })
+        end)
+    end
+
+    -- Toggle On/Off Musik
+    MusicGroup:AddToggle("Putar Musik (On/Off)", nil, false, function(state)
+        isMusicPlaying = state
+        if state then
+            currentSound.SoundId = "rbxassetid://" .. selectedSongId
+            currentSound.Looped = isMusicLoop
+            currentSound:Play()
+            Library:Notify({ Title = "Musik", Content = "Musik Diputar", Type = "Success" })
+        else
+            currentSound:Stop()
+            Library:Notify({ Title = "Musik", Content = "Musik Dimatikan", Type = "Info" })
+        end
+    end)
+
+    -- Toggle Loop / No Loop
+    MusicGroup:AddToggle("Loop Lagu (Ulangi)", nil, false, function(state)
+        isMusicLoop = state
+        currentSound.Looped = state
+        Library:Notify({ Title = "Musik", Content = "Looping: " .. tostring(state), Type = "Info" })
+    end)
+
+    -- Input Kustom ID Lagu & Tombol Simpan
+    local CustomInputFrame = Instance.new("Frame")
+    CustomInputFrame.Size = UDim2.new(1, 0, 0, 32)
+    CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    CustomInputFrame.Parent = MusicGroup.ContentHolder or SettingsContainer -- Menyesuaikan container
+
+    -- Kotak TextBox untuk Custom ID
+    local CustomTextBox = Instance.new("TextBox")
+    CustomTextBox.Size = UDim2.new(0.65, -5, 1, 0)
+    CustomTextBox.Position = UDim2.new(0, 0, 0, 0)
+    CustomTextBox.BackgroundTransparency = 1
+    CustomTextBox.PlaceholderText = "Masukkan ID Lagu..."
+    CustomTextBox.Text = ""
+    CustomTextBox.TextColor3 = currentTextColor
+    CustomTextBox.TextSize = 11
+    CustomTextBox.Font = currentFont
+    CustomTextBox.Parent = CustomInputFrame
+
+    -- Tombol Simpan & Putar Custom ID
+    local SaveCustomBtn = Instance.new("TextButton")
+    SaveCustomBtn.Size = UDim2.new(0.35, -5, 1, 0)
+    SaveCustomBtn.Position = UDim2.new(0.65, 5, 0, 0)
+    SaveCustomBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+    SaveCustomBtn.Text = "Simpan & Putar"
+    SaveCustomBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SaveCustomBtn.TextSize = 11
+    SaveCustomBtn.Font = Enum.Font.GothamBold
+    SaveCustomBtn.Parent = CustomInputFrame
+    Instance.new("UICorner", SaveCustomBtn).CornerRadius = UDim.new(0, 6)
+
+    SaveCustomBtn.MouseButton1Click:Connect(function()
+        local customId = CustomTextBox.Text
+        if customId ~= "" and tonumber(customId) then
+            selectedSongId = customId
+            NowPlayingLbl.Text = "Lagu Aktif: Custom (" .. customId .. ")"
+            playSelectedMusic()
+            Library:Notify({ Title = "Musik", Content = "ID Lagu " .. customId .. " disimpan & diputar!", Type = "Success" })
+        else
+            Library:Notify({ Title = "Musik", Content = "ID Lagu tidak valid!", Type = "Error" })
+        end
+    end)
+
+
+    -- ==========================================
+    -- PENGATURAN LAINNYA DI SETTINGS
+    -- ==========================================
     local TimerGroup = buildGroupInContainer(SettingsContainer, L("KeyTimerTitle"), "Settings", false)
     local TimerLabel = TimerGroup:AddLabel("Calculating...")
 
@@ -2063,13 +2246,11 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- 2. TRANSPARANSI
     local TransGroup = buildGroupInContainer(SettingsContainer, L("UITrans"), "Settings", false)
     TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
     end)
 
-    -- 3. PEMILIHAN BAHASA
     local LangGroup = buildGroupInContainer(SettingsContainer, L("LangSelect"), "Settings", false)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
@@ -2080,13 +2261,12 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    -- 4. PEMILIHAN FONT
     local FontGroup = buildGroupInContainer(SettingsContainer, L("TextStyle"), "Settings", false)
     for fontName, enumFont in pairs(Fonts) do
         FontGroup:AddButton(fontName, nil, function()
             currentFont = enumFont
-            for _, obj in ipairs(Main:GetDescendants()) do
-                if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+            for _, obj in ipairs(ScreenGui:GetDescendants()) do
+                if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
                     obj.Font = enumFont
                 end
             end
@@ -2171,18 +2351,16 @@ function Library:CreateWindow(config)
     end
 
     local isMinimized = false
-    local normalHeight = 300 -- Menyimpan ukuran tinggi terakhir sebelum minimize
+    local normalHeight = 300
 
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
         if isMinimized then
-            normalHeight = Main.AbsoluteSize.Y -- Simpan tinggi sebelum minimize
-            -- Lebar ikuti ukuran window saat ini (Main.AbsoluteSize.X) jadi bisa ikut melebar
+            normalHeight = Main.AbsoluteSize.Y
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
             }):Play()
         else
-            -- Kembalikan ke lebar saat ini dan tinggi normal semula
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
             }):Play()
