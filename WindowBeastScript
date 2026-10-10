@@ -1,6 +1,6 @@
 local Library = {}
 
--- Daftar Icon Registri Lengkap (Termasuk Icon Baru)
+-- Daftar Icon Registri Lengkap
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
@@ -20,7 +20,8 @@ Library.Icons = {
     ["SpinOuter"]               = "rbxassetid://109694296016043",
     ["lucide-alarm-clock"]      = "rbxassetid://10709752630",
     ["lucide-navigation"]       = "rbxassetid://10734906744",
-    ["lucide-info"]             = "rbxassetid://10723415903"
+    ["lucide-info"]             = "rbxassetid://10723415903",
+    ["lucide-key"]              = "rbxassetid://10723346959"
 }
 
 -- SISTEM BAHASA DENGAN TRANSLATION LENGKAP
@@ -42,7 +43,8 @@ local Translations = {
         ActiveSong     = "Lagu Aktif: ",
         PlayerInfo     = "Informasi Pemain",
         PlayTimeTitle  = "Waktu Bermain",
-        PerfGroup      = "Fitur & Performa"
+        PerfGroup      = "Fitur & Performa",
+        FloatSizeGroup = "Ukuran Tombol Hide/Show"
     },
     English = {
         NotifTitle     = "Notification",
@@ -61,7 +63,8 @@ local Translations = {
         ActiveSong     = "Active Song: ",
         PlayerInfo     = "Player Information",
         PlayTimeTitle  = "Play Time Tracker",
-        PerfGroup      = "Features & Performance"
+        PerfGroup      = "Features & Performance",
+        FloatSizeGroup = "Hide/Show Button Size"
     }
 }
 
@@ -180,7 +183,7 @@ local function updateGlobalThemeColor(color)
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" then
+            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
                 if obj.BackgroundTransparency < 1 then
                     if obj.Name == "Main" then
                         obj.BackgroundColor3 = color
@@ -214,7 +217,7 @@ RunService.RenderStepped:Connect(function()
         
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" then
+                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
                     if obj.BackgroundTransparency < 1 and obj.Name ~= "Main" then
                         local h, s, v = rgbColor:ToHSV()
                         obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v - 0.2, 0, 1))
@@ -815,7 +818,140 @@ function Library:CreateWindow(config)
     local text3 = config.Text3 or "Menyiapkan Ui"
     local flashText = config.FlashText or "GOODMANZ"
 
+    -- KONFIGURASI KEY SYSTEM DARI LUAR
+    local KeySystemConfig = config.KeySystem or {}
+    local isKeySystemEnabled = KeySystemConfig.Enabled or false
+    local validKeys = KeySystemConfig.Keys or { KeySystemConfig.Key or "GoodManzz2026" }
+    local keyGetUrl = KeySystemConfig.KeyURL or "https://discord.gg/yourlink"
+    local keyExpiresText = KeySystemConfig.Expires or "1 Hari / 24 Jam"
+
     local Window = {}
+
+    -- ==========================================
+    -- SISTEM KEY UI (JIKA DIAKTIFKAN)
+    -- ==========================================
+    if isKeySystemEnabled then
+        local keyVerified = false
+
+        local KeyFrame = Instance.new("Frame")
+        KeyFrame.Name = "KeyFrame"
+        KeyFrame.Size = UDim2.new(0, 250, 0, 170)
+        KeyFrame.Position = UDim2.new(0.5, -125, 0.5, -85)
+        KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+        KeyFrame.BorderSizePixel = 0
+        KeyFrame.Parent = ScreenGui
+
+        Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
+        local KeyStroke = Instance.new("UIStroke", KeyFrame)
+        KeyStroke.Color = Color3.fromRGB(255, 255, 255)
+        KeyStroke.Transparency = 0.85
+
+        makeDraggable(KeyFrame)
+
+        local KeyTitle = Instance.new("TextLabel")
+        KeyTitle.Size = UDim2.new(1, -20, 0, 25)
+        KeyTitle.Position = UDim2.new(0, 10, 0, 8)
+        KeyTitle.BackgroundTransparency = 1
+        KeyTitle.Text = titleText .. " - Key System"
+        KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        KeyTitle.TextSize = 13
+        KeyTitle.Font = Enum.Font.GothamBold
+        KeyTitle.TextXAlignment = Enum.TextXAlignment.Center
+        KeyTitle.Parent = KeyFrame
+
+        local KeyInfoLbl = Instance.new("TextLabel")
+        KeyInfoLbl.Size = UDim2.new(1, -20, 0, 18)
+        KeyInfoLbl.Position = UDim2.new(0, 10, 0, 32)
+        KeyInfoLbl.BackgroundTransparency = 1
+        KeyInfoLbl.Text = "Durasi Key: " .. keyExpiresText
+        KeyInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
+        KeyInfoLbl.TextSize = 10
+        KeyInfoLbl.Font = Enum.Font.Gotham
+        KeyInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
+        KeyInfoLbl.Parent = KeyFrame
+
+        local KeyInputBox = Instance.new("TextBox")
+        KeyInputBox.Size = UDim2.new(1, -24, 0, 32)
+        KeyInputBox.Position = UDim2.new(0, 12, 0, 56)
+        KeyInputBox.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+        KeyInputBox.PlaceholderText = "Masukkan Key Di Sini..."
+        KeyInputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
+        KeyInputBox.Text = ""
+        KeyInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+        KeyInputBox.TextSize = 11
+        KeyInputBox.Font = Enum.Font.Gotham
+        KeyInputBox.Parent = KeyFrame
+        Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 6)
+
+        local KeyVerifyBtn = Instance.new("TextButton")
+        KeyVerifyBtn.Size = UDim2.new(0.48, -8, 0, 30)
+        KeyVerifyBtn.Position = UDim2.new(0, 12, 0, 96)
+        KeyVerifyBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+        KeyVerifyBtn.Text = "Verify Key"
+        KeyVerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        KeyVerifyBtn.TextSize = 11
+        KeyVerifyBtn.Font = Enum.Font.GothamBold
+        KeyVerifyBtn.Parent = KeyFrame
+        Instance.new("UICorner", KeyVerifyBtn).CornerRadius = UDim.new(0, 6)
+
+        local KeyGetBtn = Instance.new("TextButton")
+        KeyGetBtn.Size = UDim2.new(0.48, -8, 0, 30)
+        KeyGetBtn.Position = UDim2.new(0.52, 4, 0, 96)
+        KeyGetBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+        KeyGetBtn.Text = "Get Key (Copy)"
+        KeyGetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        KeyGetBtn.TextSize = 11
+        KeyGetBtn.Font = Enum.Font.GothamBold
+        KeyGetBtn.Parent = KeyFrame
+        Instance.new("UICorner", KeyGetBtn).CornerRadius = UDim.new(0, 6)
+
+        local KeyStatusLbl = Instance.new("TextLabel")
+        KeyStatusLbl.Name = "StatusColor"
+        KeyStatusLbl.Size = UDim2.new(1, -20, 0, 20)
+        KeyStatusLbl.Position = UDim2.new(0, 10, 0, 134)
+        KeyStatusLbl.BackgroundTransparency = 1
+        KeyStatusLbl.Text = "Status: Menunggu Key..."
+        KeyStatusLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+        KeyStatusLbl.TextSize = 10
+        KeyStatusLbl.Font = Enum.Font.GothamMedium
+        KeyStatusLbl.TextXAlignment = Enum.TextXAlignment.Center
+        KeyStatusLbl.Parent = KeyFrame
+
+        KeyGetBtn.MouseButton1Click:Connect(function()
+            if setclipboard then
+                setclipboard(keyGetUrl)
+                KeyStatusLbl.Text = "Link Key Berhasil Disalin!"
+                KeyStatusLbl.TextColor3 = Color3.fromRGB(52, 152, 219)
+            else
+                KeyStatusLbl.Text = "Gagal Salin Link (Gunakan PC/Delta Browser)"
+                KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
+            end
+        end)
+
+        KeyVerifyBtn.MouseButton1Click:Connect(function()
+            local input = KeyInputBox.Text
+            local isMatch = false
+            for _, k in ipairs(validKeys) do
+                if input == k then
+                    isMatch = true
+                    break
+                end
+            end
+
+            if isMatch then
+                KeyStatusLbl.Text = "Key Benar! Buka Menu..."
+                KeyStatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+                task.wait(1)
+                KeyFrame:Destroy()
+                keyVerified = true
+            else
+                KeyStatusLbl.Text = "Key Salah / Kadaluarsa!"
+                KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
+            end
+        end)
+
+        repeat task.wait() until keyVerified
+    end
 
     local Main = Instance.new("Frame")
     Main.Name = "Main"
@@ -963,7 +1099,7 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================================
-    -- FUNGSI PEMBUATAN GROUP / SECTION (DENGAN FITUR SCROLL DI DALAM SCROLL)
+    -- FUNGSI PEMBUATAN GROUP / SECTION (SCROLL DI DALAM SCROLL)
     -- ==========================================================
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
@@ -1030,15 +1166,14 @@ function Library:CreateWindow(config)
         ArrowLbl.Font = Enum.Font.GothamBold
         ArrowLbl.Parent = GroupHeader
 
-        -- SCROLLING FRAME DI DALAM GROUP (SCROLL DI DALAM SCROLL)
         local ContentHolder = Instance.new("ScrollingFrame")
         ContentHolder.Name = "ContentHolder"
         ContentHolder.Size = UDim2.new(1, -12, 0, 0)
         ContentHolder.Position = UDim2.new(0, 6, 0, 34)
         ContentHolder.BackgroundTransparency = 1
         ContentHolder.BorderSizePixel = 0
-        ContentHolder.Active = true -- PENTING: Agar touch/drag scroll berfungsi di Delta/Mobile
-        ContentHolder.ScrollingEnabled = true -- PENTING: Mengaktifkan scroll anak
+        ContentHolder.Active = true
+        ContentHolder.ScrollingEnabled = true
         ContentHolder.ScrollBarThickness = 3
         ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 160)
         ContentHolder.ClipsDescendants = true
@@ -1049,7 +1184,7 @@ function Library:CreateWindow(config)
         ContentLayout.Padding = UDim.new(0, 5)
         ContentLayout.Parent = ContentHolder
 
-        local MAX_GROUP_HEIGHT = 160 -- Batas tinggi maksimal group sebelum scroll di dalam group aktif
+        local MAX_GROUP_HEIGHT = 160
 
         local function updateGroupSize()
             local contentHeight = ContentLayout.AbsoluteContentSize.Y
@@ -1139,6 +1274,68 @@ function Library:CreateWindow(config)
         {"Lime", Color3.fromRGB(0, 255, 0)},
         {"Magenta", Color3.fromRGB(255, 0, 255)}
     }
+
+    -- ==========================================
+    -- FLOATING ICON & NAGA (BISA DIATUR UKURAN)
+    -- ==========================================
+    local FloatingContainer = Instance.new("Frame")
+    FloatingContainer.Name = "FloatingContainer"
+    FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
+    FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
+    FloatingContainer.BackgroundTransparency = 1
+    FloatingContainer.Visible = false
+    FloatingContainer.Parent = ScreenGui
+
+    local SpinOuterIcon = Instance.new("ImageLabel")
+    SpinOuterIcon.Name = "SpinOuterIcon"
+    SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
+    SpinOuterIcon.Position = UDim2.new(0, -9, 0, -9)
+    SpinOuterIcon.BackgroundTransparency = 1
+    SpinOuterIcon.Image = Library.Icons["SpinOuter"]
+    SpinOuterIcon.Parent = FloatingContainer
+
+    RunService.RenderStepped:Connect(function()
+        if FloatingContainer.Visible then
+            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+        end
+    end)
+
+    local FloatingLogoBtn = Instance.new("ImageButton")
+    FloatingLogoBtn.Name = "FloatingLogoBtn"
+    FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
+    FloatingLogoBtn.Position = UDim2.new(0, 0, 0, 0)
+    FloatingLogoBtn.BackgroundTransparency = 1
+    FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
+    FloatingLogoBtn.Parent = FloatingContainer
+
+    makeDraggable(FloatingContainer, FloatingLogoBtn)
+
+    HideBtn.MouseButton1Click:Connect(function()
+        Main.Visible = false
+        FloatingContainer.Visible = true
+    end)
+
+    FloatingLogoBtn.MouseButton1Click:Connect(function()
+        Main.Visible = true
+        FloatingContainer.Visible = false
+    end)
+
+    -- ==========================================
+    -- FITUR BARU: PENGATURAN UKURAN TOMBOL HIDE/SHOW
+    -- ==========================================
+    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
+    FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
+        FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
+        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
+    end)
+    FloatSizeGroup:AddButton("Sedang (65px)", nil, function()
+        FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
+        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Sedang", Type = "Success" })
+    end)
+    FloatSizeGroup:AddButton("Besar (85px)", nil, function()
+        FloatingContainer.Size = UDim2.new(0, 85, 0, 85)
+        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
+    end)
 
     -- ==========================================
     -- FITUR: WAKTU BERMAIN (Play Time Tracker)
@@ -1493,51 +1690,6 @@ function Library:CreateWindow(config)
     function Window:SetScroll(state)
         Window:EnableScroll(state)
     end
-
-    -- ==========================================
-    -- FLOATING ICON & NAGA UKURAN SEDANG (65px)
-    -- ==========================================
-    local FloatingContainer = Instance.new("Frame")
-    FloatingContainer.Name = "FloatingContainer"
-    FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
-    FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
-    FloatingContainer.BackgroundTransparency = 1
-    FloatingContainer.Visible = false
-    FloatingContainer.Parent = ScreenGui
-
-    local SpinOuterIcon = Instance.new("ImageLabel")
-    SpinOuterIcon.Name = "SpinOuterIcon"
-    SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
-    SpinOuterIcon.Position = UDim2.new(0, -9, 0, -9)
-    SpinOuterIcon.BackgroundTransparency = 1
-    SpinOuterIcon.Image = Library.Icons["SpinOuter"]
-    SpinOuterIcon.Parent = FloatingContainer
-
-    RunService.RenderStepped:Connect(function()
-        if FloatingContainer.Visible then
-            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-        end
-    end)
-
-    local FloatingLogoBtn = Instance.new("ImageButton")
-    FloatingLogoBtn.Name = "FloatingLogoBtn"
-    FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
-    FloatingLogoBtn.Position = UDim2.new(0, 0, 0, 0)
-    FloatingLogoBtn.BackgroundTransparency = 1
-    FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
-    FloatingLogoBtn.Parent = FloatingContainer
-
-    makeDraggable(FloatingContainer, FloatingLogoBtn)
-
-    HideBtn.MouseButton1Click:Connect(function()
-        Main.Visible = false
-        FloatingContainer.Visible = true
-    end)
-
-    FloatingLogoBtn.MouseButton1Click:Connect(function()
-        Main.Visible = true
-        FloatingContainer.Visible = false
-    end)
 
     playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
         TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
