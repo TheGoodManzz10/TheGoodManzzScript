@@ -1,6 +1,6 @@
 local Library = {}
 
--- Daftar Icon Registri Lengkap (Termasuk Icon Baru)
+-- Daftar Icon Registri Lengkap
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
@@ -123,9 +123,8 @@ local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local SoundService = game:GetService("SoundService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local SoundService = game:GetService("SoundService")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -319,20 +318,6 @@ function Library:Notify(options)
         closeTween.Completed:Connect(function() Card:Destroy() end)
     end)
 end
-
--- LOOP NOTIFIKASI OTOMATIS SETIAP 3-5 MENIT
-task.spawn(function()
-    while task.wait(math.random(180, 300)) do
-        if ScreenGui and ScreenGui.Parent then
-            Library:Notify({
-                Title = "Dark Hub Community",
-                Content = "Suka dengan UI/Hub kami? Bergabunglah dengan komunitas kami segera!",
-                Type = "Info",
-                Duration = 5
-            })
-        end
-    end
-end)
 
 local function makeDraggable(frame, handle)
     handle = handle or frame
@@ -960,13 +945,14 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
-    local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
+    local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed, customMaxHeight)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
         local iconId = getIconId(icon)
         local isCollapsed = defaultCollapsed or false
+        local MAX_GROUP_HEIGHT = customMaxHeight or 180 -- Kamu bisa atur tinggi maksimal scroll grup di sini atau lewat parameter
 
         local GroupFrame = Instance.new("Frame")
         GroupFrame.Name = "GroupFrame"
@@ -1025,6 +1011,7 @@ function Library:CreateWindow(config)
         ArrowLbl.Font = Enum.Font.GothamBold
         ArrowLbl.Parent = GroupHeader
 
+        -- Kontainer dalam grup yang otomatis aktif fungsi scroll-nya jika konten melebihi MAX_GROUP_HEIGHT
         local ContentHolder = Instance.new("ScrollingFrame")
         ContentHolder.Name = "ContentHolder"
         ContentHolder.Size = UDim2.new(1, -12, 0, 0)
@@ -1033,6 +1020,7 @@ function Library:CreateWindow(config)
         ContentHolder.BorderSizePixel = 0
         ContentHolder.ScrollBarThickness = 2
         ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+        ContentHolder.ScrollingEnabled = true
         ContentHolder.ClipsDescendants = true
         ContentHolder.Parent = GroupFrame
 
@@ -1040,8 +1028,6 @@ function Library:CreateWindow(config)
         ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ContentLayout.Padding = UDim.new(0, 5)
         ContentLayout.Parent = ContentHolder
-
-        local MAX_GROUP_HEIGHT = 180
 
         local function updateGroupSize()
             local contentHeight = ContentLayout.AbsoluteContentSize.Y
@@ -1132,9 +1118,7 @@ function Library:CreateWindow(config)
         {"Magenta", Color3.fromRGB(255, 0, 255)}
     }
 
-    -- ==========================================
-    -- FITUR: WAKTU BERMAIN (Play Time Tracker)
-    -- ==========================================
+    -- CONTOH PENGGUNAAN FITUR WAKTU BERMAIN
     local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
     local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
     local startTime = tick()
@@ -1152,9 +1136,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- FITUR: PROFIL PLAYER & AVATAR LOBBY
-    -- ==========================================
+    -- INFORMASI PLAYER & AVATAR LOBBY
     local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
     
     local AvatarFrame = Instance.new("Frame")
@@ -1196,9 +1178,7 @@ function Library:CreateWindow(config)
     PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
     PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-    -- ==========================================
-    -- FITUR: PERFORMA & TAMBAHAN (dengan Instant Proximity Prompt)
-    -- ==========================================
+    -- PERFORMA & TAMBAHAN
     local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
@@ -1218,7 +1198,6 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Performa", Content = "Render Chunk Diperbarui!", Type = "Success" })
     end)
 
-    -- Fitur Instant Proximity Prompt (Skip Hold Duration / Langsung Instan)
     local instantPromptConn
     PerfGroup:AddToggle("Instant Proximity Prompt", nil, false, function(state)
         pcall(function()
@@ -1256,10 +1235,8 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- FITUR: SCRIPT POPULER (15 SCRIPT)
-    -- ==========================================
-    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
+    -- SCRIPT POPULER (15 SCRIPT) -> Ini otomatis bikin grupnya bisa di-scroll ke bawah di dalam grupnya!
+    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true, 160)
 
     local popularScriptsList = {
         {Name = "1. Infinite Yield (Admin Commands)", Url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
@@ -1290,10 +1267,8 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- ==========================================
-    -- FITUR: WARNA TEKS
-    -- ==========================================
-    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
+    -- WARNA TEKS
+    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true, 160)
     
     TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
         isRgbTextActive = true
@@ -1308,10 +1283,8 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- ==========================================
-    -- FITUR: TEMA BACKGROUND UI
-    -- ==========================================
-    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
+    -- TEMA BACKGROUND UI
+    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true, 160)
 
     ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
         isRgbThemeActive = true
@@ -1326,10 +1299,8 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- ==========================================
-    -- FITUR: GRUP MUSIK
-    -- ==========================================
-    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
+    -- GRUP MUSIK
+    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true, 160)
     
     local currentSound = Instance.new("Sound")
     currentSound.Parent = SoundService
@@ -1422,9 +1393,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- FITUR: PILIH BAHASA
-    -- ==========================================
+    -- PILIH BAHASA
     local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
@@ -1437,15 +1406,13 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    -- ==========================================
     -- PENGATURAN LAINNYA
-    -- ==========================================
     local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
     TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
     end)
 
-    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
+    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false, 160)
     for fontName, enumFont in pairs(Fonts) do
         FontGroup:AddButton(fontName, nil, function()
             currentFont = enumFont
@@ -1487,9 +1454,7 @@ function Library:CreateWindow(config)
         Window:EnableScroll(state)
     end
 
-    -- ==========================================
-    -- FLOATING ICON & NAGA UKURAN SEDANG (65px)
-    -- ==========================================
+    -- FLOATING ICON
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
     FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
@@ -1552,7 +1517,6 @@ function Library:CreateWindow(config)
         isMinimized = not isMinimized
         if isMinimized then
             normalHeight = Main.AbsoluteSize.Y
-            -- PERBAIKAN MINIMIZE: Sembunyikan konten secara mutlak agar tidak ada yang bocor
             Container.Visible = false
             SettingsContainer.Visible = false
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
@@ -1595,8 +1559,8 @@ function Library:CreateWindow(config)
         return createSlider(Container, text, icon, min, max, default, callback)
     end
 
-    function Window:AddGroup(groupNameKey, icon, defaultCollapsed)
-        return buildGroupInContainer(Container, groupNameKey, icon, defaultCollapsed)
+    function Window:AddGroup(groupNameKey, icon, defaultCollapsed, customMaxHeight)
+        return buildGroupInContainer(Container, groupNameKey, icon, defaultCollapsed, customMaxHeight)
     end
 
     Window.AddSection = Window.AddGroup
