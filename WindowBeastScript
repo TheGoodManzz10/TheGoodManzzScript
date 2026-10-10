@@ -915,6 +915,7 @@ function Library:CreateWindow(config)
     Container.ScrollBarThickness = 2
     Container.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
     Container.ScrollingEnabled = true
+    Container.Active = true
     Container.ClipsDescendants = true
     Container.Parent = Main
 
@@ -936,6 +937,7 @@ function Library:CreateWindow(config)
     SettingsContainer.ScrollBarThickness = 2
     SettingsContainer.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
     SettingsContainer.ScrollingEnabled = true
+    SettingsContainer.Active = true
     SettingsContainer.ClipsDescendants = true
     SettingsContainer.Visible = false
     SettingsContainer.Parent = Main
@@ -960,6 +962,9 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
+    -- ==========================================================
+    -- FUNGSI PEMBUATAN GROUP / SECTION (DENGAN FITUR SCROLL DI DALAM SCROLL)
+    -- ==========================================================
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
@@ -1025,16 +1030,17 @@ function Library:CreateWindow(config)
         ArrowLbl.Font = Enum.Font.GothamBold
         ArrowLbl.Parent = GroupHeader
 
-        -- Container dalam bentuk ScrollingFrame agar bisa di-scroll secara mandiri (Dual Scroll)
+        -- SCROLLING FRAME DI DALAM GROUP (SCROLL DI DALAM SCROLL)
         local ContentHolder = Instance.new("ScrollingFrame")
         ContentHolder.Name = "ContentHolder"
         ContentHolder.Size = UDim2.new(1, -12, 0, 0)
         ContentHolder.Position = UDim2.new(0, 6, 0, 34)
         ContentHolder.BackgroundTransparency = 1
         ContentHolder.BorderSizePixel = 0
-        ContentHolder.ScrollBarThickness = 2
-        ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
-        ContentHolder.ScrollingEnabled = true
+        ContentHolder.Active = true -- PENTING: Agar touch/drag scroll berfungsi di Delta/Mobile
+        ContentHolder.ScrollingEnabled = true -- PENTING: Mengaktifkan scroll anak
+        ContentHolder.ScrollBarThickness = 3
+        ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 160)
         ContentHolder.ClipsDescendants = true
         ContentHolder.Parent = GroupFrame
 
@@ -1043,18 +1049,18 @@ function Library:CreateWindow(config)
         ContentLayout.Padding = UDim.new(0, 5)
         ContentLayout.Parent = ContentHolder
 
-        local MAX_GROUP_HEIGHT = 160 -- Batas maksimal tinggi grup sebelum muncul scrollbar di dalam grup
+        local MAX_GROUP_HEIGHT = 160 -- Batas tinggi maksimal group sebelum scroll di dalam group aktif
 
         local function updateGroupSize()
             local contentHeight = ContentLayout.AbsoluteContentSize.Y
-            ContentHolder.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 5)
+            ContentHolder.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
             
             local displayHeight = math.min(contentHeight, MAX_GROUP_HEIGHT)
             ContentHolder.Size = UDim2.new(1, -12, 0, displayHeight)
             
             local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
             
-            TweenService:Create(GroupFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
                 Size = UDim2.new(1, 0, 0, targetHeight)
             }):Play()
         end
