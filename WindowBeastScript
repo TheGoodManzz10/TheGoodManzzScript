@@ -1,7 +1,7 @@
 local Library = {}
-Library.CurrentKeyExpire = tick() + 86400 -- Default 24 Jam (86400 detik) untuk contoh
+Library.CurrentKeyExpire = nil
 
--- Daftar Icon Registri Lengkap
+-- Daftar Icon Registri Lengkap & Terbaru
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
@@ -909,7 +909,7 @@ local function updateAllTranslations()
     end
 end
 
--- 10 GAYA TEXT / FONT
+-- FONT & TEMA
 local Fonts = {
     ["Gotham Bold"]      = Enum.Font.GothamBold,
     ["Gotham"]           = Enum.Font.Gotham,
@@ -926,7 +926,6 @@ local Fonts = {
 local currentFont = Enum.Font.GothamMedium
 local currentTextColor = Color3.fromRGB(255, 255, 255)
 local isRgbTextActive = false
-
 local isRgbThemeActive = false
 local currentThemeColor = Color3.fromRGB(12, 12, 16)
 local mainWindowRef
@@ -947,9 +946,9 @@ local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
 local SoundService = game:GetService("SoundService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -1035,20 +1034,10 @@ RunService.RenderStepped:Connect(function()
     if isRgbThemeActive and mainWindowRef then
         if mainGradientRef then mainGradientRef.Enabled = false end
         mainWindowRef.BackgroundColor3 = rgbColor
-        
-        for _, obj in ipairs(ScreenGui:GetDescendants()) do
-            if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" then
-                    if obj.BackgroundTransparency < 1 and obj.Name ~= "Main" then
-                        local h, s, v = rgbColor:ToHSV()
-                        obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v - 0.2, 0, 1))
-                    end
-                end
-            end
-        end
     end
 end)
 
+-- NOTIFIKASI
 local NotifHolder = Instance.new("Frame")
 NotifHolder.Name = "NotifHolder"
 NotifHolder.Size = UDim2.new(0, 230, 1, -20)
@@ -1144,13 +1133,13 @@ function Library:Notify(options)
     end)
 end
 
--- LOOP NOTIFIKASI OTOMATIS SETIAP 3-5 MENIT
+-- NOTIFIKASI OTOMATIS TIAP 3-5 MENIT
 task.spawn(function()
     while task.wait(math.random(180, 300)) do
         if ScreenGui and ScreenGui.Parent then
             Library:Notify({
                 Title = "Dark Hub Community",
-                Content = "Suka dengan UI/Hub kami? Bergabunglah dengan komunitas kami segera!",
+                Content = "Suka Dengan Windows kami bergabung segera!",
                 Type = "Info",
                 Duration = 5
             })
@@ -1479,175 +1468,25 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     return SliderFrame
 end
 
-local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
-    local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 8)
-
-    local Card = Instance.new("Frame")
-    Card.Size = UDim2.new(0, 240, 0, 70)
-    Card.Position = UDim2.new(0.5, -120, 0.5, -35)
-    Card.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
-    Card.BorderSizePixel = 0
-    Card.Parent = ScreenGui
-
-    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 10)
-
-    local Stroke = Instance.new("UIStroke")
-    Stroke.Color = Color3.fromRGB(255, 255, 255)
-    Stroke.Transparency = 0.85
-    Stroke.Parent = Card
-
-    local Spinner = Instance.new("Frame")
-    Spinner.Size = UDim2.new(0, 38, 0, 38)
-    Spinner.Position = UDim2.new(0, 15, 0.5, -19)
-    Spinner.BackgroundTransparency = 1
-    Spinner.Parent = Card
-
-    local RingStroke = Instance.new("UIStroke")
-    RingStroke.Thickness = 3
-    RingStroke.Color = Color3.fromRGB(255, 255, 255)
-    RingStroke.Parent = Spinner
-
-    Instance.new("UICorner", Spinner).CornerRadius = UDim.new(1, 0)
-
-    local RingGradient = Instance.new("UIGradient")
-    RingGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 80, 80)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))
-    })
-    RingGradient.Parent = RingStroke
-
-    local TitleLbl = Instance.new("TextLabel")
-    TitleLbl.Size = UDim2.new(1, -70, 0, 20)
-    TitleLbl.Position = UDim2.new(0, 62, 0, 16)
-    TitleLbl.BackgroundTransparency = 1
-    TitleLbl.Text = title or "GoodManzz Hub"
-    TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLbl.Font = Enum.Font.GothamBold
-    TitleLbl.TextSize = 13
-    TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLbl.Parent = Card
-
-    local AuthorLbl = Instance.new("TextLabel")
-    AuthorLbl.Size = UDim2.new(1, -70, 0, 16)
-    AuthorLbl.Position = UDim2.new(0, 62, 0, 36)
-    AuthorLbl.BackgroundTransparency = 1
-    AuthorLbl.Text = txt1
-    AuthorLbl.TextColor3 = Color3.fromRGB(160, 160, 170)
-    AuthorLbl.Font = Enum.Font.GothamMedium
-    AuthorLbl.TextSize = 11
-    AuthorLbl.TextXAlignment = Enum.TextXAlignment.Left
-    AuthorLbl.Parent = Card
-
-    local duration = 10.0
-    local elapsed = 0
-    local rotation = 0
-
-    local conn
-    conn = RunService.RenderStepped:Connect(function(dt)
-        elapsed = elapsed + dt
-        local progress = math.clamp(elapsed / duration, 0, 1)
-        
-        local speed = 120 + (progress ^ 3.5) * 4500 
-        rotation = rotation + (speed * dt)
-        RingGradient.Rotation = rotation % 360
-
-        local dotCount = (math.floor(elapsed * 3) % 4) + 1
-        local dots = string.rep(".", dotCount)
-
-        if elapsed < 4.0 then
-            AuthorLbl.Text = txt1
-        elseif elapsed < 7.0 then
-            AuthorLbl.Text = txt2 .. " " .. dots
-        else
-            AuthorLbl.Text = txt3 .. " " .. dots
-        end
-
-        if elapsed >= duration then
-            conn:Disconnect()
-            Card:Destroy()
-
-            local Flash = Instance.new("Frame")
-            Flash.Size = UDim2.new(1, 0, 1, 0)
-            Flash.Position = UDim2.new(0, 0, 0, 0)
-            Flash.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Flash.BackgroundTransparency = 0
-            Flash.ZIndex = 999999
-            Flash.Parent = ScreenGui
-
-            local BigText = Instance.new("TextLabel")
-            BigText.Size = UDim2.new(1, -40, 0, 120)
-            BigText.Position = UDim2.new(0, 20, 0.5, -60)
-            BigText.BackgroundTransparency = 1
-            BigText.Text = ""
-            BigText.TextColor3 = Color3.fromRGB(15, 15, 15)
-            BigText.Font = Enum.Font.PermanentMarker
-            BigText.TextSize = 72
-            BigText.TextWrapped = true
-            BigText.ZIndex = 1000000
-            BigText.Parent = Flash
-
-            task.spawn(function()
-                for i = 1, #targetFlashText do
-                    BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(1)
-                end
-            end)
-
-            local Underline = Instance.new("Frame")
-            Underline.Name = "TextUnderline"
-            Underline.Size = UDim2.new(0, 0, 0, 4)
-            Underline.Position = UDim2.new(0.5, 0, 1, 10)
-            Underline.AnchorPoint = Vector2.new(0.5, 0)
-            Underline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-            Underline.BorderSizePixel = 0
-            Underline.ZIndex = 1000001
-            Underline.Parent = BigText
-
-            local UnderlineCorner = Instance.new("UICorner")
-            UnderlineCorner.CornerRadius = UDim.new(1, 0)
-            UnderlineCorner.Parent = Underline
-
-            task.wait(0.05)
-            local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
-
-            TweenService:Create(Underline, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, targetWidth, 0, 4)
-            }):Play()
-
-            task.delay(10.0, function()
-                local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
-                TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-                fadeTween:Play()
-                fadeTween.Completed:Connect(function()
-                    Flash:Destroy()
-                    if onComplete then onComplete() end
-                end)
-            end)
-        end
-    end)
-end
-
 function Library:CreateWindow(config)
     config = config or {}
     local titleText = config.Name or "Dark Hub"
     local authorText = config.Author or "GoodManzz"
     local mainLogo = getIconId(config.Logo or "Logo")
 
-    local text1 = config.Text1 or ("by:" .. authorText)
-    local text2 = config.Text2 or "Injeksi Game"
-    local text3 = config.Text3 or "Menyiapkan Ui"
-    local flashText = config.FlashText or "GOODMANZ"
-
     local Window = {}
 
+    -- ==========================================
+    -- MAIN UI FRAME
+    -- ==========================================
     local Main = Instance.new("Frame")
     Main.Name = "Main"
-    Main.Size = UDim2.new(0, 240, 0, 0)
+    Main.Size = UDim2.new(0, 240, 0, 270)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
     Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
+    Main.Visible = false -- KUNCI TOTAL: DIHIDE DULU SAMPAI KEY SYSTEM VERIFIED!
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
@@ -1698,6 +1537,7 @@ function Library:CreateWindow(config)
     Title.TextTruncate = Enum.TextTruncate.AtEnd
     Title.Parent = Header
 
+    -- TOMBOL MINIMIZE LUCIDE (TIDAK BOCOR & BERGANTI ICON)
     local MinBtn = Instance.new("ImageButton")
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
     MinBtn.Position = UDim2.new(1, -100, 0, 7)
@@ -1784,6 +1624,7 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
+    -- MEMBUAT SETIAP GRUP BISA DI-SCROLL SENDIRI
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
@@ -1910,7 +1751,7 @@ function Library:CreateWindow(config)
             return sld
         end
 
-        function Group:AddLabel(text)
+        function Group:AddLabel(text, icon)
             local LblFrame = Instance.new("Frame")
             LblFrame.Size = UDim2.new(1, 0, 0, 28)
             LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
@@ -1921,9 +1762,21 @@ function Library:CreateWindow(config)
             Stroke.Color = Color3.fromRGB(255, 255, 255)
             Stroke.Transparency = 0.9
 
+            local xOff = 6
+            local iconId = getIconId(icon)
+            if iconId then
+                local LblIcon = Instance.new("ImageLabel")
+                LblIcon.Size = UDim2.new(0, 16, 0, 16)
+                LblIcon.Position = UDim2.new(0, 6, 0.5, -8)
+                LblIcon.BackgroundTransparency = 1
+                LblIcon.Image = iconId
+                LblIcon.Parent = LblFrame
+                xOff = 28
+            end
+
             local Lbl = Instance.new("TextLabel")
-            Lbl.Size = UDim2.new(1, -12, 1, 0)
-            Lbl.Position = UDim2.new(0, 6, 0, 0)
+            Lbl.Size = UDim2.new(1, -(xOff + 6), 1, 0)
+            Lbl.Position = UDim2.new(0, xOff, 0, 0)
             Lbl.BackgroundTransparency = 1
             Lbl.Text = tostring(text or "")
             Lbl.TextColor3 = Color3.fromRGB(46, 204, 113)
@@ -1957,10 +1810,10 @@ function Library:CreateWindow(config)
     }
 
     -- ==========================================
-    -- FITUR FITUR PENGATURAN DURASI KEY (SISA WAKTU KEY)
+    -- FITUR 1: SISA DURASI KEY
     -- ==========================================
     local KeyTimerGroup = buildGroupInContainer(SettingsContainer, "KeyTimerTitle", "lucide-key", false)
-    local KeyTimerLabel = KeyTimerGroup:AddLabel("Menghitung Sisa Durasi...")
+    local KeyTimerLabel = KeyTimerGroup:AddLabel("Menghitung Sisa Durasi...", "lucide-alarm-clock")
 
     task.spawn(function()
         while ScreenGui and ScreenGui.Parent do
@@ -1982,30 +1835,61 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- FITUR: PROFIL ASLI PLAYER (INFORMASI LENGKAP)
+    -- FITUR 2: INFORMASI PEMAIN & PROFIL LOBBY (ICON: LUCIDE-INFO)
     -- ==========================================
-    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-user", false)
+    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
     
-    local pName = LocalPlayer.DisplayName .. " (@" .. LocalPlayer.Name .. ")"
-    local pGameName = "Mendeteksi..."
-    pcall(function()
-        pGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
-    end)
-    local pPlaceId = tostring(game.PlaceId)
-    local pAge = tostring(LocalPlayer.AccountAge) .. " Hari"
+    -- Avatar / Profil Lobby Player
+    local ProfileCard = Instance.new("Frame")
+    ProfileCard.Size = UDim2.new(1, 0, 0, 50)
+    ProfileCard.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    ProfileCard.Parent = PlayerGroup.ContentHolder
+    Instance.new("UICorner", ProfileCard).CornerRadius = UDim.new(0, 6)
 
-    PlayerGroup:AddLabel("Nama: " .. pName)
+    local AvatarImg = Instance.new("ImageLabel")
+    AvatarImg.Size = UDim2.new(0, 40, 0, 40)
+    AvatarImg.Position = UDim2.new(0, 5, 0.5, -20)
+    AvatarImg.BackgroundTransparency = 1
+    AvatarImg.Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+    AvatarImg.Parent = ProfileCard
+    Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
+
+    local DisplayLbl = Instance.new("TextLabel")
+    DisplayLbl.Size = UDim2.new(1, -55, 0, 18)
+    DisplayLbl.Position = UDim2.new(0, 50, 0, 8)
+    DisplayLbl.BackgroundTransparency = 1
+    DisplayLbl.Text = LocalPlayer.DisplayName
+    DisplayLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DisplayLbl.TextSize = 12
+    DisplayLbl.Font = Enum.Font.GothamBold
+    DisplayLbl.TextXAlignment = Enum.TextXAlignment.Left
+    DisplayLbl.Parent = ProfileCard
+
+    local UserLbl = Instance.new("TextLabel")
+    UserLbl.Size = UDim2.new(1, -55, 0, 16)
+    UserLbl.Position = UDim2.new(0, 50, 0, 26)
+    UserLbl.BackgroundTransparency = 1
+    UserLbl.Text = "@" .. LocalPlayer.Name
+    UserLbl.TextColor3 = Color3.fromRGB(150, 150, 160)
+    UserLbl.TextSize = 11
+    UserLbl.Font = Enum.Font.Gotham
+    UserLbl.TextXAlignment = Enum.TextXAlignment.Left
+    UserLbl.Parent = ProfileCard
+
+    local pGameName = "Mendeteksi..."
+    pcall(function() pGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name end)
+
     PlayerGroup:AddLabel("Game: " .. pGameName)
-    PlayerGroup:AddLabel("Place ID: " .. pPlaceId)
-    PlayerGroup:AddLabel("Umur Akun: " .. pAge)
+    PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
+    PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
     
-    local PlayTimeLabel = PlayerGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
+    -- Icon Waktu Bermain: lucide-alarm-clock
+    local PlayTimeLabel = PlayerGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00", "lucide-alarm-clock")
     local startTime = tick()
     
     task.spawn(function()
         while ScreenGui and ScreenGui.Parent do
             local totalSeconds = math.floor(tick() - startTime)
-            
             local days = math.floor(totalSeconds / 86400)
             local hours = math.floor((totalSeconds % 86400) / 3600)
             local minutes = math.floor((totalSeconds % 3600) / 60)
@@ -2017,17 +1901,15 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- FITUR: PERFORMA & TAMBAHAN
+    -- FITUR 3: FITUR & PERFORMA (ICON: LUCIDE-NAVIGATION)
     -- ==========================================
-    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-zap", false)
+    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
         pcall(function()
             if state then
-                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
-                    if v:IsA("BasePart") then
-                        v.Material = Enum.Material.SmoothPlastic
-                    end
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("BasePart") then v.Material = Enum.Material.SmoothPlastic end
                 end
                 Library:Notify({ Title = "Performa", Content = "FPS Boost Diaktifkan!", Type = "Success" })
             end
@@ -2038,9 +1920,21 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Performa", Content = "Render Chunk Diperbarui!", Type = "Success" })
     end)
 
-    PerfGroup:AddToggle("Pintasan Prompt", nil, true, function(state)
-        game:GetService("ProximityPromptService").Enabled = state
-        Library:Notify({ Title = "Interaksi", Content = "Pintasan Prompt: " .. tostring(state), Type = "Info" })
+    -- FITUR INSTANT PROMPT (INSTANT SKIP PROMPT)
+    PerfGroup:AddToggle("Pintasan Prompt (Instant Skip)", nil, true, function(state)
+        if state then
+            ProximityPromptService.PromptShown:Connect(function(prompt)
+                prompt.HoldDuration = 0
+            end)
+            for _, prompt in pairs(workspace:GetDescendants()) do
+                if prompt:IsA("ProximityPrompt") then
+                    prompt.HoldDuration = 0
+                end
+            end
+            Library:Notify({ Title = "Interaksi", Content = "Instant Skip Prompt Aktif!", Type = "Success" })
+        else
+            Library:Notify({ Title = "Interaksi", Content = "Pintasan Prompt Dimatikan", Type = "Info" })
+        end
     end)
 
     local antiAfkConn
@@ -2059,7 +1953,7 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- FITUR: SCRIPT POPULER (15 SCRIPT)
+    -- FITUR 4: SCRIPT POPULER (15 SCRIPT)
     -- ==========================================
     local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
 
@@ -2093,7 +1987,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR: WARNA TEKS
+    -- FITUR 5: WARNA TEKS
     -- ==========================================
     local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
     
@@ -2111,7 +2005,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR: TEMA BACKGROUND UI
+    -- FITUR 6: TEMA BACKGROUND UI
     -- ==========================================
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
@@ -2129,7 +2023,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR: GRUP MUSIK
+    -- FITUR 7: GRUP MUSIK
     -- ==========================================
     local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
     
@@ -2225,7 +2119,7 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- FITUR: PILIH BAHASA
+    -- FITUR 8: PILIH BAHASA
     -- ==========================================
     local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
@@ -2277,21 +2171,7 @@ function Library:CreateWindow(config)
 
     makeResizable(Main, ResizeGrip, 200, 150)
 
-    function Window:EnableScroll(state)
-        state = (state == nil) and true or state
-        Container.ScrollingEnabled = state
-        if not state then
-            Container.CanvasPosition = Vector2.new(0, 0)
-        end
-    end
-
-    function Window:SetScroll(state)
-        Window:EnableScroll(state)
-    end
-
-    -- ==========================================
-    -- FLOATING ICON & NAGA UKURAN SEDANG (65px)
-    -- ==========================================
+    -- FLOATING LOGO NAGA SEDANG (65px)
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
     FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
@@ -2334,21 +2214,9 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
-    playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
-        TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 240, 0, 270)
-        }):Play()
-
-        Library:Notify({
-            Title = titleText,
-            Content = L("Executed"),
-            Type = "Success",
-            Duration = 3
-        })
-    end)
-
+    -- PERBAIKAN BUG MINIMIZE TOTAL (TANPA BOCOR)
     local isMinimized = false
-    local normalHeight = 300
+    local normalHeight = 270
 
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
@@ -2358,49 +2226,132 @@ function Library:CreateWindow(config)
             SettingsContainer.Visible = false
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
             
-            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
             }):Play()
         else
             MinBtn.Image = Library.Icons["lucide-chevron-up"]
             
-            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            local openTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
-            }):Play()
-            task.delay(0.2, function()
-                Container.Visible = not showingSettings
-                SettingsContainer.Visible = showingSettings
+            })
+            openTween:Play()
+            openTween.Completed:Connect(function()
+                if not isMinimized then
+                    Container.Visible = not showingSettings
+                    SettingsContainer.Visible = showingSettings
+                end
             end)
         end
     end)
 
     CloseBtn.MouseButton1Click:Connect(function()
-        local closeTween = TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 240, 0, 0)
-        })
-        closeTween:Play()
-        closeTween.Completed:Connect(function()
-            ScreenGui:Destroy()
-        end)
+        ScreenGui:Destroy()
     end)
 
-    function Window:AddButton(text, icon, callback)
-        return createButton(Container, text, icon, callback)
-    end
+    -- ==========================================
+    -- KEY SYSTEM VERIFIKASI KETAT
+    -- ==========================================
+    if config.KeySystem and config.KeySettings then
+        local kSettings = config.KeySettings
+        
+        local KeyFrame = Instance.new("Frame")
+        KeyFrame.Size = UDim2.new(0, 260, 0, 170)
+        KeyFrame.Position = UDim2.new(0.5, -130, 0.5, -85)
+        KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+        KeyFrame.Parent = ScreenGui
+        Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
+        makeDraggable(KeyFrame)
 
-    function Window:AddToggle(text, icon, default, callback)
-        return createToggle(Container, text, icon, default, callback)
-    end
+        local KeyStroke = Instance.new("UIStroke", KeyFrame)
+        KeyStroke.Color = Color3.fromRGB(255, 255, 255)
+        KeyStroke.Transparency = 0.85
 
-    function Window:AddSlider(text, icon, min, max, default, callback)
-        return createSlider(Container, text, icon, min, max, default, callback)
+        local KTitle = Instance.new("TextLabel")
+        KTitle.Size = UDim2.new(1, 0, 0, 30)
+        KTitle.Position = UDim2.new(0, 0, 0, 8)
+        KTitle.BackgroundTransparency = 1
+        KTitle.Text = kSettings.Title or "Key Verification"
+        KTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        KTitle.Font = Enum.Font.GothamBold
+        KTitle.TextSize = 14
+        KTitle.Parent = KeyFrame
+
+        local KInput = Instance.new("TextBox")
+        KInput.Size = UDim2.new(1, -30, 0, 32)
+        KInput.Position = UDim2.new(0, 15, 0, 48)
+        KInput.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+        KInput.PlaceholderText = "Masukkan Key..."
+        KInput.Text = ""
+        KInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+        KInput.Font = Enum.Font.Gotham
+        KInput.TextSize = 12
+        KInput.Parent = KeyFrame
+        Instance.new("UICorner", KInput).CornerRadius = UDim.new(0, 6)
+
+        local SubmitBtn = Instance.new("TextButton")
+        SubmitBtn.Size = UDim2.new(0.5, -20, 0, 32)
+        SubmitBtn.Position = UDim2.new(0, 15, 0, 90)
+        SubmitBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+        SubmitBtn.Text = "Submit Key"
+        SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        SubmitBtn.Font = Enum.Font.GothamBold
+        SubmitBtn.TextSize = 11
+        SubmitBtn.Parent = KeyFrame
+        Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
+
+        local GetKeyBtn = Instance.new("TextButton")
+        GetKeyBtn.Size = UDim2.new(0.5, -20, 0, 32)
+        GetKeyBtn.Position = UDim2.new(0.5, 5, 0, 90)
+        GetKeyBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+        GetKeyBtn.Text = "Get Key"
+        GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        GetKeyBtn.Font = Enum.Font.GothamBold
+        GetKeyBtn.TextSize = 11
+        GetKeyBtn.Parent = KeyFrame
+        Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 6)
+
+        GetKeyBtn.MouseButton1Click:Connect(function()
+            if setclipboard then
+                setclipboard(kSettings.KeyLink or "")
+                Library:Notify({ Title = "Key System", Content = "Link Key disalin!", Type = "Success" })
+            end
+        end)
+
+        SubmitBtn.MouseButton1Click:Connect(function()
+            local enteredKey = KInput.Text
+            local isValid = false
+            local matchedDuration = nil
+
+            if kSettings.SecretKey and enteredKey == kSettings.SecretKey then
+                isValid = true
+                Library.CurrentKeyExpire = nil -- Permanen / Infinity
+            elseif kSettings.Keys then
+                for _, kData in ipairs(kSettings.Keys) do
+                    if enteredKey == kData.Key then
+                        isValid = true
+                        matchedDuration = kData.Duration
+                        Library.CurrentKeyExpire = tick() + (matchedDuration * 3600)
+                        break
+                    end
+                end
+            end
+
+            if isValid then
+                KeyFrame:Destroy()
+                Main.Visible = true -- HANYA BISA MUNCUL SETELAH KEY VALID
+                Library:Notify({ Title = "Key System", Content = "Key Valid! Selamat datang.", Type = "Success" })
+            else
+                Library:Notify({ Title = "Key System", Content = "Key Salah! Coba lagi.", Type = "Error" })
+            end
+        end)
+    else
+        Main.Visible = true
     end
 
     function Window:AddGroup(groupNameKey, icon, defaultCollapsed)
         return buildGroupInContainer(Container, groupNameKey, icon, defaultCollapsed)
     end
-
-    Window.AddSection = Window.AddGroup
 
     return Window
 end
