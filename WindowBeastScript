@@ -2094,7 +2094,7 @@ function Library:CreateWindow(config)
     end
 
 ---------------------------------------------------------
--- OTOMATIS BUAT GRUP MUSIK DI SETTINGS LIBRARY
+-- OTOMATIS BUAT GRUP MUSIK DI SETTINGS LIBRARY (FIXED)
 ---------------------------------------------------------
 local MusicService = {
     CurrentSound = nil,
@@ -2110,8 +2110,8 @@ local MusicList = {
     ["Elevator Music"] = "1848354536"
 }
 
--- Buat grup khusus musik secara otomatis di dalam tab Settings
-local MusicGroup = Window:AddGroup("Musik Background / Music Player", "lucide-music")
+-- Menggunakan buildGroupInContainer agar cocok dengan struktur Settings Library kamu
+local MusicGroup = buildGroupInContainer(SettingsContainer, "Musik Background / Music Player", "lucide-music")
 
 if not MusicService.CurrentSound then
     MusicService.CurrentSound = Instance.new("Sound")
@@ -2139,7 +2139,7 @@ local MusicDropdown = MusicGroup:AddDropdown("Select Music / Pilih Musik", SongN
     end
 end)
 
--- 2. Input Custom ID (Otomatis Tersimpan ke List Dropdown)
+-- 2. Input Custom ID
 MusicGroup:AddInput("Custom Music ID", "Masukkan ID Roblox / Enter ID...", function(text)
     if text and text ~= "" and tonumber(text) then
         local cleanID = tostring(tonumber(text))
