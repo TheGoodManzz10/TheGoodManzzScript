@@ -2147,12 +2147,22 @@ function Library:CreateWindow(config)
     end
 
     local isMinimized = false
+    local normalHeight = 270 -- Menyimpan ukuran tinggi terakhir sebelum minimize
+
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
-        local targetSize = isMinimized and UDim2.new(0, 240, 0, 36) or UDim2.new(0, 240, 0, 270)
-        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Size = targetSize
-        }):Play()
+        if isMinimized then
+            normalHeight = Main.AbsoluteSize.Y -- Simpan tinggi sebelum minimize
+            -- Lebar ikuti ukuran window saat ini (Main.AbsoluteSize.X) jadi bisa ikut melebar
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
+            }):Play()
+        else
+            -- Kembalikan ke lebar saat ini dan tinggi normal semula
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
+            }):Play()
+        end
     end)
 
     CloseBtn.MouseButton1Click:Connect(function()
