@@ -5,6 +5,10 @@ Library.CurrentKeyExpire = nil
 Library.Icons = {
     ["Logo"]             = "rbxassetid://107391174248131",
     ["Settings"]         = "rbxassetid://10734950309",
+    ["lucide-zoom-out"]  = "rbxassetid://10747384679",
+    ["lucide-music"]     = "rbxassetid://10734905958",
+    ["lucide-menu"]      = "rbxassetid://10734887784",
+    ["lucide-x"]         = "rbxassetid://10747384394",
     ["SpinOuter"]        = "rbxassetid://109694296016043",
     ["lucide-accessibility"] = "rbxassetid://10709751939",
     ["lucide-activity"] = "rbxassetid://10709752035",
@@ -900,6 +904,8 @@ local isRgbTextActive = false
 
 local isRgbThemeActive = false
 local currentThemeColor = Color3.fromRGB(12, 12, 16)
+local mainWindowRef
+local mainGradientRef
 
 local function getIconId(icon)
     if not icon or type(icon) ~= "string" or icon == "" then return nil end
@@ -947,7 +953,6 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = TargetParent
 
--- Global Text Color Updater
 local function updateGlobalTextColor(color)
     currentTextColor = color
     isRgbTextActive = false
@@ -960,17 +965,17 @@ local function updateGlobalTextColor(color)
     end
 end
 
--- Global Theme Color Updater
-local mainWindowRef
 local function updateGlobalThemeColor(color)
     currentThemeColor = color
     isRgbThemeActive = false
     if mainWindowRef then
+        if mainGradientRef then
+            mainGradientRef.Enabled = false
+        end
         mainWindowRef.BackgroundColor3 = color
     end
 end
 
--- RGB Loop untuk Teks & Tema UI
 RunService.RenderStepped:Connect(function()
     local hue = tick() % 5 / 5
     local rgbColor = Color3.fromHSV(hue, 1, 1)
@@ -986,6 +991,7 @@ RunService.RenderStepped:Connect(function()
     end
 
     if isRgbThemeActive and mainWindowRef then
+        if mainGradientRef then mainGradientRef.Enabled = false end
         mainWindowRef.BackgroundColor3 = rgbColor
     end
 end)
@@ -1796,7 +1802,7 @@ function Library:CreateWindow(config)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
     Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true -- DIPASTIKAN TRUE AGAR ELEMEN TIDAK BOCOR SAAT MINIMIZE
+    Main.ClipsDescendants = true
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
@@ -1811,6 +1817,7 @@ function Library:CreateWindow(config)
     })
     MainGradient.Rotation = 135
     MainGradient.Parent = Main
+    mainGradientRef = MainGradient
 
     local MainStroke = Instance.new("UIStroke")
     MainStroke.Color = Color3.fromRGB(255, 255, 255)
@@ -1846,12 +1853,12 @@ function Library:CreateWindow(config)
     Title.TextTruncate = Enum.TextTruncate.AtEnd
     Title.Parent = Header
 
-    -- TOMBOL HEADER (MINIMIZE MEMAKAI ICON "lucide-minimize", CLOSE MEMAKAI ICON "lucide-x")
+    -- TOMBOL MINIMIZE MENGGUNAKAN ICON "lucide-menu"
     local MinBtn = Instance.new("ImageButton")
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
     MinBtn.Position = UDim2.new(1, -100, 0, 7)
     MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    MinBtn.Image = Library.Icons["lucide-minimize"]
+    MinBtn.Image = Library.Icons["lucide-menu"]
     MinBtn.Parent = Header
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
 
@@ -2127,7 +2134,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR BARU: TEMA BACKGROUND UI (25 Warna + 1 RGB)
+    -- FITUR 2: TEMA BACKGROUND UI (25 Warna + 1 RGB)
     -- ==========================================
     local ThemeGroup = buildGroupInContainer(SettingsContainer, L("ThemeGroup"), "Settings", true)
 
@@ -2145,7 +2152,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR 2: GRUP MUSIK (Memakai Icon "lucide-music")
+    -- FITUR 3: GRUP MUSIK
     -- ==========================================
     local MusicGroup = buildGroupInContainer(SettingsContainer, L("MusicGroup"), "lucide-music", true)
     
@@ -2328,7 +2335,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR FLOATING ICON + SPINNER DI LUAR KOTAK
+    -- FLOATING ICON & DRAG PERBAIKAN
     -- ==========================================
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
@@ -2338,7 +2345,6 @@ function Library:CreateWindow(config)
     FloatingContainer.Visible = false
     FloatingContainer.Parent = ScreenGui
 
-    -- Icon animasi berputar di luar kotak
     local SpinOuterIcon = Instance.new("ImageLabel")
     SpinOuterIcon.Name = "SpinOuterIcon"
     SpinOuterIcon.Size = UDim2.new(1, 12, 1, 12)
@@ -2347,14 +2353,12 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
-    -- Animasi Berputar Loop
     RunService.RenderStepped:Connect(function()
         if FloatingContainer.Visible then
             SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
         end
     end)
 
-    -- Kotak Tombol Utama UI Disembunyikan
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
     FloatingLogoBtn.Size = UDim2.new(1, -6, 1, -6)
@@ -2368,7 +2372,8 @@ function Library:CreateWindow(config)
     FloatStroke.Color = Color3.fromRGB(255, 255, 255)
     FloatStroke.Transparency = 0.8
 
-    makeDraggable(FloatingContainer)
+    -- PERBAIKAN: DRAGGING SEKARANG BERFUNGSI PADA TOMBOL MELAYANG
+    makeDraggable(FloatingContainer, FloatingLogoBtn)
 
     HideBtn.MouseButton1Click:Connect(function()
         Main.Visible = false
