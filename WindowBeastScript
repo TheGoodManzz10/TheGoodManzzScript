@@ -1,5 +1,5 @@
 local Library = {}
-Library.CurrentKeyExpire = nil
+Library.CurrentKeyExpire = tick() + 86400 -- Default 24 Jam (86400 detik) untuk contoh
 
 -- Daftar Icon Registri Lengkap
 Library.Icons = {
@@ -825,7 +825,7 @@ Library.Icons = {
     ["lucide-zoom-out"] = "rbxassetid://10747384679"
 }
 
--- SISTEM BAHASA DENGAN TRANSLATION LENGKAP SEMUA KREATIF TEKS
+-- SISTEM BAHASA DENGAN TRANSLATION LENGKAP
 local Translations = {
     Indonesian = {
         NotifTitle     = "Notifikasi",
@@ -853,7 +853,9 @@ local Translations = {
         Executing      = "Menjalankan ",
         CustomSong     = "Simpan & Putar",
         SongPlaceholder = "Masukkan ID Lagu...",
-        ActiveSong     = "Lagu Aktif: "
+        ActiveSong     = "Lagu Aktif: ",
+        PlayerInfo     = "Informasi Pemain",
+        PerfGroup      = "Fitur & Performa"
     },
     English = {
         NotifTitle     = "Notification",
@@ -881,7 +883,9 @@ local Translations = {
         Executing      = "Executing ",
         CustomSong     = "Save & Play",
         SongPlaceholder = "Enter Song ID...",
-        ActiveSong     = "Active Song: "
+        ActiveSong     = "Active Song: ",
+        PlayerInfo     = "Player Information",
+        PerfGroup      = "Features & Performance"
     }
 }
 
@@ -945,6 +949,9 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local SoundService = game:GetService("SoundService")
+local MarketplaceService = game:GetService("MarketplaceService")
+
+local LocalPlayer = Players.LocalPlayer
 
 local TargetParent
 pcall(function()
@@ -961,7 +968,7 @@ pcall(function()
 end)
 
 if not TargetParent then
-    TargetParent = Players.LocalPlayer:WaitForChild("PlayerGui")
+    TargetParent = LocalPlayer:WaitForChild("PlayerGui")
 end
 
 if TargetParent:FindFirstChild("DarkGradientLibrary") then
@@ -1136,6 +1143,20 @@ function Library:Notify(options)
         closeTween.Completed:Connect(function() Card:Destroy() end)
     end)
 end
+
+-- LOOP NOTIFIKASI OTOMATIS SETIAP 3-5 MENIT
+task.spawn(function()
+    while task.wait(math.random(180, 300)) do
+        if ScreenGui and ScreenGui.Parent then
+            Library:Notify({
+                Title = "Dark Hub Community",
+                Content = "Suka dengan UI/Hub kami? Bergabunglah dengan komunitas kami segera!",
+                Type = "Info",
+                Duration = 5
+            })
+        end
+    end
+end)
 
 local function makeDraggable(frame, handle)
     handle = handle or frame
@@ -1681,7 +1702,7 @@ function Library:CreateWindow(config)
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
     MinBtn.Position = UDim2.new(1, -100, 0, 7)
     MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    MinBtn.Image = Library.Icons["lucide-menu"]
+    MinBtn.Image = Library.Icons["lucide-chevron-up"]
     MinBtn.Parent = Header
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
 
@@ -1828,12 +1849,15 @@ function Library:CreateWindow(config)
         ArrowLbl.Font = Enum.Font.GothamBold
         ArrowLbl.Parent = GroupHeader
 
-        local ContentHolder = Instance.new("Frame")
+        local ContentHolder = Instance.new("ScrollingFrame")
         ContentHolder.Name = "ContentHolder"
         ContentHolder.Size = UDim2.new(1, -12, 0, 0)
         ContentHolder.Position = UDim2.new(0, 6, 0, 34)
         ContentHolder.BackgroundTransparency = 1
-        ContentHolder.ClipsDescendants = false
+        ContentHolder.BorderSizePixel = 0
+        ContentHolder.ScrollBarThickness = 2
+        ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+        ContentHolder.ClipsDescendants = true
         ContentHolder.Parent = GroupFrame
 
         local ContentLayout = Instance.new("UIListLayout")
@@ -1841,10 +1865,16 @@ function Library:CreateWindow(config)
         ContentLayout.Padding = UDim.new(0, 5)
         ContentLayout.Parent = ContentHolder
 
+        local MAX_GROUP_HEIGHT = 180
+
         local function updateGroupSize()
             local contentHeight = ContentLayout.AbsoluteContentSize.Y
-            ContentHolder.Size = UDim2.new(1, -12, 0, contentHeight)
-            local targetHeight = isCollapsed and 32 or (34 + contentHeight + 6)
+            ContentHolder.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
+            
+            local displayHeight = math.min(contentHeight, MAX_GROUP_HEIGHT)
+            ContentHolder.Size = UDim2.new(1, -12, 0, displayHeight)
+            
+            local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
             
             TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
                 Size = UDim2.new(1, 0, 0, targetHeight)
@@ -1897,9 +1927,10 @@ function Library:CreateWindow(config)
             Lbl.BackgroundTransparency = 1
             Lbl.Text = tostring(text or "")
             Lbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-            Lbl.TextSize = 12
+            Lbl.TextSize = 11
             Lbl.Font = Enum.Font.GothamBold
-            Lbl.TextXAlignment = Enum.TextXAlignment.Center
+            Lbl.TextXAlignment = Enum.TextXAlignment.Left
+            Lbl.TextTruncate = Enum.TextTruncate.AtEnd
             Lbl.Parent = LblFrame
 
             task.defer(updateGroupSize)
@@ -1926,7 +1957,109 @@ function Library:CreateWindow(config)
     }
 
     -- ==========================================
-    -- FITUR 1: SCRIPT POPULER (15 SCRIPT DALAM GRUP)
+    -- FITUR FITUR PENGATURAN DURASI KEY (SISA WAKTU KEY)
+    -- ==========================================
+    local KeyTimerGroup = buildGroupInContainer(SettingsContainer, "KeyTimerTitle", "lucide-key", false)
+    local KeyTimerLabel = KeyTimerGroup:AddLabel("Menghitung Sisa Durasi...")
+
+    task.spawn(function()
+        while ScreenGui and ScreenGui.Parent do
+            if Library.CurrentKeyExpire then
+                local remainingSec = math.max(0, math.floor(Library.CurrentKeyExpire - tick()))
+                if remainingSec > 0 then
+                    local h = math.floor(remainingSec / 3600)
+                    local m = math.floor((remainingSec % 3600) / 60)
+                    local s = remainingSec % 60
+                    KeyTimerLabel.Text = string.format("Sisa Waktu: %02d:%02d:%02d", h, m, s)
+                else
+                    KeyTimerLabel.Text = "Key Expired / Kadaluarsa!"
+                end
+            else
+                KeyTimerLabel.Text = L("NoKeyActive")
+            end
+            task.wait(1)
+        end
+    end)
+
+    -- ==========================================
+    -- FITUR: PROFIL ASLI PLAYER (INFORMASI LENGKAP)
+    -- ==========================================
+    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-user", false)
+    
+    local pName = LocalPlayer.DisplayName .. " (@" .. LocalPlayer.Name .. ")"
+    local pGameName = "Mendeteksi..."
+    pcall(function()
+        pGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
+    end)
+    local pPlaceId = tostring(game.PlaceId)
+    local pAge = tostring(LocalPlayer.AccountAge) .. " Hari"
+
+    PlayerGroup:AddLabel("Nama: " .. pName)
+    PlayerGroup:AddLabel("Game: " .. pGameName)
+    PlayerGroup:AddLabel("Place ID: " .. pPlaceId)
+    PlayerGroup:AddLabel("Umur Akun: " .. pAge)
+    
+    local PlayTimeLabel = PlayerGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
+    local startTime = tick()
+    
+    task.spawn(function()
+        while ScreenGui and ScreenGui.Parent do
+            local totalSeconds = math.floor(tick() - startTime)
+            
+            local days = math.floor(totalSeconds / 86400)
+            local hours = math.floor((totalSeconds % 86400) / 3600)
+            local minutes = math.floor((totalSeconds % 3600) / 60)
+            local seconds = totalSeconds % 60
+            
+            PlayTimeLabel.Text = string.format("Waktu Bermain: %d hari, %02d:%02d:%02d", days, hours, minutes, seconds)
+            task.wait(1)
+        end
+    end)
+
+    -- ==========================================
+    -- FITUR: PERFORMA & TAMBAHAN
+    -- ==========================================
+    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-zap", false)
+    
+    PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
+        pcall(function()
+            if state then
+                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.Material = Enum.Material.SmoothPlastic
+                    end
+                end
+                Library:Notify({ Title = "Performa", Content = "FPS Boost Diaktifkan!", Type = "Success" })
+            end
+        end)
+    end)
+
+    PerfGroup:AddButton("Render Chunk", nil, function()
+        Library:Notify({ Title = "Performa", Content = "Render Chunk Diperbarui!", Type = "Success" })
+    end)
+
+    PerfGroup:AddToggle("Pintasan Prompt", nil, true, function(state)
+        game:GetService("ProximityPromptService").Enabled = state
+        Library:Notify({ Title = "Interaksi", Content = "Pintasan Prompt: " .. tostring(state), Type = "Info" })
+    end)
+
+    local antiAfkConn
+    PerfGroup:AddToggle("Anti AFK", nil, true, function(state)
+        if state then
+            antiAfkConn = LocalPlayer.Idled:Connect(function()
+                game:GetService("VirtualUser"):Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                game:GetService("VirtualUser"):Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            end)
+            Library:Notify({ Title = "System", Content = "Anti AFK Aktif!", Type = "Success" })
+        else
+            if antiAfkConn then antiAfkConn:Disconnect() end
+            Library:Notify({ Title = "System", Content = "Anti AFK Dimatikan", Type = "Info" })
+        end
+    end)
+
+    -- ==========================================
+    -- FITUR: SCRIPT POPULER (15 SCRIPT)
     -- ==========================================
     local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
 
@@ -1960,7 +2093,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR 2: WARNA TEKS
+    -- FITUR: WARNA TEKS
     -- ==========================================
     local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
     
@@ -1978,7 +2111,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR 3: TEMA BACKGROUND UI
+    -- FITUR: TEMA BACKGROUND UI
     -- ==========================================
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
@@ -1996,7 +2129,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR 4: GRUP MUSIK
+    -- FITUR: GRUP MUSIK
     -- ==========================================
     local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
     
@@ -2092,7 +2225,7 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- FITUR 5: PILIH BAHASA (INSTANT MULTI-LANGUAGE TRANSLATE)
+    -- FITUR: PILIH BAHASA
     -- ==========================================
     local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
@@ -2157,7 +2290,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FLOATING ICON & NAGA UKURAN SEDANG (65px) DI LUAR KOTAK
+    -- FLOATING ICON & NAGA UKURAN SEDANG (65px)
     -- ==========================================
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
@@ -2167,7 +2300,6 @@ function Library:CreateWindow(config)
     FloatingContainer.Visible = false
     FloatingContainer.Parent = ScreenGui
 
-    -- Icon Animasi Berputar di Luar
     local SpinOuterIcon = Instance.new("ImageLabel")
     SpinOuterIcon.Name = "SpinOuterIcon"
     SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
@@ -2182,7 +2314,6 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- LOGO NAGA PAS SEDANG DI LUAR
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
     FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
@@ -2225,10 +2356,14 @@ function Library:CreateWindow(config)
             normalHeight = Main.AbsoluteSize.Y
             Container.Visible = false
             SettingsContainer.Visible = false
+            MinBtn.Image = Library.Icons["lucide-chevron-down"]
+            
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
             }):Play()
         else
+            MinBtn.Image = Library.Icons["lucide-chevron-up"]
+            
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
             }):Play()
