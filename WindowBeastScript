@@ -1465,6 +1465,28 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                 end
             end)
 
+-- 1. Buat Frame garis bawah secara otomatis (posisi di bawah teks flashbang)
+local Underline = Instance.new("Frame")
+Underline.Name = "TextUnderline"
+Underline.Size = UDim2.new(0, 0, 0, 3) -- Mulai dari lebar 0
+Underline.Position = UDim2.new(0.5, 0, 0.7, 0) -- Sesuaikan posisi di bawah teks
+Underline.AnchorPoint = Vector2.new(0.5, 0)
+Underline.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Warna garis (bisa disesuaikan)
+Underline.BorderSizePixel = 0
+Underline.Parent = FlashScreenFrame -- Masukkan ke frame intro kamu
+
+-- Tambahkan UICorner biar ujung garisnya agak melengkung estetik
+local UnderlineCorner = Instance.new("UICorner")
+UnderlineCorner.CornerRadius = UDim.new(1, 0)
+UnderlineCorner.Parent = Underline
+
+-- 2. Jalankan Tween garisnya melebar setelah teks selesai diketik
+task.delay(0.1, function()
+    TweenService:Create(Underline, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 180, 0, 3) -- Ubah angka 180 sesuai panjang teksnya nanti
+    }):Play()
+end)
+
             task.delay(10.0, function()
                 local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
                 TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
