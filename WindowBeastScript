@@ -1,29 +1,26 @@
 local Library = {}
 
--- Daftar Icon Registri Lengkap
+-- Daftar Icon Registri Pilihan yang Relevan & Cocok
 Library.Icons = {
-    ["Logo"]                    = "rbxassetid://107391174248131",
-    ["Settings"]                = "rbxassetid://10734950309",
-    ["lucide-sliders"]          = "rbxassetid://10734963400",
-    ["lucide-languages"]        = "rbxassetid://10723417703",
-    ["lucide-type"]             = "rbxassetid://10747364761",
-    ["lucide-palette"]          = "rbxassetid://10734910430",
-    ["lucide-paint-bucket"]     = "rbxassetid://10734909847",
-    ["lucide-music"]            = "rbxassetid://10734905958",
-    ["lucide-menu"]             = "rbxassetid://10734887784",
-    ["lucide-x"]                = "rbxassetid://10747384394",
-    ["lucide-code"]             = "rbxassetid://10709810463",
-    ["lucide-user"]             = "rbxassetid://10747373176",
-    ["lucide-zap"]              = "rbxassetid://10734883986",
-    ["lucide-chevron-up"]       = "rbxassetid://10709791523",
-    ["lucide-chevron-down"]     = "rbxassetid://10709790948",
-    ["SpinOuter"]               = "rbxassetid://109694296016043",
-    ["lucide-alarm-clock"]      = "rbxassetid://10709752630",
-    ["lucide-navigation"]       = "rbxassetid://10734906744",
-    ["lucide-info"]             = "rbxassetid://10723415903",
-    ["lucide-key"]              = "rbxassetid://10723346959",
-    ["lucide-search"]           = "rbxassetid://10734941499",
-    ["lucide-bot"]              = "rbxassetid://10734883986"
+    ["Logo"]                = "rbxassetid://107391174248131",
+    ["Settings"]            = "rbxassetid://10734950309",
+    ["Fingerprint"]         = "rbxassetid://10723375250", -- lucide-fingerprint
+    ["Search"]              = "rbxassetid://10734943674", -- lucide-search
+    ["Key"]                 = "rbxassetid://10723416652", -- lucide-key
+    ["Sliders"]             = "rbxassetid://10734963400", -- lucide-sliders
+    ["Languages"]           = "rbxassetid://10723417703", -- lucide-languages
+    ["Type"]                = "rbxassetid://10747364761", -- lucide-type
+    ["Palette"]             = "rbxassetid://10734910430", -- lucide-palette
+    ["PaintBucket"]         = "rbxassetid://10734909847", -- lucide-paint-bucket
+    ["Music"]               = "rbxassetid://10734905958", -- lucide-music
+    ["Code"]                = "rbxassetid://10709810463", -- lucide-code
+    ["User"]                = "rbxassetid://10747373176", -- lucide-user
+    ["Gauge"]               = "rbxassetid://10723395708", -- lucide-gauge
+    ["AlarmClock"]          = "rbxassetid://10709752630", -- lucide-alarm-clock
+    ["ChevronUp"]           = "rbxassetid://10709791523",
+    ["ChevronDown"]         = "rbxassetid://10709790948",
+    ["SpinOuter"]           = "rbxassetid://109694296016043",
+    ["Close"]               = "rbxassetid://10747384394"
 }
 
 -- SISTEM BAHASA DENGAN TRANSLATION LENGKAP
@@ -189,7 +186,7 @@ local function updateGlobalThemeColor(color)
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
+            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "IntroBlackScreen" then
                 if obj.BackgroundTransparency < 1 then
                     if obj.Name == "Main" then
                         obj.BackgroundColor3 = color
@@ -223,7 +220,7 @@ RunService.RenderStepped:Connect(function()
         
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
+                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "IntroBlackScreen" then
                     if obj.BackgroundTransparency < 1 and obj.Name ~= "Main" then
                         local h, s, v = rgbColor:ToHSV()
                         obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v - 0.2, 0, 1))
@@ -824,7 +821,7 @@ function Library:CreateWindow(config)
     local text3 = config.Text3 or "Menyiapkan Ui"
     flashText = config.FlashText or "GOODMANZ"
 
-    -- KONFIGURASI KEY SYSTEM DARI LUAR
+    -- KONFIGURASI KEY SYSTEM
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
     local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", DurationDays = 365, DurationText = "Permanen" } }
@@ -837,7 +834,6 @@ function Library:CreateWindow(config)
 
     local Window = {}
 
-    -- HELPER UTAMA SAVE/READ KEY SYSTEM
     local function parseDurationSeconds(keyData)
         if keyData.DurationSeconds then return keyData.DurationSeconds end
         if keyData.DurationDays then return keyData.DurationDays * 86400 end
@@ -879,151 +875,234 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- SISTEM KEY UI (AUTO SAVE & EXPIRE CHECK)
+    -- FUNGSI UTAMA UNTUK MENJALANKAN KEY / LOADING
     -- ==========================================
-    if isKeySystemEnabled then
-        local isAlreadyValid = checkSavedKeyValid()
+    local function startLoadingOrKeySystem()
+        if isKeySystemEnabled then
+            local isAlreadyValid = checkSavedKeyValid()
 
-        if not isAlreadyValid then
-            local keyVerified = false
+            if not isAlreadyValid then
+                local keyVerified = false
 
-            local KeyFrame = Instance.new("Frame")
-            KeyFrame.Name = "KeyFrame"
-            KeyFrame.Size = UDim2.new(0, 250, 0, 170)
-            KeyFrame.Position = UDim2.new(0.5, -125, 0.5, -85)
-            KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-            KeyFrame.BorderSizePixel = 0
-            KeyFrame.Parent = ScreenGui
+                local KeyFrame = Instance.new("Frame")
+                KeyFrame.Name = "KeyFrame"
+                KeyFrame.Size = UDim2.new(0, 250, 0, 170)
+                KeyFrame.Position = UDim2.new(0.5, -125, 0.5, -85)
+                KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+                KeyFrame.BorderSizePixel = 0
+                KeyFrame.Parent = ScreenGui
 
-            Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
-            local KeyStroke = Instance.new("UIStroke", KeyFrame)
-            KeyStroke.Color = Color3.fromRGB(255, 255, 255)
-            KeyStroke.Transparency = 0.85
+                Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
+                local KeyStroke = Instance.new("UIStroke", KeyFrame)
+                KeyStroke.Color = Color3.fromRGB(255, 255, 255)
+                KeyStroke.Transparency = 0.85
 
-            makeDraggable(KeyFrame)
+                makeDraggable(KeyFrame)
 
-            local KeyTitle = Instance.new("TextLabel")
-            KeyTitle.Size = UDim2.new(1, -20, 0, 25)
-            KeyTitle.Position = UDim2.new(0, 10, 0, 8)
-            KeyTitle.BackgroundTransparency = 1
-            KeyTitle.Text = titleText .. " - Key System"
-            KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyTitle.TextSize = 13
-            KeyTitle.Font = Enum.Font.GothamBold
-            KeyTitle.TextXAlignment = Enum.TextXAlignment.Center
-            KeyTitle.Parent = KeyFrame
+                local KeyTitle = Instance.new("TextLabel")
+                KeyTitle.Size = UDim2.new(1, -20, 0, 25)
+                KeyTitle.Position = UDim2.new(0, 10, 0, 8)
+                KeyTitle.BackgroundTransparency = 1
+                KeyTitle.Text = titleText .. " - Key System"
+                KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeyTitle.TextSize = 13
+                KeyTitle.Font = Enum.Font.GothamBold
+                KeyTitle.TextXAlignment = Enum.TextXAlignment.Center
+                KeyTitle.Parent = KeyFrame
 
-            local KeyInfoLbl = Instance.new("TextLabel")
-            KeyInfoLbl.Size = UDim2.new(1, -20, 0, 18)
-            KeyInfoLbl.Position = UDim2.new(0, 10, 0, 32)
-            KeyInfoLbl.BackgroundTransparency = 1
-            KeyInfoLbl.Text = "Masukkan Key Anda Untuk Melanjutkan"
-            KeyInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
-            KeyInfoLbl.TextSize = 10
-            KeyInfoLbl.Font = Enum.Font.Gotham
-            KeyInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
-            KeyInfoLbl.Parent = KeyFrame
+                local KeyInfoLbl = Instance.new("TextLabel")
+                KeyInfoLbl.Size = UDim2.new(1, -20, 0, 18)
+                KeyInfoLbl.Position = UDim2.new(0, 10, 0, 32)
+                KeyInfoLbl.BackgroundTransparency = 1
+                KeyInfoLbl.Text = "Masukkan Key Anda Untuk Melanjutkan"
+                KeyInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
+                KeyInfoLbl.TextSize = 10
+                KeyInfoLbl.Font = Enum.Font.Gotham
+                KeyInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
+                KeyInfoLbl.Parent = KeyFrame
 
-            local KeyInputBox = Instance.new("TextBox")
-            KeyInputBox.Size = UDim2.new(1, -24, 0, 32)
-            KeyInputBox.Position = UDim2.new(0, 12, 0, 56)
-            KeyInputBox.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-            KeyInputBox.PlaceholderText = "Masukkan Key Di Sini..."
-            KeyInputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
-            KeyInputBox.Text = ""
-            KeyInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyInputBox.TextSize = 11
-            KeyInputBox.Font = Enum.Font.Gotham
-            KeyInputBox.Parent = KeyFrame
-            Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 6)
+                local KeyInputBox = Instance.new("TextBox")
+                KeyInputBox.Size = UDim2.new(1, -24, 0, 32)
+                KeyInputBox.Position = UDim2.new(0, 12, 0, 56)
+                KeyInputBox.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+                KeyInputBox.PlaceholderText = "Masukkan Key Di Sini..."
+                KeyInputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
+                KeyInputBox.Text = ""
+                KeyInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeyInputBox.TextSize = 11
+                KeyInputBox.Font = Enum.Font.Gotham
+                KeyInputBox.Parent = KeyFrame
+                Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 6)
 
-            local KeyVerifyBtn = Instance.new("TextButton")
-            KeyVerifyBtn.Size = UDim2.new(0.48, -8, 0, 30)
-            KeyVerifyBtn.Position = UDim2.new(0, 12, 0, 96)
-            KeyVerifyBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-            KeyVerifyBtn.Text = "Verify Key"
-            KeyVerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyVerifyBtn.TextSize = 11
-            KeyVerifyBtn.Font = Enum.Font.GothamBold
-            KeyVerifyBtn.Parent = KeyFrame
-            Instance.new("UICorner", KeyVerifyBtn).CornerRadius = UDim.new(0, 6)
+                local KeyVerifyBtn = Instance.new("TextButton")
+                KeyVerifyBtn.Size = UDim2.new(0.48, -8, 0, 30)
+                KeyVerifyBtn.Position = UDim2.new(0, 12, 0, 96)
+                KeyVerifyBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+                KeyVerifyBtn.Text = "Verify Key"
+                KeyVerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeyVerifyBtn.TextSize = 11
+                KeyVerifyBtn.Font = Enum.Font.GothamBold
+                KeyVerifyBtn.Parent = KeyFrame
+                Instance.new("UICorner", KeyVerifyBtn).CornerRadius = UDim.new(0, 6)
 
-            local KeyGetBtn = Instance.new("TextButton")
-            KeyGetBtn.Size = UDim2.new(0.48, -8, 0, 30)
-            KeyGetBtn.Position = UDim2.new(0.52, 4, 0, 96)
-            KeyGetBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
-            KeyGetBtn.Text = "Get Key (Copy)"
-            KeyGetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyGetBtn.TextSize = 11
-            KeyGetBtn.Font = Enum.Font.GothamBold
-            KeyGetBtn.Parent = KeyFrame
-            Instance.new("UICorner", KeyGetBtn).CornerRadius = UDim.new(0, 6)
+                local KeyGetBtn = Instance.new("TextButton")
+                KeyGetBtn.Size = UDim2.new(0.48, -8, 0, 30)
+                KeyGetBtn.Position = UDim2.new(0.52, 4, 0, 96)
+                KeyGetBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+                KeyGetBtn.Text = "Get Key (Copy)"
+                KeyGetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeyGetBtn.TextSize = 11
+                KeyGetBtn.Font = Enum.Font.GothamBold
+                KeyGetBtn.Parent = KeyFrame
+                Instance.new("UICorner", KeyGetBtn).CornerRadius = UDim.new(0, 6)
 
-            local KeyStatusLbl = Instance.new("TextLabel")
-            KeyStatusLbl.Name = "StatusColor"
-            KeyStatusLbl.Size = UDim2.new(1, -20, 0, 20)
-            KeyStatusLbl.Position = UDim2.new(0, 10, 0, 134)
-            KeyStatusLbl.BackgroundTransparency = 1
-            KeyStatusLbl.Text = "Status: Menunggu Key..."
-            KeyStatusLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
-            KeyStatusLbl.TextSize = 10
-            KeyStatusLbl.Font = Enum.Font.GothamMedium
-            KeyStatusLbl.TextXAlignment = Enum.TextXAlignment.Center
-            KeyStatusLbl.Parent = KeyFrame
+                local KeyStatusLbl = Instance.new("TextLabel")
+                KeyStatusLbl.Name = "StatusColor"
+                KeyStatusLbl.Size = UDim2.new(1, -20, 0, 20)
+                KeyStatusLbl.Position = UDim2.new(0, 10, 0, 134)
+                KeyStatusLbl.BackgroundTransparency = 1
+                KeyStatusLbl.Text = "Status: Menunggu Key..."
+                KeyStatusLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+                KeyStatusLbl.TextSize = 10
+                KeyStatusLbl.Font = Enum.Font.GothamMedium
+                KeyStatusLbl.TextXAlignment = Enum.TextXAlignment.Center
+                KeyStatusLbl.Parent = KeyFrame
 
-            KeyGetBtn.MouseButton1Click:Connect(function()
-                if setclipboard then
-                    setclipboard(keyGetUrl)
-                    KeyStatusLbl.Text = "Link Key Berhasil Disalin!"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(52, 152, 219)
-                else
-                    KeyStatusLbl.Text = "Gagal Salin Link (Gunakan PC/Delta Browser)"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
-                end
-            end)
-
-            KeyVerifyBtn.MouseButton1Click:Connect(function()
-                local input = KeyInputBox.Text
-                local matchedKeyData = nil
-
-                for _, keyData in ipairs(validKeys) do
-                    if type(keyData) == "table" and keyData.Key == input then
-                        matchedKeyData = keyData
-                        break
-                    elseif type(keyData) == "string" and keyData == input then
-                        matchedKeyData = { Key = keyData, DurationDays = 1, DurationText = "1 Hari" }
-                        break
+                KeyGetBtn.MouseButton1Click:Connect(function()
+                    if setclipboard then
+                        setclipboard(keyGetUrl)
+                        KeyStatusLbl.Text = "Link Key Berhasil Disalin!"
+                        KeyStatusLbl.TextColor3 = Color3.fromRGB(52, 152, 219)
+                    else
+                        KeyStatusLbl.Text = "Gagal Salin Link"
+                        KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
                     end
-                end
+                end)
 
-                if matchedKeyData then
-                    local durText = matchedKeyData.DurationText or (matchedKeyData.DurationDays and (matchedKeyData.DurationDays .. " Hari")) or "Aktif"
-                    local durSec = parseDurationSeconds(matchedKeyData)
+                KeyVerifyBtn.MouseButton1Click:Connect(function()
+                    local input = KeyInputBox.Text
+                    local matchedKeyData = nil
 
-                    saveKeyLocally(matchedKeyData.Key, durSec, durText)
+                    for _, keyData in ipairs(validKeys) do
+                        if type(keyData) == "table" and keyData.Key == input then
+                            matchedKeyData = keyData
+                            break
+                        elseif type(keyData) == "string" and keyData == input then
+                            matchedKeyData = { Key = keyData, DurationDays = 1, DurationText = "1 Hari" }
+                            break
+                        end
+                    end
 
-                    KeyStatusLbl.Text = "Key Benar & Disimpan! (" .. durText .. ")"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-                    
+                    if matchedKeyData then
+                        local durText = matchedKeyData.DurationText or (matchedKeyData.DurationDays and (matchedKeyData.DurationDays .. " Hari")) or "Aktif"
+                        local durSec = parseDurationSeconds(matchedKeyData)
+
+                        saveKeyLocally(matchedKeyData.Key, durSec, durText)
+
+                        KeyStatusLbl.Text = "Key Benar & Disimpan! (" .. durText .. ")"
+                        KeyStatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+                        
+                        Library:Notify({
+                            Title = "Key Verified",
+                            Content = "Akses Diberikan! Durasi: " .. durText,
+                            Type = "Success",
+                            Duration = 4
+                        })
+
+                        task.wait(1)
+                        KeyFrame:Destroy()
+                        
+                        -- Lanjut ke animasi eksekusi setelah key verified
+                        playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
+                            TweenService:Create(mainWindowRef, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                                Size = UDim2.new(0, 240, 0, 270)
+                            }):Play()
+
+                            Library:Notify({
+                                Title = titleText,
+                                Content = L("Executed"),
+                                Type = "Success",
+                                Duration = 3
+                            })
+                        end)
+                    else
+                        KeyStatusLbl.Text = "Key Salah / Kadaluarsa!"
+                        KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
+                    end
+                end)
+            else
+                -- Key sudah valid tersimpan, langsung lanjut animasi eksekusi
+                playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
+                    TweenService:Create(mainWindowRef, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0, 240, 0, 270)
+                    }):Play()
+
                     Library:Notify({
-                        Title = "Key Verified",
-                        Content = "Akses Diberikan! Durasi: " .. durText,
+                        Title = titleText,
+                        Content = L("Executed"),
                         Type = "Success",
-                        Duration = 4
+                        Duration = 3
                     })
+                end)
+            end
+        else
+            -- Tanpa Key System, langsung animasi eksekusi
+            playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
+                TweenService:Create(mainWindowRef, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, 240, 0, 270)
+                }):Play()
 
-                    task.wait(1)
-                    KeyFrame:Destroy()
-                    keyVerified = true
-                else
-                    KeyStatusLbl.Text = "Key Salah / Kadaluarsa!"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
-                end
+                Library:Notify({
+                    Title = titleText,
+                    Content = L("Executed"),
+                    Type = "Success",
+                    Duration = 3
+                })
             end)
-
-            repeat task.wait() until keyVerified
         end
     end
+
+    -- ==========================================
+    -- LAYAR HITAM PENUH DENGAN ICON 5 KALI KLIK
+    -- ==========================================
+    local IntroBlackScreen = Instance.new("Frame")
+    IntroBlackScreen.Name = "IntroBlackScreen"
+    IntroBlackScreen.Size = UDim2.new(1, 0, 1, 0)
+    IntroBlackScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    IntroBlackScreen.BorderSizePixel = 0
+    IntroBlackScreen.ZIndex = 999999
+    IntroBlackScreen.Parent = ScreenGui
+
+    local CenterFingerBtn = Instance.new("ImageButton")
+    CenterFingerBtn.Size = UDim2.new(0, 90, 0, 90)
+    CenterFingerBtn.Position = UDim2.new(0.5, -45, 0.5, -45)
+    CenterFingerBtn.BackgroundTransparency = 1
+    CenterFingerBtn.Image = Library.Icons["Fingerprint"]
+    CenterFingerBtn.ZIndex = 1000000
+    CenterFingerBtn.Parent = IntroBlackScreen
+
+    local clickCount = 0
+    local requiredClicks = 5
+
+    CenterFingerBtn.MouseButton1Click:Connect(function()
+        clickCount = clickCount + 1
+        
+        -- Efek animasi kecil saat diklik
+        TweenService:Create(CenterFingerBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 75, 0, 75)}):Play()
+        task.wait(0.1)
+        TweenService:Create(CenterFingerBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 90, 0, 90)}):Play()
+
+        if clickCount >= requiredClicks then
+            -- Hilangkan layar hitam dengan mulus lalu jalankan key/loading
+            local fadeOut = TweenService:Create(IntroBlackScreen, TweenInfo.new(0.6), {BackgroundTransparency = 1})
+            TweenService:Create(CenterFingerBtn, TweenInfo.new(0.6), {ImageTransparency = 1}):Play()
+            fadeOut:Play()
+            fadeOut.Completed:Connect(function()
+                IntroBlackScreen:Destroy()
+                startLoadingOrKeySystem()
+            end)
+        end
+    end)
 
     local Main = Instance.new("Frame")
     Main.Name = "Main"
@@ -1086,7 +1165,7 @@ function Library:CreateWindow(config)
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
     MinBtn.Position = UDim2.new(1, -100, 0, 7)
     MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    MinBtn.Image = Library.Icons["lucide-chevron-up"]
+    MinBtn.Image = Library.Icons["ChevronUp"]
     MinBtn.Parent = Header
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
 
@@ -1110,7 +1189,7 @@ function Library:CreateWindow(config)
     CloseBtn.Size = UDim2.new(0, 22, 0, 22)
     CloseBtn.Position = UDim2.new(1, -25, 0, 7)
     CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    CloseBtn.Image = Library.Icons["lucide-x"]
+    CloseBtn.Image = Library.Icons["Close"]
     CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
@@ -1164,7 +1243,7 @@ function Library:CreateWindow(config)
     local normalHeight = 270
 
     SettingsBtn.MouseButton1Click:Connect(function()
-        if isMinimized then return end
+        if isMinimized then return end -- Tombol settings terkunci saat minimized
         showingSettings = not showingSettings
         Container.Visible = not showingSettings
         SettingsContainer.Visible = showingSettings
@@ -1397,9 +1476,9 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- DISPLAY INFORMASI KEY DI SETTINGS
+    -- PENGATURAN SETTINGS (DENGAN ICON PILIHAN)
     -- ==========================================
-    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", false)
+    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "Key", false)
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
 
@@ -1416,14 +1495,11 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- FITUR: SEARCH SCRIPTBLOX DENGAN SLIDER JUMLAH (8-25)
-    -- ==========================================
-    local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
+    -- SCRIPTBLOX SEARCH (DENGAN SLIDER 8-25)
+    local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "Search", true)
 
-    local scriptLimit = 10 -- Default jumlah script yang ditampilkan
-
-    ScriptbloxGroup:AddSlider("Jumlah Hasil Script", nil, 8, 25, 10, function(val)
+    local scriptLimit = 10 
+    ScriptbloxGroup:AddSlider("Jumlah Hasil Script", "Sliders", 8, 25, 10, function(val)
         scriptLimit = val
     end)
 
@@ -1564,10 +1640,8 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- PENGATURAN UKURAN TOMBOL HIDE/SHOW
-    -- ==========================================
-    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
+    -- UKURAN TOMBOL HIDE/SHOW
+    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "Sliders", false)
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
@@ -1581,10 +1655,8 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
     end)
 
-    -- ==========================================
-    -- WAKTU BERMAIN (Play Time Tracker)
-    -- ==========================================
-    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
+    -- WAKTU BERMAIN
+    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "AlarmClock", false)
     local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
     local startTime = tick()
     
@@ -1601,10 +1673,8 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- PROFIL PLAYER & AVATAR LOBBY
-    -- ==========================================
-    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
+    -- PROFIL PLAYER
+    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "User", false)
     
     local AvatarFrame = Instance.new("Frame")
     AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
@@ -1645,10 +1715,8 @@ function Library:CreateWindow(config)
     PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
     PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-    -- ==========================================
-    -- PERFORMA & TAMBAHAN
-    -- ==========================================
-    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
+    -- PERFORMA
+    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "Gauge", false)
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
         pcall(function()
@@ -1704,10 +1772,8 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- SCRIPT POPULER (15 SCRIPT)
-    -- ==========================================
-    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
+    -- SCRIPT POPULER
+    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "Code", true)
 
     local popularScriptsList = {
         {Name = "1. Infinite Yield (Admin Commands)", Url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
@@ -1738,10 +1804,8 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- ==========================================
     -- WARNA TEKS
-    -- ==========================================
-    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
+    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "Palette", true)
     
     TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
         isRgbTextActive = true
@@ -1756,10 +1820,8 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- ==========================================
-    -- TEMA BACKGROUND UI
-    -- ==========================================
-    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
+    -- TEMA UI
+    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "PaintBucket", true)
 
     ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
         isRgbThemeActive = true
@@ -1774,10 +1836,8 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- ==========================================
-    -- GRUP MUSIK
-    -- ==========================================
-    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
+    -- MUSIK
+    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "Music", true)
     
     local currentSound = Instance.new("Sound")
     currentSound.Parent = SoundService
@@ -1870,10 +1930,8 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- ==========================================
-    -- PILIH BAHASA
-    -- ==========================================
-    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
+    -- BAHASA
+    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "Languages", false)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
         updateAllTranslations()
@@ -1885,15 +1943,13 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    -- ==========================================
-    -- PENGATURAN LAINNYA
-    -- ==========================================
-    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
+    -- TRANSPARANSI UI & FONT
+    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "Sliders", false)
     TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
     end)
 
-    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
+    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "Type", false)
     for fontName, enumFont in pairs(Fonts) do
         FontGroup:AddButton(fontName, nil, function()
             currentFont = enumFont
@@ -1935,32 +1991,19 @@ function Library:CreateWindow(config)
         Window:EnableScroll(state)
     end
 
-    playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
-        TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 240, 0, 270)
-        }):Play()
-
-        Library:Notify({
-            Title = titleText,
-            Content = L("Executed"),
-            Type = "Success",
-            Duration = 3
-        })
-    end)
-
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
         if isMinimized then
             normalHeight = Main.AbsoluteSize.Y
             Container.Visible = false
             SettingsContainer.Visible = false
-            MinBtn.Image = Library.Icons["lucide-chevron-down"]
+            MinBtn.Image = Library.Icons["ChevronDown"]
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
             }):Play()
         else
-            MinBtn.Image = Library.Icons["lucide-chevron-up"]
+            MinBtn.Image = Library.Icons["ChevronUp"]
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
