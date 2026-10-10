@@ -2093,6 +2093,97 @@ function Library:CreateWindow(config)
         end)
     end
 
+---------------------------------------------------------
+-- GRUP PENGUBAH WARNA TEKS (25 WARNA + 1 RGB)
+---------------------------------------------------------
+local TextColorGroup = buildGroupInContainer(SettingsContainer, "Warna Teks Hub / Hub Text Color", "lucide-palette")
+
+-- Daftar 25 Pilihan Warna + 1 RGB
+local ColorPalette = {
+    ["RGB Rainbow"] = "RGB",
+    ["Putih (White)"] = Color3.fromRGB(255, 255, 255),
+    ["Merah (Red)"] = Color3.fromRGB(255, 50, 50),
+    ["Merah Muda (Pink)"] = Color3.fromRGB(255, 105, 180),
+    ["Magenta"] = Color3.fromRGB(255, 0, 255),
+    ["Oranye (Orange)"] = Color3.fromRGB(255, 140, 0),
+    ["Kuning (Yellow)"] = Color3.fromRGB(255, 220, 0),
+    ["Emas (Gold)"] = Color3.fromRGB(255, 215, 0),
+    ["Hijau Terang (Lime)"] = Color3.fromRGB(0, 255, 0),
+    ["Hijau (Green)"] = Color3.fromRGB(50, 205, 50),
+    ["Hijau Mint (Mint)"] = Color3.fromRGB(152, 255, 152),
+    ["Cyan"] = Color3.fromRGB(0, 255, 255),
+    ["Biru Langit (Sky Blue)"] = Color3.fromRGB(135, 206, 235),
+    ["Biru (Blue)"] = Color3.fromRGB(50, 150, 255),
+    ["Biru Dongker (Navy)"] = Color3.fromRGB(0, 0, 128),
+    ["Ungu (Purple)"] = Color3.fromRGB(147, 112, 219),
+    ["Ungu Tua (Indigo)"] = Color3.fromRGB(75, 0, 130),
+    ["Lavender"] = Color3.fromRGB(230, 230, 250),
+    ["Cokelat (Brown)"] = Color3.fromRGB(165, 42, 42),
+    ["Cokelat Muda (Tan)"] = Color3.fromRGB(210, 180, 140),
+    ["Abu-abu Terang (Light Gray)"] = Color3.fromRGB(211, 211, 211),
+    ["Abu-abu (Gray)"] = Color3.fromRGB(128, 128, 128),
+    ["Hitam (Black)"] = Color3.fromRGB(30, 30, 30),
+    ["Peach"] = Color3.fromRGB(255, 218, 185),
+    ["Coral"] = Color3.fromRGB(255, 127, 80),
+    ["Teal"] = Color3.fromRGB(0, 128, 128)
+}
+
+-- Urutan nama warna untuk Dropdown
+local ColorNames = {
+    "RGB Rainbow", "Putih (White)", "Merah (Red)", "Merah Muda (Pink)", "Magenta", 
+    ["Oranye (Orange)"] = nil -- biar rapi pakai array terurut di bawah
+}
+
+local OrderedColorNames = {
+    "RGB Rainbow", "Putih (White)", "Merah (Red)", "Merah Muda (Pink)", "Magenta",
+    "Oranye (Orange)", "Kuning (Yellow)", "Emas (Gold)", "Hijau Terang (Lime)", "Hijau (Green)",
+    "Hijau Mint (Mint)", "Cyan", "Biru Langit (Sky Blue)", "Biru (Blue)", "Biru Dongker (Navy)",
+    "Ungu (Purple)", "Ungu Tua (Indigo)", "Lavender", "Cokelat (Brown)", "Cokelat Muda (Tan)",
+    "Abu-abu Terang (Light Gray)", "Abu-abu (Gray)", "Hitam (Black)", "Peach", "Coral", "Teal"
+}
+
+-- Variabel state RGB
+local rgbConnection = nil
+
+TextColorGroup:AddDropdown("Pilih Warna / Select Color", OrderedColorNames, "Putih (White)", function(selected)
+    -- Hentikan animasi RGB sebelumnya jika aktif
+    if rgbConnection then
+        rgbConnection:Disconnect()
+        rgbConnection = nil
+    end
+
+    if selected == "RGB Rainbow" then
+        Library:Notify({ Title = "Warna Teks / Text Color", Content = "Mode RGB Rainbow Aktif!", Type = "Success", Duration = 2 })
+        
+        -- Jalankan efek warna RGB berkedip/berubah-ubah halus
+        rgbConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            local hue = tick() % 5 / 5
+            local rgbColor = Color3.fromHSV(hue, 1, 1)
+            
+            if Main and Main.GetDescendants then
+                for _, obj in ipairs(Main:GetDescendants()) do
+                    if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                        obj.TextColor3 = rgbColor
+                    end
+                end
+            end
+        end)
+    else
+        local chosenColor = ColorPalette[selected]
+        if chosenColor then
+            Library:Notify({ Title = "Warna Teks / Text Color", Content = "Berubah ke: " .. selected, Type = "Success", Duration = 2 })
+            
+            if Main and Main.GetDescendants then
+                for _, obj in ipairs(Main:GetDescendants()) do
+                    if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                        obj.TextColor3 = chosenColor
+                    end
+                end
+            end
+        end
+    end
+end)
+
     local ResizeGrip = Instance.new("Frame")
     ResizeGrip.Name = "ResizeGrip"
     ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
