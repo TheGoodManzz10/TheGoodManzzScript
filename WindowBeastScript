@@ -1,24 +1,24 @@
 local Library = {}
 
--- Daftar Icon Lucide Terpilih yang Relevan & Nyambung dengan Fitur
+-- Daftar Icon Lucide Terpilih
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
     ["SpinOuter"]               = "rbxassetid://109694296016043",
-    ["lucide-fingerprint"]      = "rbxassetid://10723375250", -- Verifikasi Sidik Jari
-    ["lucide-shield"]           = "rbxassetid://10734951847", -- Info Key & Keamanan
-    ["lucide-search"]           = "rbxassetid://10734943674", -- Cari Script Scriptblox
-    ["lucide-sliders"]          = "rbxassetid://10734963400", -- Pengaturan Ukuran & Transparansi
-    ["lucide-alarm-clock"]      = "rbxassetid://10734984606", -- Waktu Bermain
-    ["lucide-user"]             = "rbxassetid://10747373176", -- Informasi Pemain / Profil
-    ["lucide-navigation"]       = "rbxassetid://10734906744", -- Performa & Aksi Cepat
-    ["lucide-code"]             = "rbxassetid://10709810463", -- Script Populer
-    ["lucide-palette"]          = "rbxassetid://10734910430", -- Warna Teks
-    ["lucide-paint-bucket"]     = "rbxassetid://10734909847", -- Tema UI
-    ["lucide-music"]            = "rbxassetid://10734905958", -- Musik & Audio
-    ["lucide-languages"]        = "rbxassetid://10723417703", -- Pilihan Bahasa
-    ["lucide-type"]             = "rbxassetid://10747364761", -- Gaya Text / Font
-    ["lucide-zap"]              = "rbxassetid://10734883986", -- Fitur AI / Kecepatan
+    ["lucide-fingerprint"]      = "rbxassetid://10723375250",
+    ["lucide-shield"]           = "rbxassetid://10734951847",
+    ["lucide-search"]           = "rbxassetid://10734943674",
+    ["lucide-sliders"]          = "rbxassetid://10734963400",
+    ["lucide-alarm-clock"]      = "rbxassetid://10734984606",
+    ["lucide-user"]             = "rbxassetid://10747373176",
+    ["lucide-navigation"]       = "rbxassetid://10734906744",
+    ["lucide-code"]             = "rbxassetid://10709810463",
+    ["lucide-palette"]          = "rbxassetid://10734910430",
+    ["lucide-paint-bucket"]     = "rbxassetid://10734909847",
+    ["lucide-music"]            = "rbxassetid://10734905958",
+    ["lucide-languages"]        = "rbxassetid://10723417703",
+    ["lucide-type"]             = "rbxassetid://10747364761",
+    ["lucide-zap"]              = "rbxassetid://10734883986",
     ["lucide-chevron-up"]       = "rbxassetid://10709791523",
     ["lucide-chevron-down"]     = "rbxassetid://10709790948",
     ["lucide-x"]                = "rbxassetid://10747384394"
@@ -811,15 +811,13 @@ function Library:CreateWindow(config)
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
     local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", DurationDays = 365, DurationText = "Permanen" } }
     local keyGetUrl = KeySystemConfig.KeyURL or "https://discord.gg/yourlink"
-    local saveFileName = "WindowBeastKey.json"
 
     local AiSystemConfig = config.AiSystem or {}
     local isAiEnabled = (AiSystemConfig.Enabled ~= false)
     local openRouterApiKey = AiSystemConfig.ApiKey or "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"
     local openRouterUrl = AiSystemConfig.Url or "https://openrouter.ai/api/v1/chat/completions"
 
-    -- Variabel limit scriptblox dinamis (bisa diatur lewat slider di dalam grup)
-    local currentScriptbloxLimit = math.clamp(config.ScriptbloxLimit or 15, 8, 25)
+    local scriptbloxLimit = math.clamp(config.ScriptbloxLimit or 15, 8, 25)
 
     local currentActiveKey = "Tidak ada"
     local currentKeyDurationText = "Tidak ada"
@@ -1082,16 +1080,17 @@ function Library:CreateWindow(config)
                         return
                     end
 
+                    -- DIUBAH MENJADI MODEL: openrouter/auto
                     local requestBody = HttpService:JSONEncode({
-                        model = "meta-llama/llama-3.1-8b-instruct:free",
+                        model = "openrouter/auto",
                         messages = {
                             { role = "system", content = "Kamu adalah asisten AI ramah dari Window Beast Hub yang membantu seputar game Roblox." },
                             { role = "user", content = promptText }
                         }
                     })
 
-                    pcall(function()
-                        local res = requestFunc({
+                    local success, res = pcall(function()
+                        return requestFunc({
                             Url = openRouterUrl,
                             Method = "POST",
                             Headers = {
@@ -1102,21 +1101,28 @@ function Library:CreateWindow(config)
                             },
                             Body = requestBody
                         })
+                    end)
 
-                        if res and res.Body then
-                            local decoded = HttpService:JSONDecode(res.Body)
-                            if decoded and decoded.choices and decoded.choices[1] and decoded.choices[1].message then
+                    if success and res and res.Body then
+                        local decodeSuccess, decoded = pcall(function()
+                            return HttpService:JSONDecode(res.Body)
+                        end)
+
+                        if decodeSuccess and decoded then
+                            if decoded.choices and decoded.choices[1] and decoded.choices[1].message then
                                 addChatMessage("Beast AI", decoded.choices[1].message.content)
-                            elseif decoded and decoded.error then
-                                local errMsg = type(decoded.error) == "table" and (decoded.error.message or "Unknown OpenRouter Error") or tostring(decoded.error)
+                            elseif decoded.error then
+                                local errMsg = type(decoded.error) == "table" and (decoded.error.message or "Unknown Error") or tostring(decoded.error)
                                 addChatMessage("Beast AI", "API Error: " .. errMsg)
                             else
                                 addChatMessage("Beast AI", "Respon Server: " .. tostring(res.Body))
                             end
                         else
-                            addChatMessage("Beast AI", "Gagal menghubungkan ke server OpenRouter.")
+                            addChatMessage("Beast AI", "Gagal memproses JSON dari server.")
                         end
-                    end)
+                    else
+                        addChatMessage("Beast AI", "Gagal menghubungkan ke server OpenRouter.")
+                    end
                 end)
             end
 
@@ -1135,8 +1141,9 @@ function Library:CreateWindow(config)
         local showingSettings = false
         local showingAi = false
 
+        -- PERBAIKAN: CEK DENGAN `if isMinimized then return end` AGAR TIDAK BISA DIBUKA SAAT MINIMIZE
         SettingsBtn.MouseButton1Click:Connect(function()
-            if isMinimized then return end -- Tidak bisa diklik saat minimize
+            if isMinimized then return end
             showingSettings = not showingSettings
             showingAi = false
             Container.Visible = not showingSettings
@@ -1153,7 +1160,7 @@ function Library:CreateWindow(config)
 
         if AiBtn then
             AiBtn.MouseButton1Click:Connect(function()
-                if isMinimized then return end -- Tidak bisa diklik saat minimize
+                if isMinimized then return end
                 showingAi = not showingAi
                 showingSettings = false
                 Container.Visible = not showingAi
@@ -1400,13 +1407,7 @@ function Library:CreateWindow(config)
             end
         end)
 
-        -- SEARCH SCRIPTBLOX DENGAN SLIDER JUMLAH SCRIPT DI DALAMNYA
         local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
-
-        -- SLIDER ATUR JUMLAH SCRIPT (8 - 25)
-        ScriptbloxGroup:AddSlider("Jumlah Script Ditampilkan", "lucide-sliders", 8, 25, currentScriptbloxLimit, function(val)
-            currentScriptbloxLimit = val
-        end)
 
         local SearchBoxFrame = Instance.new("Frame")
         SearchBoxFrame.Size = UDim2.new(1, 0, 0, 32)
@@ -1467,7 +1468,7 @@ function Library:CreateWindow(config)
 
                     if data and data.result and data.result.scripts and #data.result.scripts > 0 then
                         for i, item in ipairs(data.result.scripts) do
-                            if i > currentScriptbloxLimit then break end
+                            if i > scriptbloxLimit then break end
 
                             local scriptTitle = item.title or "No Title"
                             local rawScript = item.script or ""
@@ -1956,9 +1957,7 @@ function Library:CreateWindow(config)
         Window.AddSection = Window.AddGroup
     end
 
-    -- ==========================================
-    -- LAYAR HITAM & SISTEM KETUK 5 KALI (TAP 5 TIMES)
-    -- ==========================================
+    -- LAYAR HITAM & VERIFIKASI SIDIK JARI 5 KALI
     task.spawn(function()
         local LockScreen = Instance.new("Frame")
         LockScreen.Name = "LockScreen"
