@@ -54,7 +54,7 @@ local Translations = {
         CustomSong     = "Simpan & Putar",
         SongPlaceholder = "Masukkan ID Lagu...",
         ActiveSong     = "Lagu Aktif: ",
-        PlayerInfo     = "Informasi Pemain & Lobby",
+        PlayerInfo     = "Informasi Pemain",
         PerfGroup      = "Fitur & Performa"
     },
     English = {
@@ -84,7 +84,7 @@ local Translations = {
         CustomSong     = "Save & Play",
         SongPlaceholder = "Enter Song ID...",
         ActiveSong     = "Active Song: ",
-        PlayerInfo     = "Player & Lobby Info",
+        PlayerInfo     = "Player Information",
         PerfGroup      = "Features & Performance"
     }
 }
@@ -1182,12 +1182,42 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- FITUR: PROFIL LOBBY & PLAYER (INFORMASI LENGKAP)
+    -- FITUR: PROFIL ASLI PLAYER (DENGAN AVATAR & INFO)
     -- ==========================================
     local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
     
-    local pName = LocalPlayer.DisplayName .. " (@" .. LocalPlayer.Name .. ")"
-    local pTeam = LocalPlayer.Team and LocalPlayer.Team.Name or "Tanpa Tim / No Team"
+    local AvatarFrame = Instance.new("Frame")
+    AvatarFrame.Size = UDim2.new(1, 0, 0, 52)
+    AvatarFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    AvatarFrame.Parent = PlayerGroup.ContentHolder
+    Instance.new("UICorner", AvatarFrame).CornerRadius = UDim.new(0, 6)
+    local AvatarStroke = Instance.new("UIStroke", AvatarFrame)
+    AvatarStroke.Color = Color3.fromRGB(255, 255, 255)
+    AvatarStroke.Transparency = 0.9
+
+    local AvatarImg = Instance.new("ImageLabel")
+    AvatarImg.Size = UDim2.new(0, 40, 0, 40)
+    AvatarImg.Position = UDim2.new(0, 6, 0.5, -20)
+    AvatarImg.BackgroundTransparency = 1
+    pcall(function()
+        AvatarImg.Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+    end)
+    AvatarImg.Parent = AvatarFrame
+    Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
+
+    local AvatarLbl = Instance.new("TextLabel")
+    AvatarLbl.Size = UDim2.new(1, -54, 1, 0)
+    AvatarLbl.Position = UDim2.new(0, 52, 0, 0)
+    AvatarLbl.BackgroundTransparency = 1
+    AvatarLbl.Text = LocalPlayer.DisplayName .. "\n(@" .. LocalPlayer.Name .. ")"
+    AvatarLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
+    AvatarLbl.TextSize = 11
+    AvatarLbl.Font = Enum.Font.GothamBold
+    AvatarLbl.TextXAlignment = Enum.TextXAlignment.Left
+    AvatarLbl.TextYAlignment = Enum.TextYAlignment.Center
+    AvatarLbl.TextTruncate = Enum.TextTruncate.AtEnd
+    AvatarLbl.Parent = AvatarFrame
+
     local pGameName = "Mendeteksi..."
     pcall(function()
         pGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
@@ -1195,8 +1225,6 @@ function Library:CreateWindow(config)
     local pPlaceId = tostring(game.PlaceId)
     local pAge = tostring(LocalPlayer.AccountAge) .. " Hari"
 
-    PlayerGroup:AddLabel("Nama: " + pName)
-    PlayerGroup:AddLabel("Tim / Team: " .. pTeam)
     PlayerGroup:AddLabel("Game: " .. pGameName)
     PlayerGroup:AddLabel("Place ID: " .. pPlaceId)
     PlayerGroup:AddLabel("Umur Akun: " .. pAge)
@@ -1219,7 +1247,7 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- FITUR: PERFORMA & TAMBAHAN (DENGAN INSTAN PROMPT)
+    -- FITUR: PERFORMA & INSTANT PROXIMITY PROMPT
     -- ==========================================
     local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
     
@@ -1240,23 +1268,19 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Performa", Content = "Render Chunk Diperbarui!", Type = "Success" })
     end)
 
-    local promptConn
-    PerfGroup:AddToggle("Instan Prompt", nil, false, function(state)
+    -- Instant Prompt: otomatis skip / langsung trigger hold prompt
+    local instantPromptConn
+    PerfGroup:AddToggle("Instant Prompt", "lucide-zap", false, function(state)
         if state then
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v:IsA("ProximityPrompt") then
-                    v.HoldDuration = 0
-                end
-            end
-            promptConn = workspace.DescendantAdded:Connect(function(v)
-                if v:IsA("ProximityPrompt") then
-                    v.HoldDuration = 0
-                end
+            instantPromptConn = game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(prompt)
+                pcall(function()
+                    fireproximityprompt(prompt)
+                end)
             end)
-            Library:Notify({ Title = "Interaksi", Content = "Instan Prompt Aktif (Hold = 0s)!", Type = "Success" })
+            Library:Notify({ Title = "Interaksi", Content = "Instant Prompt Aktif (Skip Otomatis)", Type = "Success" })
         else
-            if promptConn then promptConn:Disconnect() end
-            Library:Notify({ Title = "Interaksi", Content = "Instan Prompt Dimatikan", Type = "Info" })
+            if instantPromptConn then instantPromptConn:Disconnect() end
+            Library:Notify({ Title = "Interaksi", Content = "Instant Prompt Dimatikan", Type = "Info" })
         end
     end)
 
@@ -1567,13 +1591,13 @@ function Library:CreateWindow(config)
     local isMinimized = false
     local normalHeight = 300
 
+    -- PERBAIKAN BUG MINIMIZE: Sembunyikan container secara instan saat minimize agar tidak bocor keluar
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
         if isMinimized then
             normalHeight = Main.AbsoluteSize.Y
             Container.Visible = false
             SettingsContainer.Visible = false
-            ResizeGrip.Visible = false -- Sembunyikan grip saat minimize agar tidak bocor
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
@@ -1588,7 +1612,6 @@ function Library:CreateWindow(config)
             task.delay(0.2, function()
                 Container.Visible = not showingSettings
                 SettingsContainer.Visible = showingSettings
-                ResizeGrip.Visible = true -- Tampilkan kembali saat restore
             end)
         end
     end)
