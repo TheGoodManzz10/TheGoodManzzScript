@@ -1,24 +1,23 @@
 local Library = {}
 
--- Daftar Icon Lucide Terpilih
+-- Daftar Icon Lucide Terpilih yang Relevan & Nyambung dengan Fitur
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
     ["SpinOuter"]               = "rbxassetid://109694296016043",
-    ["lucide-fingerprint"]      = "rbxassetid://10723375250",
-    ["lucide-shield"]           = "rbxassetid://10734951847",
-    ["lucide-search"]           = "rbxassetid://10734943674",
-    ["lucide-sliders"]          = "rbxassetid://10734963400",
-    ["lucide-alarm-clock"]      = "rbxassetid://10734984606",
-    ["lucide-user"]             = "rbxassetid://10747373176",
-    ["lucide-navigation"]       = "rbxassetid://10734906744",
-    ["lucide-code"]             = "rbxassetid://10709810463",
-    ["lucide-palette"]          = "rbxassetid://10734910430",
-    ["lucide-paint-bucket"]     = "rbxassetid://10734909847",
-    ["lucide-music"]            = "rbxassetid://10734905958",
-    ["lucide-languages"]        = "rbxassetid://10723417703",
-    ["lucide-type"]             = "rbxassetid://10747364761",
-    ["lucide-zap"]              = "rbxassetid://10734883986",
+    ["lucide-fingerprint"]      = "rbxassetid://10723375250", -- Verifikasi Sidik Jari
+    ["lucide-shield"]           = "rbxassetid://10734951847", -- Info Key & Keamanan
+    ["lucide-search"]           = "rbxassetid://10734943674", -- Cari Script Scriptblox
+    ["lucide-sliders"]          = "rbxassetid://10734963400", -- Pengaturan Ukuran & Transparansi
+    ["lucide-alarm-clock"]      = "rbxassetid://10734984606", -- Waktu Bermain
+    ["lucide-user"]             = "rbxassetid://10747373176", -- Informasi Pemain / Profil
+    ["lucide-navigation"]       = "rbxassetid://10734906744", -- Performa & Aksi Cepat
+    ["lucide-code"]             = "rbxassetid://10709810463", -- Script Populer
+    ["lucide-palette"]          = "rbxassetid://10734910430", -- Warna Teks
+    ["lucide-paint-bucket"]     = "rbxassetid://10734909847", -- Tema UI
+    ["lucide-music"]            = "rbxassetid://10734905958", -- Musik & Audio
+    ["lucide-languages"]        = "rbxassetid://10723417703", -- Pilihan Bahasa
+    ["lucide-type"]             = "rbxassetid://10747364761", -- Gaya Text / Font
     ["lucide-chevron-up"]       = "rbxassetid://10709791523",
     ["lucide-chevron-down"]     = "rbxassetid://10709790948",
     ["lucide-x"]                = "rbxassetid://10747384394"
@@ -808,15 +807,6 @@ function Library:CreateWindow(config)
     local flashText = config.FlashText or "GOODMANZ"
 
     local KeySystemConfig = config.KeySystem or {}
-    local isKeySystemEnabled = KeySystemConfig.Enabled or false
-    local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", DurationDays = 365, DurationText = "Permanen" } }
-    local keyGetUrl = KeySystemConfig.KeyURL or "https://discord.gg/yourlink"
-
-    local AiSystemConfig = config.AiSystem or {}
-    local isAiEnabled = (AiSystemConfig.Enabled ~= false)
-    local openRouterApiKey = AiSystemConfig.ApiKey or "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"
-    local openRouterUrl = AiSystemConfig.Url or "https://openrouter.ai/api/v1/chat/completions"
-
     local scriptbloxLimit = math.clamp(config.ScriptbloxLimit or 15, 8, 25)
 
     local currentActiveKey = "Tidak ada"
@@ -871,12 +861,11 @@ function Library:CreateWindow(config)
             HeaderIcon.Parent = Header
         end
 
-        local rightOffsetMinBtn = isAiEnabled and 125 or 100
-        local rightOffsetAiBtn = 100
+        local rightOffsetMinBtn = 100
         local rightOffsetSetBtn = 75
 
         local Title = Instance.new("TextLabel")
-        Title.Size = UDim2.new(1, mainLogo and -(isAiEnabled and 150 or 125) or -(isAiEnabled and 140 or 115), 1, 0)
+        Title.Size = UDim2.new(1, mainLogo and -115 or -100, 1, 0)
         Title.Position = UDim2.new(0, mainLogo and 34 or 12, 0, 0)
         Title.BackgroundTransparency = 1
         Title.Text = titleText
@@ -894,17 +883,6 @@ function Library:CreateWindow(config)
         MinBtn.Image = Library.Icons["lucide-chevron-up"]
         MinBtn.Parent = Header
         Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
-
-        local AiBtn
-        if isAiEnabled then
-            AiBtn = Instance.new("ImageButton")
-            AiBtn.Size = UDim2.new(0, 22, 0, 22)
-            AiBtn.Position = UDim2.new(1, -rightOffsetAiBtn, 0, 7)
-            AiBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-            AiBtn.Image = Library.Icons["lucide-zap"]
-            AiBtn.Parent = Header
-            Instance.new("UICorner", AiBtn).CornerRadius = UDim.new(0, 6)
-        end
 
         local SettingsBtn = Instance.new("ImageButton")
         SettingsBtn.Size = UDim2.new(0, 22, 0, 22)
@@ -975,204 +953,27 @@ function Library:CreateWindow(config)
             SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 8)
         end)
 
-        local AiContainer, AiChatScroll, AiTextBox, AiSendBtn
-        if isAiEnabled then
-            AiContainer = Instance.new("Frame")
-            AiContainer.Name = "AiContainer"
-            AiContainer.Size = UDim2.new(1, -16, 1, -44)
-            AiContainer.Position = UDim2.new(0, 8, 0, 38)
-            AiContainer.BackgroundTransparency = 1
-            AiContainer.Visible = false
-            AiContainer.Parent = Main
-
-            AiChatScroll = Instance.new("ScrollingFrame")
-            AiChatScroll.Size = UDim2.new(1, 0, 1, -38)
-            AiChatScroll.Position = UDim2.new(0, 0, 0, 0)
-            AiChatScroll.BackgroundTransparency = 1
-            AiChatScroll.BorderSizePixel = 0
-            AiChatScroll.ScrollBarThickness = 2
-            AiChatScroll.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
-            AiChatScroll.ClipsDescendants = true
-            AiChatScroll.Parent = AiContainer
-
-            local AiChatLayout = Instance.new("UIListLayout")
-            AiChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            AiChatLayout.Padding = UDim.new(0, 6)
-            AiChatLayout.Parent = AiChatScroll
-
-            AiChatLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                AiChatScroll.CanvasSize = UDim2.new(0, 0, 0, AiChatLayout.AbsoluteContentSize.Y + 6)
-                AiChatScroll.CanvasPosition = Vector2.new(0, AiChatLayout.AbsoluteContentSize.Y)
-            end)
-
-            local AiInputFrame = Instance.new("Frame")
-            AiInputFrame.Size = UDim2.new(1, 0, 0, 32)
-            AiInputFrame.Position = UDim2.new(0, 0, 1, -32)
-            AiInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-            AiInputFrame.Parent = AiContainer
-            Instance.new("UICorner", AiInputFrame).CornerRadius = UDim.new(0, 6)
-
-            AiTextBox = Instance.new("TextBox")
-            AiTextBox.Size = UDim2.new(0.75, -5, 1, 0)
-            AiTextBox.Position = UDim2.new(0, 8, 0, 0)
-            AiTextBox.BackgroundTransparency = 1
-            AiTextBox.PlaceholderText = "Tanya AI sesuatu..."
-            AiTextBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
-            AiTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-            AiTextBox.TextSize = 11
-            AiTextBox.Font = currentFont
-            AiTextBox.TextXAlignment = Enum.TextXAlignment.Left
-            AiTextBox.Parent = AiInputFrame
-
-            AiSendBtn = Instance.new("TextButton")
-            AiSendBtn.Size = UDim2.new(0.25, -8, 1, -6)
-            AiSendBtn.Position = UDim2.new(0.75, 2, 0, 3)
-            AiSendBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-            AiSendBtn.Text = "Kirim"
-            AiSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            AiSendBtn.TextSize = 10
-            AiSendBtn.Font = Enum.Font.GothamBold
-            AiSendBtn.Parent = AiInputFrame
-            Instance.new("UICorner", AiSendBtn).CornerRadius = UDim.new(0, 4)
-
-            local function addChatMessage(sender, text)
-                local MsgBubble = Instance.new("Frame")
-                MsgBubble.Size = UDim2.new(1, 0, 0, 0)
-                MsgBubble.BackgroundColor3 = (sender == "You") and Color3.fromRGB(37, 100, 60) or Color3.fromRGB(28, 28, 36)
-                MsgBubble.Parent = AiChatScroll
-                Instance.new("UICorner", MsgBubble).CornerRadius = UDim.new(0, 6)
-
-                local MsgLbl = Instance.new("TextLabel")
-                MsgLbl.Size = UDim2.new(1, -12, 1, -12)
-                MsgLbl.Position = UDim2.new(0, 6, 0, 6)
-                MsgLbl.BackgroundTransparency = 1
-                MsgLbl.Text = "<b>" .. sender .. ":</b> " .. text
-                MsgLbl.RichText = true
-                MsgLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-                MsgLbl.TextSize = 10
-                MsgLbl.Font = Enum.Font.Gotham
-                MsgLbl.TextXAlignment = Enum.TextXAlignment.Left
-                MsgLbl.TextYAlignment = Enum.TextYAlignment.Top
-                MsgLbl.TextWrapped = true
-                MsgLbl.Parent = MsgBubble
-
-                local textHeight = game:GetService("TextService"):GetTextSize(
-                    sender .. ": " .. text,
-                    10,
-                    Enum.Font.Gotham,
-                    Vector2.new(190, 9999)
-                ).Y
-
-                MsgBubble.Size = UDim2.new(1, 0, 0, math.max(28, textHeight + 14))
-            end
-
-            addChatMessage("Beast AI", "Halo! Asisten AI siap membantu script Anda.")
-
-            local function sendAiRequest(promptText)
-                if promptText == "" then return end
-                addChatMessage("You", promptText)
-                AiTextBox.Text = ""
-
-                task.spawn(function()
-                    local requestFunc = (syn and syn.request) or (http and http.request) or http_request or request
-                    if not requestFunc then
-                        addChatMessage("Beast AI", "Error: Executor Anda tidak mendukung HTTP Request!")
-                        return
-                    end
-
-                    -- DIUBAH MENJADI MODEL: openrouter/auto
-                    local requestBody = HttpService:JSONEncode({
-                        model = "openrouter/auto",
-                        messages = {
-                            { role = "system", content = "Kamu adalah asisten AI ramah dari Window Beast Hub yang membantu seputar game Roblox." },
-                            { role = "user", content = promptText }
-                        }
-                    })
-
-                    local success, res = pcall(function()
-                        return requestFunc({
-                            Url = openRouterUrl,
-                            Method = "POST",
-                            Headers = {
-                                ["Authorization"] = "Bearer " .. openRouterApiKey,
-                                ["Content-Type"] = "application/json",
-                                ["HTTP-Referer"] = "https://roblox.com",
-                                ["X-Title"] = "Window Beast Hub"
-                            },
-                            Body = requestBody
-                        })
-                    end)
-
-                    if success and res and res.Body then
-                        local decodeSuccess, decoded = pcall(function()
-                            return HttpService:JSONDecode(res.Body)
-                        end)
-
-                        if decodeSuccess and decoded then
-                            if decoded.choices and decoded.choices[1] and decoded.choices[1].message then
-                                addChatMessage("Beast AI", decoded.choices[1].message.content)
-                            elseif decoded.error then
-                                local errMsg = type(decoded.error) == "table" and (decoded.error.message or "Unknown Error") or tostring(decoded.error)
-                                addChatMessage("Beast AI", "API Error: " .. errMsg)
-                            else
-                                addChatMessage("Beast AI", "Respon Server: " .. tostring(res.Body))
-                            end
-                        else
-                            addChatMessage("Beast AI", "Gagal memproses JSON dari server.")
-                        end
-                    else
-                        addChatMessage("Beast AI", "Gagal menghubungkan ke server OpenRouter.")
-                    end
-                end)
-            end
-
-            AiSendBtn.MouseButton1Click:Connect(function()
-                sendAiRequest(AiTextBox.Text)
-            end)
-
-            AiTextBox.FocusLost:Connect(function(enterPressed)
-                if enterPressed then
-                    sendAiRequest(AiTextBox.Text)
-                end
-            end)
-        end
-
-        local isMinimized = false
         local showingSettings = false
-        local showingAi = false
+        local isMinimized = false
+        local normalHeight = 300
 
-        -- PERBAIKAN: CEK DENGAN `if isMinimized then return end` AGAR TIDAK BISA DIBUKA SAAT MINIMIZE
         SettingsBtn.MouseButton1Click:Connect(function()
-            if isMinimized then return end
+            if isMinimized then
+                isMinimized = false
+                MinBtn.Image = Library.Icons["lucide-chevron-up"]
+                TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
+                }):Play()
+            end
+
             showingSettings = not showingSettings
-            showingAi = false
             Container.Visible = not showingSettings
             SettingsContainer.Visible = showingSettings
-            if AiContainer then AiContainer.Visible = false end
 
             TweenService:Create(SettingsBtn, TweenInfo.new(0.2), {
                 ImageColor3 = showingSettings and Color3.fromRGB(52, 152, 219) or Color3.fromRGB(255, 255, 255)
             }):Play()
-            if AiBtn then
-                TweenService:Create(AiBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
-            end
         end)
-
-        if AiBtn then
-            AiBtn.MouseButton1Click:Connect(function()
-                if isMinimized then return end
-                showingAi = not showingAi
-                showingSettings = false
-                Container.Visible = not showingAi
-                SettingsContainer.Visible = false
-                if AiContainer then AiContainer.Visible = showingAi end
-
-                TweenService:Create(AiBtn, TweenInfo.new(0.2), {
-                    ImageColor3 = showingAi and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(255, 255, 255)
-                }):Play()
-                TweenService:Create(SettingsBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
-            end)
-        end
 
         local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
             if type(icon) == "boolean" then
@@ -1390,6 +1191,7 @@ function Library:CreateWindow(config)
             FloatingContainer.Visible = false
         end)
 
+        -- ICON RELEVAN: Lucide-Shield untuk keamanan/key info
         local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-shield", false)
         local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
         local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
@@ -1407,6 +1209,7 @@ function Library:CreateWindow(config)
             end
         end)
 
+        -- ICON RELEVAN: Lucide-Search untuk pencarian scriptblox
         local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
 
         local SearchBoxFrame = Instance.new("Frame")
@@ -1546,6 +1349,7 @@ function Library:CreateWindow(config)
             end
         end)
 
+        -- ICON RELEVAN: Lucide-Sliders untuk pengaturan tombol
         local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
         FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
             FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
@@ -1560,6 +1364,7 @@ function Library:CreateWindow(config)
             Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
         end)
 
+        -- ICON RELEVAN: Lucide-Alarm-Clock untuk waktu bermain
         local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
         local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
         local startTime = tick()
@@ -1577,6 +1382,7 @@ function Library:CreateWindow(config)
             end
         end)
 
+        -- ICON RELEVAN: Lucide-User untuk informasi profil player
         local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-user", false)
         
         local AvatarFrame = Instance.new("Frame")
@@ -1618,6 +1424,7 @@ function Library:CreateWindow(config)
         PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
         PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
+        -- ICON RELEVAN: Lucide-Navigation untuk performa
         local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
         
         PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
@@ -1674,6 +1481,7 @@ function Library:CreateWindow(config)
             end
         end)
 
+        -- ICON RELEVAN: Lucide-Code untuk script populer
         local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
 
         local popularScriptsList = {
@@ -1705,6 +1513,7 @@ function Library:CreateWindow(config)
             end)
         end
 
+        -- ICON RELEVAN: Lucide-Palette untuk warna teks
         local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
         
         TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
@@ -1720,6 +1529,7 @@ function Library:CreateWindow(config)
             end)
         end
 
+        -- ICON RELEVAN: Lucide-Paint-Bucket untuk tema UI
         local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
         ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
@@ -1735,6 +1545,7 @@ function Library:CreateWindow(config)
             end)
         end
 
+        -- ICON RELEVAN: Lucide-Music untuk musik
         local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
         
         local currentSound = Instance.new("Sound")
@@ -1828,6 +1639,7 @@ function Library:CreateWindow(config)
             end
         end)
 
+        -- ICON RELEVAN: Lucide-Languages untuk bahasa
         local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
         LangGroup:AddButton("Bahasa Indonesia", nil, function()
             currentLang = "Indonesian"
@@ -1840,11 +1652,13 @@ function Library:CreateWindow(config)
             Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
         end)
 
+        -- ICON RELEVAN: Lucide-Sliders untuk transparansi UI
         local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
         TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
             Main.BackgroundTransparency = val / 100
         end)
 
+        -- ICON RELEVAN: Lucide-Type untuk gaya font text
         local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
         for fontName, enumFont in pairs(Fonts) do
             FontGroup:AddButton(fontName, nil, function()
@@ -1900,15 +1714,12 @@ function Library:CreateWindow(config)
             })
         end)
 
-        local normalHeight = 270
-
         MinBtn.MouseButton1Click:Connect(function()
             isMinimized = not isMinimized
             if isMinimized then
                 normalHeight = Main.AbsoluteSize.Y
                 Container.Visible = false
                 SettingsContainer.Visible = false
-                if AiContainer then AiContainer.Visible = false end
                 MinBtn.Image = Library.Icons["lucide-chevron-down"]
                 
                 TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
@@ -1921,9 +1732,8 @@ function Library:CreateWindow(config)
                     Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
                 }):Play()
                 task.delay(0.2, function()
-                    Container.Visible = not showingSettings and not showingAi
+                    Container.Visible = not showingSettings
                     SettingsContainer.Visible = showingSettings
-                    if AiContainer then AiContainer.Visible = showingAi end
                 end)
             end
         end)
@@ -1957,7 +1767,9 @@ function Library:CreateWindow(config)
         Window.AddSection = Window.AddGroup
     end
 
-    -- LAYAR HITAM & VERIFIKASI SIDIK JARI 5 KALI
+    -- ==========================================
+    -- LAYAR HITAM & SISTEM KETUK 5 KALI (TAP 5 TIMES)
+    -- ==========================================
     task.spawn(function()
         local LockScreen = Instance.new("Frame")
         LockScreen.Name = "LockScreen"
