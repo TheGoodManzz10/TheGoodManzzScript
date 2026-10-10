@@ -1,10 +1,11 @@
 local Library = {}
 Library.CurrentKeyExpire = nil
 
--- Preset Icon Registry (Hanya Logo & Settings)
+-- Preset Icon Registry
 Library.Icons = {
-    ["Logo"]        = "rbxassetid://107391174248131",
-    ["Settings"]    = "rbxassetid://10734950309",
+    ["Logo"]             = "rbxassetid://107391174248131",
+    ["Settings"]         = "rbxassetid://10734950309",
+    ["SpinOuter"]        = "rbxassetid://109694296016043",
     ["lucide-accessibility"] = "rbxassetid://10709751939",
     ["lucide-activity"] = "rbxassetid://10709752035",
     ["lucide-air-vent"] = "rbxassetid://10709752131",
@@ -846,6 +847,7 @@ local Translations = {
         KeyTimerTitle  = "Sisa Durasi Key",
         NoKeyActive    = "Tanpa Key / Key Bebas",
         TextColorGroup = "Pilih Warna Teks",
+        ThemeGroup     = "Pilih Tema UI",
         MusicGroup     = "Grup Musik"
     },
     English = {
@@ -868,6 +870,7 @@ local Translations = {
         KeyTimerTitle  = "Key Expiration Timer",
         NoKeyActive    = "No Key Active",
         TextColorGroup = "Text Color",
+        ThemeGroup     = "UI Theme Color",
         MusicGroup     = "Music Group"
     }
 }
@@ -894,6 +897,9 @@ local Fonts = {
 local currentFont = Enum.Font.GothamMedium
 local currentTextColor = Color3.fromRGB(255, 255, 255)
 local isRgbTextActive = false
+
+local isRgbThemeActive = false
+local currentThemeColor = Color3.fromRGB(12, 12, 16)
 
 local function getIconId(icon)
     if not icon or type(icon) ~= "string" or icon == "" then return nil end
@@ -941,13 +947,12 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = TargetParent
 
--- Fungsi update warna teks global
+-- Global Text Color Updater
 local function updateGlobalTextColor(color)
     currentTextColor = color
     isRgbTextActive = false
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-            -- Kecualikan elemen tertentu jika perlu (seperti tombol status/notifikasi khusus)
             if obj.Name ~= "StatusColor" then
                 obj.TextColor3 = color
             end
@@ -955,11 +960,22 @@ local function updateGlobalTextColor(color)
     end
 end
 
--- RGB Loop untuk teks
+-- Global Theme Color Updater
+local mainWindowRef
+local function updateGlobalThemeColor(color)
+    currentThemeColor = color
+    isRgbThemeActive = false
+    if mainWindowRef then
+        mainWindowRef.BackgroundColor3 = color
+    end
+end
+
+-- RGB Loop untuk Teks & Tema UI
 RunService.RenderStepped:Connect(function()
+    local hue = tick() % 5 / 5
+    local rgbColor = Color3.fromHSV(hue, 1, 1)
+
     if isRgbTextActive then
-        local hue = tick() % 5 / 5
-        local rgbColor = Color3.fromHSV(hue, 1, 1)
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
                 if obj.Name ~= "StatusColor" then
@@ -967,6 +983,10 @@ RunService.RenderStepped:Connect(function()
                 end
             end
         end
+    end
+
+    if isRgbThemeActive and mainWindowRef then
+        mainWindowRef.BackgroundColor3 = rgbColor
     end
 end)
 
@@ -1776,8 +1796,10 @@ function Library:CreateWindow(config)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
     Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true
+    Main.ClipsDescendants = true -- DIPASTIKAN TRUE AGAR ELEMEN TIDAK BOCOR SAAT MINIMIZE
     Main.Parent = ScreenGui
+
+    mainWindowRef = Main
 
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
@@ -1824,14 +1846,12 @@ function Library:CreateWindow(config)
     Title.TextTruncate = Enum.TextTruncate.AtEnd
     Title.Parent = Header
 
-    local MinBtn = Instance.new("TextButton")
+    -- TOMBOL HEADER (MINIMIZE MEMAKAI ICON "lucide-minimize", CLOSE MEMAKAI ICON "lucide-x")
+    local MinBtn = Instance.new("ImageButton")
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
     MinBtn.Position = UDim2.new(1, -100, 0, 7)
     MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    MinBtn.Text = "-"
-    MinBtn.TextColor3 = currentTextColor
-    MinBtn.TextSize = 13
-    MinBtn.Font = Enum.Font.GothamBold
+    MinBtn.Image = Library.Icons["lucide-minimize"]
     MinBtn.Parent = Header
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
 
@@ -1851,14 +1871,11 @@ function Library:CreateWindow(config)
     HideBtn.Parent = Header
     Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
 
-    local CloseBtn = Instance.new("TextButton")
+    local CloseBtn = Instance.new("ImageButton")
     CloseBtn.Size = UDim2.new(0, 22, 0, 22)
     CloseBtn.Position = UDim2.new(1, -25, 0, 7)
     CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    CloseBtn.Text = "✕"
-    CloseBtn.TextColor3 = currentTextColor
-    CloseBtn.TextSize = 10
-    CloseBtn.Font = Enum.Font.GothamBold
+    CloseBtn.Image = Library.Icons["lucide-x"]
     CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
@@ -1871,6 +1888,7 @@ function Library:CreateWindow(config)
     Container.ScrollBarThickness = 2
     Container.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
     Container.ScrollingEnabled = true
+    Container.ClipsDescendants = true
     Container.Parent = Main
 
     local Layout = Instance.new("UIListLayout")
@@ -1891,6 +1909,7 @@ function Library:CreateWindow(config)
     SettingsContainer.ScrollBarThickness = 2
     SettingsContainer.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
     SettingsContainer.ScrollingEnabled = true
+    SettingsContainer.ClipsDescendants = true
     SettingsContainer.Visible = false
     SettingsContainer.Parent = Main
 
@@ -2011,6 +2030,7 @@ function Library:CreateWindow(config)
         end)
 
         local Group = {}
+        Group.ContentHolder = ContentHolder
 
         function Group:AddButton(text, icon, callback)
             local btn = createButton(ContentHolder, text, icon, callback)
@@ -2061,17 +2081,15 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR BARU 1: GRUP PILIH WARNA TEKS (25 Warna + 1 RGB)
+    -- FITUR 1: WARNA TEKS (25 Warna Solid + 1 RGB)
     -- ==========================================
     local TextColorGroup = buildGroupInContainer(SettingsContainer, L("TextColorGroup"), "Settings", true)
     
-    -- Opsi RGB
     TextColorGroup:AddButton("🌈 RGB Rainbow (Berubah Warna Warni)", nil, function()
         isRgbTextActive = true
         Library:Notify({ Title = "Warna Teks", Content = "Mode RGB Rainbow Diaktifkan!", Type = "Success", Duration = 2 })
     end)
 
-    -- 25 Warna Pilihan Solid
     local colorList = {
         {"Putih (White)", Color3.fromRGB(255, 255, 255)},
         {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
@@ -2108,23 +2126,38 @@ function Library:CreateWindow(config)
         end)
     end
 
+    -- ==========================================
+    -- FITUR BARU: TEMA BACKGROUND UI (25 Warna + 1 RGB)
+    -- ==========================================
+    local ThemeGroup = buildGroupInContainer(SettingsContainer, L("ThemeGroup"), "Settings", true)
+
+    ThemeGroup:AddButton("🌈 RGB Theme (Berubah Warna Warni)", nil, function()
+        isRgbThemeActive = true
+        Library:Notify({ Title = "Tema UI", Content = "Mode Tema RGB Diaktifkan!", Type = "Success", Duration = 2 })
+    end)
+
+    for _, cInfo in ipairs(colorList) do
+        local name, col = cInfo[1], cInfo[2]
+        ThemeGroup:AddButton("Tema " .. name, nil, function()
+            updateGlobalThemeColor(col)
+            Library:Notify({ Title = "Tema UI", Content = "Tema diubah ke " .. name, Type = "Success", Duration = 2 })
+        end)
+    end
 
     -- ==========================================
-    -- FITUR BARU 2: GRUP MUSIK (Player, 4 Lagu Awal, Custom ID & Simpan)
+    -- FITUR 2: GRUP MUSIK (Memakai Icon "lucide-music")
     -- ==========================================
-    local MusicGroup = buildGroupInContainer(SettingsContainer, L("MusicGroup"), "Settings", true)
+    local MusicGroup = buildGroupInContainer(SettingsContainer, L("MusicGroup"), "lucide-music", true)
     
-    -- Setup objek Sound
     local currentSound = Instance.new("Sound")
     currentSound.Parent = SoundService
     
-    local selectedSongId = "142376088" -- Default dari foto (Raining Tacos)
+    local selectedSongId = "142376088"
     local isMusicPlaying = false
     local isMusicLoop = false
 
     local NowPlayingLbl = MusicGroup:AddLabel("Lagu Aktif: Raining Tacos (142376088)")
 
-    -- Tabel Daftar Lagu (Default + Custom yang tersimpan)
     local musicDatabase = {
         {Name = "Raining Tacos", Id = "142376088"},
         {Name = "Spooky Scary Skeletons", Id = "148677707"},
@@ -2141,7 +2174,6 @@ function Library:CreateWindow(config)
         end
     end
 
-    -- Tombol Pilih Lagu Default
     for _, song in ipairs(musicDatabase) do
         MusicGroup:AddButton("🎵 " .. song.Name, nil, function()
             selectedSongId = song.Id
@@ -2151,7 +2183,6 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- Toggle On/Off Musik
     MusicGroup:AddToggle("Putar Musik (On/Off)", nil, false, function(state)
         isMusicPlaying = state
         if state then
@@ -2165,20 +2196,17 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- Toggle Loop / No Loop
     MusicGroup:AddToggle("Loop Lagu (Ulangi)", nil, false, function(state)
         isMusicLoop = state
         currentSound.Looped = state
         Library:Notify({ Title = "Musik", Content = "Looping: " .. tostring(state), Type = "Info" })
     end)
 
-    -- Input Kustom ID Lagu & Tombol Simpan
     local CustomInputFrame = Instance.new("Frame")
     CustomInputFrame.Size = UDim2.new(1, 0, 0, 32)
     CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    CustomInputFrame.Parent = MusicGroup.ContentHolder or SettingsContainer -- Menyesuaikan container
+    CustomInputFrame.Parent = MusicGroup.ContentHolder
 
-    -- Kotak TextBox untuk Custom ID
     local CustomTextBox = Instance.new("TextBox")
     CustomTextBox.Size = UDim2.new(0.65, -5, 1, 0)
     CustomTextBox.Position = UDim2.new(0, 0, 0, 0)
@@ -2190,7 +2218,6 @@ function Library:CreateWindow(config)
     CustomTextBox.Font = currentFont
     CustomTextBox.Parent = CustomInputFrame
 
-    -- Tombol Simpan & Putar Custom ID
     local SaveCustomBtn = Instance.new("TextButton")
     SaveCustomBtn.Size = UDim2.new(0.35, -5, 1, 0)
     SaveCustomBtn.Position = UDim2.new(0.65, 5, 0, 0)
@@ -2214,10 +2241,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-
-    -- ==========================================
-    -- PENGATURAN LAINNYA DI SETTINGS
-    -- ==========================================
+    -- Timer & Settings Lainnya
     local TimerGroup = buildGroupInContainer(SettingsContainer, L("KeyTimerTitle"), "Settings", false)
     local TimerLabel = TimerGroup:AddLabel("Calculating...")
 
@@ -2303,30 +2327,57 @@ function Library:CreateWindow(config)
         Window:EnableScroll(state)
     end
 
+    -- ==========================================
+    -- FITUR FLOATING ICON + SPINNER DI LUAR KOTAK
+    -- ==========================================
+    local FloatingContainer = Instance.new("Frame")
+    FloatingContainer.Name = "FloatingContainer"
+    FloatingContainer.Size = UDim2.new(0, 48, 0, 48)
+    FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
+    FloatingContainer.BackgroundTransparency = 1
+    FloatingContainer.Visible = false
+    FloatingContainer.Parent = ScreenGui
+
+    -- Icon animasi berputar di luar kotak
+    local SpinOuterIcon = Instance.new("ImageLabel")
+    SpinOuterIcon.Name = "SpinOuterIcon"
+    SpinOuterIcon.Size = UDim2.new(1, 12, 1, 12)
+    SpinOuterIcon.Position = UDim2.new(0, -6, 0, -6)
+    SpinOuterIcon.BackgroundTransparency = 1
+    SpinOuterIcon.Image = Library.Icons["SpinOuter"]
+    SpinOuterIcon.Parent = FloatingContainer
+
+    -- Animasi Berputar Loop
+    RunService.RenderStepped:Connect(function()
+        if FloatingContainer.Visible then
+            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+        end
+    end)
+
+    -- Kotak Tombol Utama UI Disembunyikan
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
-    FloatingLogoBtn.Size = UDim2.new(0, 42, 0, 42)
-    FloatingLogoBtn.Position = UDim2.new(0, 15, 0.3, 0)
+    FloatingLogoBtn.Size = UDim2.new(1, -6, 1, -6)
+    FloatingLogoBtn.Position = UDim2.new(0, 3, 0, 3)
     FloatingLogoBtn.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
     FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
-    FloatingLogoBtn.Visible = false
-    FloatingLogoBtn.Parent = ScreenGui
+    FloatingLogoBtn.Parent = FloatingContainer
 
     Instance.new("UICorner", FloatingLogoBtn).CornerRadius = UDim.new(0, 8)
     local FloatStroke = Instance.new("UIStroke", FloatingLogoBtn)
     FloatStroke.Color = Color3.fromRGB(255, 255, 255)
     FloatStroke.Transparency = 0.8
 
-    makeDraggable(FloatingLogoBtn)
+    makeDraggable(FloatingContainer)
 
     HideBtn.MouseButton1Click:Connect(function()
         Main.Visible = false
-        FloatingLogoBtn.Visible = true
+        FloatingContainer.Visible = true
     end)
 
     FloatingLogoBtn.MouseButton1Click:Connect(function()
         Main.Visible = true
-        FloatingLogoBtn.Visible = false
+        FloatingContainer.Visible = false
     end)
 
     local function startExecution()
@@ -2357,6 +2408,8 @@ function Library:CreateWindow(config)
         isMinimized = not isMinimized
         if isMinimized then
             normalHeight = Main.AbsoluteSize.Y
+            Container.Visible = false
+            SettingsContainer.Visible = false
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
             }):Play()
@@ -2364,6 +2417,10 @@ function Library:CreateWindow(config)
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
             }):Play()
+            task.delay(0.2, function()
+                Container.Visible = not showingSettings
+                SettingsContainer.Visible = showingSettings
+            end)
         end
     end)
 
