@@ -834,7 +834,7 @@ function Library:CreateWindow(config)
 
     -- KONFIGURASI AI SYSTEM (TRUE/FALSE)
     local AiSystemConfig = config.AiSystem or {}
-    local isAiEnabled = (AiSystemConfig.Enabled ~= false) -- Default true jika tidak diatur false
+    local isAiEnabled = (AiSystemConfig.Enabled ~= false)
     local openRouterApiKey = AiSystemConfig.ApiKey or "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"
     local openRouterUrl = AiSystemConfig.Url or "https://openrouter.ai/api/v1/chat/completions"
 
@@ -847,1425 +847,1223 @@ function Library:CreateWindow(config)
 
     local Window = {}
 
-    -- ==========================================
-    -- FASE 1: LAYAR HITAM & VERIFIKASI SIDIK JARI 5 DETIK
-    -- ==========================================
-    local LockScreen = Instance.new("Frame")
-    LockScreen.Name = "LockScreen"
-    LockScreen.Size = UDim2.new(1, 0, 1, 0)
-    LockScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    LockScreen.BorderSizePixel = 0
-    LockScreen.ZIndex = 9999999
-    LockScreen.Parent = ScreenGui
+    -- FUNGSI MEMULAI CREATION UI UTAMA
+    local function startMainUI()
+        local Main = Instance.new("Frame")
+        Main.Name = "Main"
+        Main.Size = UDim2.new(0, 240, 0, 0)
+        Main.Position = UDim2.new(0.5, -120, 0.5, -135)
+        Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Main.BorderSizePixel = 0
+        Main.ClipsDescendants = true
+        Main.Parent = ScreenGui
 
-    local FingerprintBtn = Instance.new("ImageButton")
-    FingerprintBtn.Size = UDim2.new(0, 100, 0, 100)
-    FingerprintBtn.Position = UDim2.new(0.5, -50, 0.5, -60)
-    FingerprintBtn.BackgroundTransparency = 1
-    FingerprintBtn.Image = Library.Icons["lucide-fingerprint"]
-    FingerprintBtn.ZIndex = 10000000
-    FingerprintBtn.Parent = LockScreen
+        mainWindowRef = Main
 
-    local LockTitle = Instance.new("TextLabel")
-    LockTitle.Size = UDim2.new(1, -40, 0, 25)
-    LockTitle.Position = UDim2.new(0, 20, 0.5, -100)
-    LockTitle.BackgroundTransparency = 1
-    LockTitle.Text = titleText .. " - Keamanan Sidik Jari"
-    LockTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    LockTitle.TextSize = 15
-    LockTitle.Font = Enum.Font.GothamBold
-    LockTitle.TextXAlignment = Enum.TextXAlignment.Center
-    LockTitle.ZIndex = 10000000
-    LockTitle.Parent = LockScreen
+        Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-    local LockInfoLbl = Instance.new("TextLabel")
-    LockInfoLbl.Size = UDim2.new(1, -40, 0, 30)
-    LockInfoLbl.Position = UDim2.new(0, 20, 0.5, 45)
-    LockInfoLbl.BackgroundTransparency = 1
-    LockInfoLbl.Text = "Tekan dan tahan ikon sidik jari selama 5 detik dengan jempol"
-    LockInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
-    LockInfoLbl.TextSize = 11
-    LockInfoLbl.Font = Enum.Font.Gotham
-    LockInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
-    LockInfoLbl.TextWrapped = true
-    LockInfoLbl.ZIndex = 10000000
-    LockInfoLbl.Parent = LockScreen
+        local MainGradient = Instance.new("UIGradient")
+        MainGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 24)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 8, 10)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+        })
+        MainGradient.Rotation = 135
+        MainGradient.Parent = Main
+        mainGradientRef = MainGradient
 
-    local holdingFinger = false
-    local holdCounter = 0
-    local requiredHoldSeconds = 5.0
-    local isUnlocked = false
+        local MainStroke = Instance.new("UIStroke")
+        MainStroke.Color = Color3.fromRGB(255, 255, 255)
+        MainStroke.Thickness = 1
+        MainStroke.Transparency = 0.85
+        MainStroke.Parent = Main
 
-    local function startHolding()
-        if isUnlocked then return end
-        holdingFinger = true
-        holdCounter = 0
-    end
+        local Header = Instance.new("Frame")
+        Header.Size = UDim2.new(1, 0, 0, 36)
+        Header.BackgroundTransparency = 1
+        Header.Parent = Main
 
-    local function stopHolding()
-        if isUnlocked then return end
-        holdingFinger = false
-        holdCounter = 0
-        LockInfoLbl.Text = "Tekan dan tahan ikon sidik jari selama 5 detik dengan jempol"
-    end
+        makeDraggable(Main, Header)
 
-    FingerprintBtn.MouseButton1Down:Connect(startHolding)
-    FingerprintBtn.MouseButton1Up:Connect(stopHolding)
-    FingerprintBtn.TouchStarted:Connect(startHolding)
-    FingerprintBtn.TouchEnded:Connect(stopHolding)
-
-    local lockConn
-    lockConn = RunService.RenderStepped:Connect(function(dt)
-        if isUnlocked then 
-            if lockConn then lockConn:Disconnect() end
-            return 
+        if mainLogo then
+            local HeaderIcon = Instance.new("ImageLabel")
+            HeaderIcon.Size = UDim2.new(0, 18, 0, 18)
+            HeaderIcon.Position = UDim2.new(0, 10, 0, 9)
+            HeaderIcon.BackgroundTransparency = 1
+            HeaderIcon.Image = mainLogo
+            HeaderIcon.Parent = Header
         end
-        if holdingFinger then
-            holdCounter = holdCounter + dt
-            local remain = math.max(0, requiredHoldSeconds - holdCounter)
-            LockInfoLbl.Text = string.format("Memindai sidik jari... (%.1f detik lagi)", remain)
-            
-            if holdCounter >= requiredHoldSeconds then
-                isUnlocked = true
-                holdingFinger = false
-                LockInfoLbl.Text = "Verifikasi Sidik Jari Berhasil!"
-                LockInfoLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-                
-                TweenService:Create(LockScreen, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
-                TweenService:Create(FingerprintBtn, TweenInfo.new(0.6), {ImageTransparency = 1}):Play()
-                TweenService:Create(LockTitle, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
-                TweenService:Create(LockInfoLbl, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
-                
-                task.delay(0.6, function()
-                    LockScreen:Destroy()
-                end)
-                if lockConn then lockConn:Disconnect() end
-            end
+
+        local rightOffsetMinBtn = isAiEnabled and 125 or 100
+        local rightOffsetAiBtn = 100
+        local rightOffsetSetBtn = 75
+
+        local Title = Instance.new("TextLabel")
+        Title.Size = UDim2.new(1, mainLogo and -(isAiEnabled and 150 or 125) or -(isAiEnabled and 140 or 115), 1, 0)
+        Title.Position = UDim2.new(0, mainLogo and 34 or 12, 0, 0)
+        Title.BackgroundTransparency = 1
+        Title.Text = titleText
+        Title.TextColor3 = currentTextColor
+        Title.TextSize = 13
+        Title.Font = Enum.Font.GothamBold
+        Title.TextXAlignment = Enum.TextXAlignment.Left
+        Title.TextTruncate = Enum.TextTruncate.AtEnd
+        Title.Parent = Header
+
+        local MinBtn = Instance.new("ImageButton")
+        MinBtn.Size = UDim2.new(0, 22, 0, 22)
+        MinBtn.Position = UDim2.new(1, -rightOffsetMinBtn, 0, 7)
+        MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        MinBtn.Image = Library.Icons["lucide-chevron-up"]
+        MinBtn.Parent = Header
+        Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+
+        local AiBtn
+        if isAiEnabled then
+            AiBtn = Instance.new("ImageButton")
+            AiBtn.Size = UDim2.new(0, 22, 0, 22)
+            AiBtn.Position = UDim2.new(1, -rightOffsetAiBtn, 0, 7)
+            AiBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            AiBtn.Image = Library.Icons["lucide-zap"]
+            AiBtn.Parent = Header
+            Instance.new("UICorner", AiBtn).CornerRadius = UDim.new(0, 6)
         end
-    end)
 
-    -- Tunggu sampai user selesai menahan sidik jari selama 5 detik
-    repeat task.wait() until isUnlocked
+        local SettingsBtn = Instance.new("ImageButton")
+        SettingsBtn.Size = UDim2.new(0, 22, 0, 22)
+        SettingsBtn.Position = UDim2.new(1, -rightOffsetSetBtn, 0, 7)
+        SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        SettingsBtn.Image = Library.Icons["Settings"]
+        SettingsBtn.Parent = Header
+        Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 6)
 
-    -- HELPER UTAMA SAVE/READ KEY SYSTEM
-    local function parseDurationSeconds(keyData)
-        if keyData.DurationSeconds then return keyData.DurationSeconds end
-        if keyData.DurationDays then return keyData.DurationDays * 86400 end
-        return 86400
-    end
+        local HideBtn = Instance.new("ImageButton")
+        HideBtn.Size = UDim2.new(0, 22, 0, 22)
+        HideBtn.Position = UDim2.new(1, -50, 0, 7)
+        HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        HideBtn.Image = mainLogo or Library.Icons["Logo"]
+        HideBtn.Parent = Header
+        Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
 
-    local function checkSavedKeyValid()
-        if readfile and isfile and isfile(saveFileName) then
-            local success, content = pcall(function() return HttpService:JSONDecode(readfile(saveFileName)) end)
-            if success and content and content.Key and content.Expires then
-                if os.time() < content.Expires then
-                    for _, k in ipairs(validKeys) do
-                        if k.Key == content.Key then
-                            currentActiveKey = content.Key
-                            currentKeyDurationText = content.DurationText or "Aktif"
-                            currentKeyExpiresTimestamp = content.Expires
-                            return true
-                        end
-                    end
-                end
-            end
-        end
-        return false
-    end
+        local CloseBtn = Instance.new("ImageButton")
+        CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+        CloseBtn.Position = UDim2.new(1, -25, 0, 7)
+        CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        CloseBtn.Image = Library.Icons["lucide-x"]
+        CloseBtn.Parent = Header
+        Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
-    local function saveKeyLocally(keyStr, durationSec, durText)
-        if writefile then
-            local expiresTime = os.time() + durationSec
-            local saveData = {
-                Key = keyStr,
-                Expires = expiresTime,
-                DurationText = durText
-            }
-            pcall(function() writefile(saveFileName, HttpService:JSONEncode(saveData)) end)
-            currentActiveKey = keyStr
-            currentKeyDurationText = durText
-            currentKeyExpiresTimestamp = expiresTime
-        end
-    end
+        local Container = Instance.new("ScrollingFrame")
+        Container.Name = "MainContainer"
+        Container.Size = UDim2.new(1, -16, 1, -44)
+        Container.Position = UDim2.new(0, 8, 0, 38)
+        Container.BackgroundTransparency = 1
+        Container.BorderSizePixel = 0
+        Container.ScrollBarThickness = 2
+        Container.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+        Container.ScrollingEnabled = true
+        Container.Active = true
+        Container.ClipsDescendants = true
+        Container.Parent = Main
 
-    -- ==========================================
-    -- FASE 2: SISTEM KEY UI (AUTO SAVE & EXPIRE CHECK)
-    -- ==========================================
-    if isKeySystemEnabled then
-        local isAlreadyValid = checkSavedKeyValid()
+        local Layout = Instance.new("UIListLayout")
+        Layout.SortOrder = Enum.SortOrder.LayoutOrder
+        Layout.Padding = UDim.new(0, 6)
+        Layout.Parent = Container
 
-        if not isAlreadyValid then
-            local keyVerified = false
-
-            local KeyFrame = Instance.new("Frame")
-            KeyFrame.Name = "KeyFrame"
-            KeyFrame.Size = UDim2.new(0, 250, 0, 170)
-            KeyFrame.Position = UDim2.new(0.5, -125, 0.5, -85)
-            KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-            KeyFrame.BorderSizePixel = 0
-            KeyFrame.Parent = ScreenGui
-
-            Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
-            local KeyStroke = Instance.new("UIStroke", KeyFrame)
-            KeyStroke.Color = Color3.fromRGB(255, 255, 255)
-            KeyStroke.Transparency = 0.85
-
-            makeDraggable(KeyFrame)
-
-            local KeyTitle = Instance.new("TextLabel")
-            KeyTitle.Size = UDim2.new(1, -20, 0, 25)
-            KeyTitle.Position = UDim2.new(0, 10, 0, 8)
-            KeyTitle.BackgroundTransparency = 1
-            KeyTitle.Text = titleText .. " - Key System"
-            KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyTitle.TextSize = 13
-            KeyTitle.Font = Enum.Font.GothamBold
-            KeyTitle.TextXAlignment = Enum.TextXAlignment.Center
-            KeyTitle.Parent = KeyFrame
-
-            local KeyInfoLbl = Instance.new("TextLabel")
-            KeyInfoLbl.Size = UDim2.new(1, -20, 0, 18)
-            KeyInfoLbl.Position = UDim2.new(0, 10, 0, 32)
-            KeyInfoLbl.BackgroundTransparency = 1
-            KeyInfoLbl.Text = "Masukkan Key Anda Untuk Melanjutkan"
-            KeyInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
-            KeyInfoLbl.TextSize = 10
-            KeyInfoLbl.Font = Enum.Font.Gotham
-            KeyInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
-            KeyInfoLbl.Parent = KeyFrame
-
-            local KeyInputBox = Instance.new("TextBox")
-            KeyInputBox.Size = UDim2.new(1, -24, 0, 32)
-            KeyInputBox.Position = UDim2.new(0, 12, 0, 56)
-            KeyInputBox.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-            KeyInputBox.PlaceholderText = "Masukkan Key Di Sini..."
-            KeyInputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
-            KeyInputBox.Text = ""
-            KeyInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyInputBox.TextSize = 11
-            KeyInputBox.Font = Enum.Font.Gotham
-            KeyInputBox.Parent = KeyFrame
-            Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 6)
-
-            local KeyVerifyBtn = Instance.new("TextButton")
-            KeyVerifyBtn.Size = UDim2.new(0.48, -8, 0, 30)
-            KeyVerifyBtn.Position = UDim2.new(0, 12, 0, 96)
-            KeyVerifyBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-            KeyVerifyBtn.Text = "Verify Key"
-            KeyVerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyVerifyBtn.TextSize = 11
-            KeyVerifyBtn.Font = Enum.Font.GothamBold
-            KeyVerifyBtn.Parent = KeyFrame
-            Instance.new("UICorner", KeyVerifyBtn).CornerRadius = UDim.new(0, 6)
-
-            local KeyGetBtn = Instance.new("TextButton")
-            KeyGetBtn.Size = UDim2.new(0.48, -8, 0, 30)
-            KeyGetBtn.Position = UDim2.new(0.52, 4, 0, 96)
-            KeyGetBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
-            KeyGetBtn.Text = "Get Key (Copy)"
-            KeyGetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyGetBtn.TextSize = 11
-            KeyGetBtn.Font = Enum.Font.GothamBold
-            KeyGetBtn.Parent = KeyFrame
-            Instance.new("UICorner", KeyGetBtn).CornerRadius = UDim.new(0, 6)
-
-            local KeyStatusLbl = Instance.new("TextLabel")
-            KeyStatusLbl.Name = "StatusColor"
-            KeyStatusLbl.Size = UDim2.new(1, -20, 0, 20)
-            KeyStatusLbl.Position = UDim2.new(0, 10, 0, 134)
-            KeyStatusLbl.BackgroundTransparency = 1
-            KeyStatusLbl.Text = "Status: Menunggu Key..."
-            KeyStatusLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
-            KeyStatusLbl.TextSize = 10
-            KeyStatusLbl.Font = Enum.Font.GothamMedium
-            KeyStatusLbl.TextXAlignment = Enum.TextXAlignment.Center
-            KeyStatusLbl.Parent = KeyFrame
-
-            KeyGetBtn.MouseButton1Click:Connect(function()
-                if setclipboard then
-                    setclipboard(keyGetUrl)
-                    KeyStatusLbl.Text = "Link Key Berhasil Disalin!"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(52, 152, 219)
-                else
-                    KeyStatusLbl.Text = "Gagal Salin Link (Gunakan PC/Delta Browser)"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
-                end
-            end)
-
-            KeyVerifyBtn.MouseButton1Click:Connect(function()
-                local input = KeyInputBox.Text
-                local matchedKeyData = nil
-
-                for _, keyData in ipairs(validKeys) do
-                    if type(keyData) == "table" and keyData.Key == input then
-                        matchedKeyData = keyData
-                        break
-                    elseif type(keyData) == "string" and keyData == input then
-                        matchedKeyData = { Key = keyData, DurationDays = 1, DurationText = "1 Hari" }
-                        break
-                    end
-                end
-
-                if matchedKeyData then
-                    local durText = matchedKeyData.DurationText or (matchedKeyData.DurationDays and (matchedKeyData.DurationDays .. " Hari")) or "Aktif"
-                    local durSec = parseDurationSeconds(matchedKeyData)
-
-                    saveKeyLocally(matchedKeyData.Key, durSec, durText)
-
-                    KeyStatusLbl.Text = "Key Benar & Disimpan! (" .. durText .. ")"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-                    
-                    Library:Notify({
-                        Title = "Key Verified",
-                        Content = "Akses Diberikan! Durasi: " .. durText,
-                        Type = "Success",
-                        Duration = 4
-                    })
-
-                    task.wait(1)
-                    KeyFrame:Destroy()
-                    keyVerified = true
-                else
-                    KeyStatusLbl.Text = "Key Salah / Kadaluarsa!"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
-                end
-            end)
-
-            repeat task.wait() until keyVerified
-        end
-    end
-
-    local Main = Instance.new("Frame")
-    Main.Name = "Main"
-    Main.Size = UDim2.new(0, 240, 0, 0)
-    Main.Position = UDim2.new(0.5, -120, 0.5, -135)
-    Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true
-    Main.Parent = ScreenGui
-
-    mainWindowRef = Main
-
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
-
-    local MainGradient = Instance.new("UIGradient")
-    MainGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 24)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 8, 10)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
-    })
-    MainGradient.Rotation = 135
-    MainGradient.Parent = Main
-    mainGradientRef = MainGradient
-
-    local MainStroke = Instance.new("UIStroke")
-    MainStroke.Color = Color3.fromRGB(255, 255, 255)
-    MainStroke.Thickness = 1
-    MainStroke.Transparency = 0.85
-    MainStroke.Parent = Main
-
-    local Header = Instance.new("Frame")
-    Header.Size = UDim2.new(1, 0, 0, 36)
-    Header.BackgroundTransparency = 1
-    Header.Parent = Main
-
-    makeDraggable(Main, Header)
-
-    if mainLogo then
-        local HeaderIcon = Instance.new("ImageLabel")
-        HeaderIcon.Size = UDim2.new(0, 18, 0, 18)
-        HeaderIcon.Position = UDim2.new(0, 10, 0, 9)
-        HeaderIcon.BackgroundTransparency = 1
-        HeaderIcon.Image = mainLogo
-        HeaderIcon.Parent = Header
-    end
-
-    -- Hitung posisi tombol header berdasarkan status AI (enabled/disabled)
-    local rightOffsetMinBtn = isAiEnabled and 125 or 100
-    local rightOffsetAiBtn = 100
-    local rightOffsetSetBtn = 75
-
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, mainLogo and -(isAiEnabled and 150 or 125) or -(isAiEnabled and 140 or 115), 1, 0)
-    Title.Position = UDim2.new(0, mainLogo and 34 or 12, 0, 0)
-    Title.BackgroundTransparency = 1
-    Title.Text = titleText
-    Title.TextColor3 = currentTextColor
-    Title.TextSize = 13
-    Title.Font = Enum.Font.GothamBold
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.TextTruncate = Enum.TextTruncate.AtEnd
-    Title.Parent = Header
-
-    local MinBtn = Instance.new("ImageButton")
-    MinBtn.Size = UDim2.new(0, 22, 0, 22)
-    MinBtn.Position = UDim2.new(1, -rightOffsetMinBtn, 0, 7)
-    MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    MinBtn.Image = Library.Icons["lucide-chevron-up"]
-    MinBtn.Parent = Header
-    Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
-
-    -- TOMBOL AI (HANYA MUNCUL JIKA isAiEnabled == true)
-    local AiBtn
-    if isAiEnabled then
-        AiBtn = Instance.new("ImageButton")
-        AiBtn.Size = UDim2.new(0, 22, 0, 22)
-        AiBtn.Position = UDim2.new(1, -rightOffsetAiBtn, 0, 7)
-        AiBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        AiBtn.Image = Library.Icons["lucide-zap"]
-        AiBtn.Parent = Header
-        Instance.new("UICorner", AiBtn).CornerRadius = UDim.new(0, 6)
-    end
-
-    local SettingsBtn = Instance.new("ImageButton")
-    SettingsBtn.Size = UDim2.new(0, 22, 0, 22)
-    SettingsBtn.Position = UDim2.new(1, -rightOffsetSetBtn, 0, 7)
-    SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    SettingsBtn.Image = Library.Icons["Settings"]
-    SettingsBtn.Parent = Header
-    Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 6)
-
-    local HideBtn = Instance.new("ImageButton")
-    HideBtn.Size = UDim2.new(0, 22, 0, 22)
-    HideBtn.Position = UDim2.new(1, -50, 0, 7)
-    HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    HideBtn.Image = mainLogo or Library.Icons["Logo"]
-    HideBtn.Parent = Header
-    Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
-
-    local CloseBtn = Instance.new("ImageButton")
-    CloseBtn.Size = UDim2.new(0, 22, 0, 22)
-    CloseBtn.Position = UDim2.new(1, -25, 0, 7)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    CloseBtn.Image = Library.Icons["lucide-x"]
-    CloseBtn.Parent = Header
-    Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
-
-    local Container = Instance.new("ScrollingFrame")
-    Container.Name = "MainContainer"
-    Container.Size = UDim2.new(1, -16, 1, -44)
-    Container.Position = UDim2.new(0, 8, 0, 38)
-    Container.BackgroundTransparency = 1
-    Container.BorderSizePixel = 0
-    Container.ScrollBarThickness = 2
-    Container.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
-    Container.ScrollingEnabled = true
-    Container.Active = true
-    Container.ClipsDescendants = true
-    Container.Parent = Main
-
-    local Layout = Instance.new("UIListLayout")
-    Layout.SortOrder = Enum.SortOrder.LayoutOrder
-    Layout.Padding = UDim.new(0, 6)
-    Layout.Parent = Container
-
-    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Container.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 8)
-    end)
-
-    local SettingsContainer = Instance.new("ScrollingFrame")
-    SettingsContainer.Name = "SettingsContainer"
-    SettingsContainer.Size = UDim2.new(1, -16, 1, -44)
-    SettingsContainer.Position = UDim2.new(0, 8, 0, 38)
-    SettingsContainer.BackgroundTransparency = 1
-    SettingsContainer.BorderSizePixel = 0
-    SettingsContainer.ScrollBarThickness = 2
-    SettingsContainer.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
-    SettingsContainer.ScrollingEnabled = true
-    SettingsContainer.Active = true
-    SettingsContainer.ClipsDescendants = true
-    SettingsContainer.Visible = false
-    SettingsContainer.Parent = Main
-
-    local SettingsLayout = Instance.new("UIListLayout")
-    SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SettingsLayout.Padding = UDim.new(0, 6)
-    SettingsLayout.Parent = SettingsContainer
-
-    SettingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 8)
-    end)
-
-    -- PANEL CHAT AI (WHATSAPP STYLE)
-    local AiContainer, AiChatScroll, AiTextBox, AiSendBtn
-    if isAiEnabled then
-        AiContainer = Instance.new("Frame")
-        AiContainer.Name = "AiContainer"
-        AiContainer.Size = UDim2.new(1, -16, 1, -44)
-        AiContainer.Position = UDim2.new(0, 8, 0, 38)
-        AiContainer.BackgroundTransparency = 1
-        AiContainer.Visible = false
-        AiContainer.Parent = Main
-
-        AiChatScroll = Instance.new("ScrollingFrame")
-        AiChatScroll.Size = UDim2.new(1, 0, 1, -38)
-        AiChatScroll.Position = UDim2.new(0, 0, 0, 0)
-        AiChatScroll.BackgroundTransparency = 1
-        AiChatScroll.BorderSizePixel = 0
-        AiChatScroll.ScrollBarThickness = 2
-        AiChatScroll.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
-        AiChatScroll.ClipsDescendants = true
-        AiChatScroll.Parent = AiContainer
-
-        local AiChatLayout = Instance.new("UIListLayout")
-        AiChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        AiChatLayout.Padding = UDim.new(0, 6)
-        AiChatLayout.Parent = AiChatScroll
-
-        AiChatLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            AiChatScroll.CanvasSize = UDim2.new(0, 0, 0, AiChatLayout.AbsoluteContentSize.Y + 6)
-            AiChatScroll.CanvasPosition = Vector2.new(0, AiChatLayout.AbsoluteContentSize.Y)
+        Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Container.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 8)
         end)
 
-        local AiInputFrame = Instance.new("Frame")
-        AiInputFrame.Size = UDim2.new(1, 0, 0, 32)
-        AiInputFrame.Position = UDim2.new(0, 0, 1, -32)
-        AiInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-        AiInputFrame.Parent = AiContainer
-        Instance.new("UICorner", AiInputFrame).CornerRadius = UDim.new(0, 6)
+        local SettingsContainer = Instance.new("ScrollingFrame")
+        SettingsContainer.Name = "SettingsContainer"
+        SettingsContainer.Size = UDim2.new(1, -16, 1, -44)
+        SettingsContainer.Position = UDim2.new(0, 8, 0, 38)
+        SettingsContainer.BackgroundTransparency = 1
+        SettingsContainer.BorderSizePixel = 0
+        SettingsContainer.ScrollBarThickness = 2
+        SettingsContainer.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+        SettingsContainer.ScrollingEnabled = true
+        SettingsContainer.Active = true
+        SettingsContainer.ClipsDescendants = true
+        SettingsContainer.Visible = false
+        SettingsContainer.Parent = Main
 
-        AiTextBox = Instance.new("TextBox")
-        AiTextBox.Size = UDim2.new(0.75, -5, 1, 0)
-        AiTextBox.Position = UDim2.new(0, 8, 0, 0)
-        AiTextBox.BackgroundTransparency = 1
-        AiTextBox.PlaceholderText = "Tanya AI sesuatu..."
-        AiTextBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
-        AiTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-        AiTextBox.TextSize = 11
-        AiTextBox.Font = currentFont
-        AiTextBox.TextXAlignment = Enum.TextXAlignment.Left
-        AiTextBox.Parent = AiInputFrame
+        local SettingsLayout = Instance.new("UIListLayout")
+        SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        SettingsLayout.Padding = UDim.new(0, 6)
+        SettingsLayout.Parent = SettingsContainer
 
-        AiSendBtn = Instance.new("TextButton")
-        AiSendBtn.Size = UDim2.new(0.25, -8, 1, -6)
-        AiSendBtn.Position = UDim2.new(0.75, 2, 0, 3)
-        AiSendBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-        AiSendBtn.Text = "Kirim"
-        AiSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        AiSendBtn.TextSize = 10
-        AiSendBtn.Font = Enum.Font.GothamBold
-        AiSendBtn.Parent = AiInputFrame
-        Instance.new("UICorner", AiSendBtn).CornerRadius = UDim.new(0, 4)
+        SettingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 8)
+        end)
 
-        local function addChatMessage(sender, text)
-            local MsgBubble = Instance.new("Frame")
-            MsgBubble.Size = UDim2.new(1, 0, 0, 0)
-            MsgBubble.BackgroundColor3 = (sender == "You") and Color3.fromRGB(37, 100, 60) or Color3.fromRGB(28, 28, 36)
-            MsgBubble.Parent = AiChatScroll
-            Instance.new("UICorner", MsgBubble).CornerRadius = UDim.new(0, 6)
+        -- PANEL CHAT AI (WHATSAPP STYLE)
+        local AiContainer, AiChatScroll, AiTextBox, AiSendBtn
+        if isAiEnabled then
+            AiContainer = Instance.new("Frame")
+            AiContainer.Name = "AiContainer"
+            AiContainer.Size = UDim2.new(1, -16, 1, -44)
+            AiContainer.Position = UDim2.new(0, 8, 0, 38)
+            AiContainer.BackgroundTransparency = 1
+            AiContainer.Visible = false
+            AiContainer.Parent = Main
 
-            local MsgLbl = Instance.new("TextLabel")
-            MsgLbl.Size = UDim2.new(1, -12, 1, -12)
-            MsgLbl.Position = UDim2.new(0, 6, 0, 6)
-            MsgLbl.BackgroundTransparency = 1
-            MsgLbl.Text = "<b>" .. sender .. ":</b> " .. text
-            MsgLbl.RichText = true
-            MsgLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-            MsgLbl.TextSize = 10
-            MsgLbl.Font = Enum.Font.Gotham
-            MsgLbl.TextXAlignment = Enum.TextXAlignment.Left
-            MsgLbl.TextYAlignment = Enum.TextYAlignment.Top
-            MsgLbl.TextWrapped = true
-            MsgLbl.Parent = MsgBubble
+            AiChatScroll = Instance.new("ScrollingFrame")
+            AiChatScroll.Size = UDim2.new(1, 0, 1, -38)
+            AiChatScroll.Position = UDim2.new(0, 0, 0, 0)
+            AiChatScroll.BackgroundTransparency = 1
+            AiChatScroll.BorderSizePixel = 0
+            AiChatScroll.ScrollBarThickness = 2
+            AiChatScroll.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+            AiChatScroll.ClipsDescendants = true
+            AiChatScroll.Parent = AiContainer
 
-            local textHeight = game:GetService("TextService"):GetTextSize(
-                sender .. ": " .. text,
-                10,
-                Enum.Font.Gotham,
-                Vector2.new(190, 9999)
-            ).Y
+            local AiChatLayout = Instance.new("UIListLayout")
+            AiChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            AiChatLayout.Padding = UDim.new(0, 6)
+            AiChatLayout.Parent = AiChatScroll
 
-            MsgBubble.Size = UDim2.new(1, 0, 0, math.max(28, textHeight + 14))
-        end
+            AiChatLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                AiChatScroll.CanvasSize = UDim2.new(0, 0, 0, AiChatLayout.AbsoluteContentSize.Y + 6)
+                AiChatScroll.CanvasPosition = Vector2.new(0, AiChatLayout.AbsoluteContentSize.Y)
+            end)
 
-        addChatMessage("Beast AI", "Halo! Asisten AI siap membantu script Anda.")
+            local AiInputFrame = Instance.new("Frame")
+            AiInputFrame.Size = UDim2.new(1, 0, 0, 32)
+            AiInputFrame.Position = UDim2.new(0, 0, 1, -32)
+            AiInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+            AiInputFrame.Parent = AiContainer
+            Instance.new("UICorner", AiInputFrame).CornerRadius = UDim.new(0, 6)
 
-        local function sendAiRequest(promptText)
-            if promptText == "" then return end
-            addChatMessage("You", promptText)
-            AiTextBox.Text = ""
+            AiTextBox = Instance.new("TextBox")
+            AiTextBox.Size = UDim2.new(0.75, -5, 1, 0)
+            AiTextBox.Position = UDim2.new(0, 8, 0, 0)
+            AiTextBox.BackgroundTransparency = 1
+            AiTextBox.PlaceholderText = "Tanya AI sesuatu..."
+            AiTextBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
+            AiTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            AiTextBox.TextSize = 11
+            AiTextBox.Font = currentFont
+            AiTextBox.TextXAlignment = Enum.TextXAlignment.Left
+            AiTextBox.Parent = AiInputFrame
 
-            task.spawn(function()
-                local requestFunc = (syn and syn.request) or (http and http.request) or http_request or request
-                if not requestFunc then
-                    addChatMessage("Beast AI", "Error: Executor Anda tidak mendukung HTTP Request!")
-                    return
-                end
+            AiSendBtn = Instance.new("TextButton")
+            AiSendBtn.Size = UDim2.new(0.25, -8, 1, -6)
+            AiSendBtn.Position = UDim2.new(0.75, 2, 0, 3)
+            AiSendBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+            AiSendBtn.Text = "Kirim"
+            AiSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            AiSendBtn.TextSize = 10
+            AiSendBtn.Font = Enum.Font.GothamBold
+            AiSendBtn.Parent = AiInputFrame
+            Instance.new("UICorner", AiSendBtn).CornerRadius = UDim.new(0, 4)
 
-                local requestBody = HttpService:JSONEncode({
-                    model = "meta-llama/llama-3.1-8b-instruct:free",
-                    messages = {
-                        { role = "system", content = "Kamu adalah asisten AI ramah dari Window Beast Hub yang membantu seputar game Roblox." },
-                        { role = "user", content = promptText }
-                    }
-                })
+            local function addChatMessage(sender, text)
+                local MsgBubble = Instance.new("Frame")
+                MsgBubble.Size = UDim2.new(1, 0, 0, 0)
+                MsgBubble.BackgroundColor3 = (sender == "You") and Color3.fromRGB(37, 100, 60) or Color3.fromRGB(28, 28, 36)
+                MsgBubble.Parent = AiChatScroll
+                Instance.new("UICorner", MsgBubble).CornerRadius = UDim.new(0, 6)
 
-                pcall(function()
-                    local res = requestFunc({
-                        Url = openRouterUrl,
-                        Method = "POST",
-                        Headers = {
-                            ["Authorization"] = "Bearer " .. openRouterApiKey,
-                            ["Content-Type"] = "application/json"
-                        },
-                        Body = requestBody
+                local MsgLbl = Instance.new("TextLabel")
+                MsgLbl.Size = UDim2.new(1, -12, 1, -12)
+                MsgLbl.Position = UDim2.new(0, 6, 0, 6)
+                MsgLbl.BackgroundTransparency = 1
+                MsgLbl.Text = "<b>" .. sender .. ":</b> " .. text
+                MsgLbl.RichText = true
+                MsgLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+                MsgLbl.TextSize = 10
+                MsgLbl.Font = Enum.Font.Gotham
+                MsgLbl.TextXAlignment = Enum.TextXAlignment.Left
+                MsgLbl.TextYAlignment = Enum.TextYAlignment.Top
+                MsgLbl.TextWrapped = true
+                MsgLbl.Parent = MsgBubble
+
+                local textHeight = game:GetService("TextService"):GetTextSize(
+                    sender .. ": " .. text,
+                    10,
+                    Enum.Font.Gotham,
+                    Vector2.new(190, 9999)
+                ).Y
+
+                MsgBubble.Size = UDim2.new(1, 0, 0, math.max(28, textHeight + 14))
+            end
+
+            addChatMessage("Beast AI", "Halo! Asisten AI siap membantu script Anda.")
+
+            local function sendAiRequest(promptText)
+                if promptText == "" then return end
+                addChatMessage("You", promptText)
+                AiTextBox.Text = ""
+
+                task.spawn(function()
+                    local requestFunc = (syn and syn.request) or (http and http.request) or http_request or request
+                    if not requestFunc then
+                        addChatMessage("Beast AI", "Error: Executor Anda tidak mendukung HTTP Request!")
+                        return
+                    end
+
+                    local requestBody = HttpService:JSONEncode({
+                        model = "meta-llama/llama-3.1-8b-instruct:free",
+                        messages = {
+                            { role = "system", content = "Kamu adalah asisten AI ramah dari Window Beast Hub yang membantu seputar game Roblox." },
+                            { role = "user", content = promptText }
+                        }
                     })
 
-                    if res and res.Body then
-                        local decoded = HttpService:JSONDecode(res.Body)
-                        if decoded and decoded.choices and decoded.choices[1] and decoded.choices[1].message then
-                            addChatMessage("Beast AI", decoded.choices[1].message.content)
+                    pcall(function()
+                        local res = requestFunc({
+                            Url = openRouterUrl,
+                            Method = "POST",
+                            Headers = {
+                                ["Authorization"] = "Bearer " .. openRouterApiKey,
+                                ["Content-Type"] = "application/json"
+                            },
+                            Body = requestBody
+                        })
+
+                        if res and res.Body then
+                            local decoded = HttpService:JSONDecode(res.Body)
+                            if decoded and decoded.choices and decoded.choices[1] and decoded.choices[1].message then
+                                addChatMessage("Beast AI", decoded.choices[1].message.content)
+                            else
+                                addChatMessage("Beast AI", "Maaf, gagal memproses respon dari AI.")
+                            end
                         else
-                            addChatMessage("Beast AI", "Maaf, gagal memproses respon dari AI.")
+                            addChatMessage("Beast AI", "Gagal menghubungkan ke server OpenRouter.")
                         end
-                    else
-                        addChatMessage("Beast AI", "Gagal menghubungkan ke server OpenRouter.")
-                    end
+                    end)
                 end)
+            end
+
+            AiSendBtn.MouseButton1Click:Connect(function()
+                sendAiRequest(AiTextBox.Text)
+            end)
+
+            AiTextBox.FocusLost:Connect(function(enterPressed)
+                if enterPressed then
+                    sendAiRequest(AiTextBox.Text)
+                end
             end)
         end
 
-        AiSendBtn.MouseButton1Click:Connect(function()
-            sendAiRequest(AiTextBox.Text)
-        end)
+        local showingSettings = false
+        local showingAi = false
 
-        AiTextBox.FocusLost:Connect(function(enterPressed)
-            if enterPressed then
-                sendAiRequest(AiTextBox.Text)
+        SettingsBtn.MouseButton1Click:Connect(function()
+            showingSettings = not showingSettings
+            showingAi = false
+            Container.Visible = not showingSettings
+            SettingsContainer.Visible = showingSettings
+            if AiContainer then AiContainer.Visible = false end
+
+            TweenService:Create(SettingsBtn, TweenInfo.new(0.2), {
+                ImageColor3 = showingSettings and Color3.fromRGB(52, 152, 219) or Color3.fromRGB(255, 255, 255)
+            }):Play()
+            if AiBtn then
+                TweenService:Create(AiBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
             end
         end)
-    end
 
-    local showingSettings = false
-    local showingAi = false
-
-    SettingsBtn.MouseButton1Click:Connect(function()
-        showingSettings = not showingSettings
-        showingAi = false
-        Container.Visible = not showingSettings
-        SettingsContainer.Visible = showingSettings
-        if AiContainer then AiContainer.Visible = false end
-
-        TweenService:Create(SettingsBtn, TweenInfo.new(0.2), {
-            ImageColor3 = showingSettings and Color3.fromRGB(52, 152, 219) or Color3.fromRGB(255, 255, 255)
-        }):Play()
         if AiBtn then
-            TweenService:Create(AiBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
-        end
-    end)
+            AiBtn.MouseButton1Click:Connect(function()
+                showingAi = not showingAi
+                showingSettings = false
+                Container.Visible = not showingAi
+                SettingsContainer.Visible = false
+                if AiContainer then AiContainer.Visible = showingAi end
 
-    if AiBtn then
-        AiBtn.MouseButton1Click:Connect(function()
-            showingAi = not showingAi
-            showingSettings = false
-            Container.Visible = not showingAi
-            SettingsContainer.Visible = false
-            if AiContainer then AiContainer.Visible = showingAi end
-
-            TweenService:Create(AiBtn, TweenInfo.new(0.2), {
-                ImageColor3 = showingAi and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(255, 255, 255)
-            }):Play()
-            TweenService:Create(SettingsBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
-        end)
-    end
-
-    -- ==========================================================
-    -- FUNGSI PEMBUATAN GROUP / SECTION (SCROLL DI DALAM SCROLL)
-    -- ==========================================================
-    local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
-        if type(icon) == "boolean" then
-            defaultCollapsed = icon
-            icon = nil
-        end
-        local iconId = getIconId(icon)
-        local isCollapsed = defaultCollapsed or false
-
-        local GroupFrame = Instance.new("Frame")
-        GroupFrame.Name = "GroupFrame"
-        GroupFrame.Size = UDim2.new(1, 0, 0, 32)
-        GroupFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-        GroupFrame.BorderSizePixel = 0
-        GroupFrame.ClipsDescendants = true
-        GroupFrame.Parent = parentContainer
-
-        Instance.new("UICorner", GroupFrame).CornerRadius = UDim.new(0, 8)
-        local GroupStroke = Instance.new("UIStroke", GroupFrame)
-        GroupStroke.Color = Color3.fromRGB(255, 255, 255)
-        GroupStroke.Transparency = 0.93
-
-        local GroupHeader = Instance.new("TextButton")
-        GroupHeader.Name = "GroupHeader"
-        GroupHeader.Size = UDim2.new(1, 0, 0, 32)
-        GroupHeader.BackgroundTransparency = 1
-        GroupHeader.Text = ""
-        GroupHeader.Parent = GroupFrame
-
-        local xOffset = 10
-        if iconId then
-            local GIcon = Instance.new("ImageLabel")
-            GIcon.Size = UDim2.new(0, 16, 0, 16)
-            GIcon.Position = UDim2.new(0, 10, 0.5, -8)
-            GIcon.BackgroundTransparency = 1
-            GIcon.Image = iconId
-            GIcon.Parent = GroupHeader
-            xOffset = 32
+                TweenService:Create(AiBtn, TweenInfo.new(0.2), {
+                    ImageColor3 = showingAi and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(255, 255, 255)
+                }):Play()
+                TweenService:Create(SettingsBtn, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+            end)
         end
 
-        local TitleLbl = Instance.new("TextLabel")
-        TitleLbl.Name = "GroupTitleLbl"
-        TitleLbl.Size = UDim2.new(1, -(xOffset + 35), 1, 0)
-        TitleLbl.Position = UDim2.new(0, xOffset, 0, 0)
-        TitleLbl.BackgroundTransparency = 1
-        TitleLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
-        TitleLbl.TextSize = 12
-        TitleLbl.Font = currentFont
-        TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-        TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
-        TitleLbl.Parent = GroupHeader
-        
-        if groupNameKey then
-            registerTranslation(TitleLbl, groupNameKey)
-        end
-
-        local ArrowLbl = Instance.new("TextLabel")
-        ArrowLbl.Size = UDim2.new(0, 20, 0, 20)
-        ArrowLbl.Position = UDim2.new(1, -25, 0.5, -10)
-        ArrowLbl.BackgroundTransparency = 1
-        ArrowLbl.Text = isCollapsed and "▼" or "▲"
-        ArrowLbl.TextColor3 = Color3.fromRGB(160, 160, 170)
-        ArrowLbl.TextSize = 11
-        ArrowLbl.Font = Enum.Font.GothamBold
-        ArrowLbl.Parent = GroupHeader
-
-        local ContentHolder = Instance.new("ScrollingFrame")
-        ContentHolder.Name = "ContentHolder"
-        ContentHolder.Size = UDim2.new(1, -12, 0, 0)
-        ContentHolder.Position = UDim2.new(0, 6, 0, 34)
-        ContentHolder.BackgroundTransparency = 1
-        ContentHolder.BorderSizePixel = 0
-        ContentHolder.Active = true
-        ContentHolder.ScrollingEnabled = true
-        ContentHolder.ScrollBarThickness = 3
-        ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 160)
-        ContentHolder.ClipsDescendants = true
-        ContentHolder.Parent = GroupFrame
-
-        local ContentLayout = Instance.new("UIListLayout")
-        ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        ContentLayout.Padding = UDim.new(0, 5)
-        ContentLayout.Parent = ContentHolder
-
-        local MAX_GROUP_HEIGHT = 160
-
-        local function updateGroupSize()
-            local contentHeight = ContentLayout.AbsoluteContentSize.Y
-            ContentHolder.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
-            
-            local displayHeight = math.min(contentHeight, MAX_GROUP_HEIGHT)
-            ContentHolder.Size = UDim2.new(1, -12, 0, displayHeight)
-            
-            local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
-            
-            TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-                Size = UDim2.new(1, 0, 0, targetHeight)
-            }):Play()
-        end
-
-        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateGroupSize)
-
-        GroupHeader.MouseButton1Click:Connect(function()
-            isCollapsed = not isCollapsed
-            ArrowLbl.Text = isCollapsed and "▼" or "▲"
-            updateGroupSize()
-        end)
-
-        local Group = {}
-        Group.ContentHolder = ContentHolder
-
-        function Group:AddButton(text, icon, callback)
-            local btn = createButton(ContentHolder, text, icon, callback)
-            task.defer(updateGroupSize)
-            return btn
-        end
-
-        function Group:AddToggle(text, icon, default, callback)
-            local tog = createToggle(ContentHolder, text, icon, default, callback)
-            task.defer(updateGroupSize)
-            return tog
-        end
-
-        function Group:AddSlider(text, icon, min, max, default, callback)
-            local sld = createSlider(ContentHolder, text, icon, min, max, default, callback)
-            task.defer(updateGroupSize)
-            return sld
-        end
-
-        function Group:AddLabel(text)
-            local LblFrame = Instance.new("Frame")
-            LblFrame.Size = UDim2.new(1, 0, 0, 28)
-            LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-            LblFrame.Parent = ContentHolder
-
-            Instance.new("UICorner", LblFrame).CornerRadius = UDim.new(0, 6)
-            local Stroke = Instance.new("UIStroke", LblFrame)
-            Stroke.Color = Color3.fromRGB(255, 255, 255)
-            Stroke.Transparency = 0.9
-
-            local Lbl = Instance.new("TextLabel")
-            Lbl.Size = UDim2.new(1, -12, 1, 0)
-            Lbl.Position = UDim2.new(0, 6, 0, 0)
-            Lbl.BackgroundTransparency = 1
-            Lbl.Text = tostring(text or "")
-            Lbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-            Lbl.TextSize = 11
-            Lbl.Font = Enum.Font.GothamBold
-            Lbl.TextXAlignment = Enum.TextXAlignment.Left
-            Lbl.TextTruncate = Enum.TextTruncate.AtEnd
-            Lbl.Parent = LblFrame
-
-            task.defer(updateGroupSize)
-            return Lbl
-        end
-
-        task.defer(updateGroupSize)
-        return Group
-    end
-
-    local colorList = {
-        {"Hitam (Black)", Color3.fromRGB(0, 0, 0)},
-        {"Putih (White)", Color3.fromRGB(255, 255, 255)},
-        {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
-        {"Hijau (Green)", Color3.fromRGB(46, 204, 113)},
-        {"Biru (Blue)", Color3.fromRGB(52, 152, 219)},
-        {"Kuning (Yellow)", Color3.fromRGB(241, 196, 15)},
-        {"Ungu (Purple)", Color3.fromRGB(155, 89, 182)},
-        {"Oranye (Orange)", Color3.fromRGB(230, 126, 34)},
-        {"Pink", Color3.fromRGB(255, 105, 180)},
-        {"Cyan", Color3.fromRGB(0, 255, 255)},
-        {"Lime", Color3.fromRGB(0, 255, 0)},
-        {"Magenta", Color3.fromRGB(255, 0, 255)}
-    }
-
-    -- FLOATING ICON & NAGA
-    local FloatingContainer = Instance.new("Frame")
-    FloatingContainer.Name = "FloatingContainer"
-    FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
-    FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
-    FloatingContainer.BackgroundTransparency = 1
-    FloatingContainer.Visible = false
-    FloatingContainer.Parent = ScreenGui
-
-    local SpinOuterIcon = Instance.new("ImageLabel")
-    SpinOuterIcon.Name = "SpinOuterIcon"
-    SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
-    SpinOuterIcon.Position = UDim2.new(0, -9, 0, -9)
-    SpinOuterIcon.BackgroundTransparency = 1
-    SpinOuterIcon.Image = Library.Icons["SpinOuter"]
-    SpinOuterIcon.Parent = FloatingContainer
-
-    RunService.RenderStepped:Connect(function()
-        if FloatingContainer.Visible then
-            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-        end
-    end)
-
-    local FloatingLogoBtn = Instance.new("ImageButton")
-    FloatingLogoBtn.Name = "FloatingLogoBtn"
-    FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
-    FloatingLogoBtn.Position = UDim2.new(0, 0, 0, 0)
-    FloatingLogoBtn.BackgroundTransparency = 1
-    FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
-    FloatingLogoBtn.Parent = FloatingContainer
-
-    makeDraggable(FloatingContainer, FloatingLogoBtn)
-
-    HideBtn.MouseButton1Click:Connect(function()
-        Main.Visible = false
-        FloatingContainer.Visible = true
-    end)
-
-    FloatingLogoBtn.MouseButton1Click:Connect(function()
-        Main.Visible = true
-        FloatingContainer.Visible = false
-    end)
-
-    -- DISPLAY INFORMASI KEY DI SETTINGS
-    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", false)
-    local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
-    local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
-
-    task.spawn(function()
-        while ScreenGui and ScreenGui.Parent do
-            if currentKeyExpiresTimestamp > 0 then
-                local remainingSec = math.max(0, currentKeyExpiresTimestamp - os.time())
-                local hours = math.floor(remainingSec / 3600)
-                local mins = math.floor((remainingSec % 3600) / 60)
-                local secs = remainingSec % 60
-                KeyExpireLblSetting.Text = string.format("Sisa Waktu: %02d:%02d:%02d", hours, mins, secs)
+        local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
+            if type(icon) == "boolean" then
+                defaultCollapsed = icon
+                icon = nil
             end
-            task.wait(1)
+            local iconId = getIconId(icon)
+            local isCollapsed = defaultCollapsed or false
+
+            local GroupFrame = Instance.new("Frame")
+            GroupFrame.Name = "GroupFrame"
+            GroupFrame.Size = UDim2.new(1, 0, 0, 32)
+            GroupFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+            GroupFrame.BorderSizePixel = 0
+            GroupFrame.ClipsDescendants = true
+            GroupFrame.Parent = parentContainer
+
+            Instance.new("UICorner", GroupFrame).CornerRadius = UDim.new(0, 8)
+            local GroupStroke = Instance.new("UIStroke", GroupFrame)
+            GroupStroke.Color = Color3.fromRGB(255, 255, 255)
+            GroupStroke.Transparency = 0.93
+
+            local GroupHeader = Instance.new("TextButton")
+            GroupHeader.Name = "GroupHeader"
+            GroupHeader.Size = UDim2.new(1, 0, 0, 32)
+            GroupHeader.BackgroundTransparency = 1
+            GroupHeader.Text = ""
+            GroupHeader.Parent = GroupFrame
+
+            local xOffset = 10
+            if iconId then
+                local GIcon = Instance.new("ImageLabel")
+                GIcon.Size = UDim2.new(0, 16, 0, 16)
+                GIcon.Position = UDim2.new(0, 10, 0.5, -8)
+                GIcon.BackgroundTransparency = 1
+                GIcon.Image = iconId
+                GIcon.Parent = GroupHeader
+                xOffset = 32
+            end
+
+            local TitleLbl = Instance.new("TextLabel")
+            TitleLbl.Name = "GroupTitleLbl"
+            TitleLbl.Size = UDim2.new(1, -(xOffset + 35), 1, 0)
+            TitleLbl.Position = UDim2.new(0, xOffset, 0, 0)
+            TitleLbl.BackgroundTransparency = 1
+            TitleLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
+            TitleLbl.TextSize = 12
+            TitleLbl.Font = currentFont
+            TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+            TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
+            TitleLbl.Parent = GroupHeader
+            
+            if groupNameKey then
+                registerTranslation(TitleLbl, groupNameKey)
+            end
+
+            local ArrowLbl = Instance.new("TextLabel")
+            ArrowLbl.Size = UDim2.new(0, 20, 0, 20)
+            ArrowLbl.Position = UDim2.new(1, -25, 0.5, -10)
+            ArrowLbl.BackgroundTransparency = 1
+            ArrowLbl.Text = isCollapsed and "▼" or "▲"
+            ArrowLbl.TextColor3 = Color3.fromRGB(160, 160, 170)
+            ArrowLbl.TextSize = 11
+            ArrowLbl.Font = Enum.Font.GothamBold
+            ArrowLbl.Parent = GroupHeader
+
+            local ContentHolder = Instance.new("ScrollingFrame")
+            ContentHolder.Name = "ContentHolder"
+            ContentHolder.Size = UDim2.new(1, -12, 0, 0)
+            ContentHolder.Position = UDim2.new(0, 6, 0, 34)
+            ContentHolder.BackgroundTransparency = 1
+            ContentHolder.BorderSizePixel = 0
+            ContentHolder.Active = true
+            ContentHolder.ScrollingEnabled = true
+            ContentHolder.ScrollBarThickness = 3
+            ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 160)
+            ContentHolder.ClipsDescendants = true
+            ContentHolder.Parent = GroupFrame
+
+            local ContentLayout = Instance.new("UIListLayout")
+            ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            ContentLayout.Padding = UDim.new(0, 5)
+            ContentLayout.Parent = ContentHolder
+
+            local MAX_GROUP_HEIGHT = 160
+
+            local function updateGroupSize()
+                local contentHeight = ContentLayout.AbsoluteContentSize.Y
+                ContentHolder.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
+                
+                local displayHeight = math.min(contentHeight, MAX_GROUP_HEIGHT)
+                ContentHolder.Size = UDim2.new(1, -12, 0, displayHeight)
+                
+                local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
+                
+                TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(1, 0, 0, targetHeight)
+                }):Play()
+            end
+
+            ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateGroupSize)
+
+            GroupHeader.MouseButton1Click:Connect(function()
+                isCollapsed = not isCollapsed
+                ArrowLbl.Text = isCollapsed and "▼" or "▲"
+                updateGroupSize()
+            end)
+
+            local Group = {}
+            Group.ContentHolder = ContentHolder
+
+            function Group:AddButton(text, icon, callback)
+                local btn = createButton(ContentHolder, text, icon, callback)
+                task.defer(updateGroupSize)
+                return btn
+            end
+
+            function Group:AddToggle(text, icon, default, callback)
+                local tog = createToggle(ContentHolder, text, icon, default, callback)
+                task.defer(updateGroupSize)
+                return tog
+            end
+
+            function Group:AddSlider(text, icon, min, max, default, callback)
+                local sld = createSlider(ContentHolder, text, icon, min, max, default, callback)
+                task.defer(updateGroupSize)
+                return sld
+            end
+
+            function Group:AddLabel(text)
+                local LblFrame = Instance.new("Frame")
+                LblFrame.Size = UDim2.new(1, 0, 0, 28)
+                LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+                LblFrame.Parent = ContentHolder
+
+                Instance.new("UICorner", LblFrame).CornerRadius = UDim.new(0, 6)
+                local Stroke = Instance.new("UIStroke", LblFrame)
+                Stroke.Color = Color3.fromRGB(255, 255, 255)
+                Stroke.Transparency = 0.9
+
+                local Lbl = Instance.new("TextLabel")
+                Lbl.Size = UDim2.new(1, -12, 1, 0)
+                Lbl.Position = UDim2.new(0, 6, 0, 0)
+                Lbl.BackgroundTransparency = 1
+                Lbl.Text = tostring(text or "")
+                Lbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+                Lbl.TextSize = 11
+                Lbl.Font = Enum.Font.GothamBold
+                Lbl.TextXAlignment = Enum.TextXAlignment.Left
+                Lbl.TextTruncate = Enum.TextTruncate.AtEnd
+                Lbl.Parent = LblFrame
+
+                task.defer(updateGroupSize)
+                return Lbl
+            end
+
+            task.defer(updateGroupSize)
+            return Group
         end
-    end)
 
-    -- SEARCH SCRIPTBLOX (MENGGUNAKAN SCRIPTBLOX LIMIT CONFIG)
-    local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
+        local colorList = {
+            {"Hitam (Black)", Color3.fromRGB(0, 0, 0)},
+            {"Putih (White)", Color3.fromRGB(255, 255, 255)},
+            {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
+            {"Hijau (Green)", Color3.fromRGB(46, 204, 113)},
+            {"Biru (Blue)", Color3.fromRGB(52, 152, 219)},
+            {"Kuning (Yellow)", Color3.fromRGB(241, 196, 15)},
+            {"Ungu (Purple)", Color3.fromRGB(155, 89, 182)},
+            {"Oranye (Orange)", Color3.fromRGB(230, 126, 34)},
+            {"Pink", Color3.fromRGB(255, 105, 180)},
+            {"Cyan", Color3.fromRGB(0, 255, 255)},
+            {"Lime", Color3.fromRGB(0, 255, 0)},
+            {"Magenta", Color3.fromRGB(255, 0, 255)}
+        }
 
-    local SearchBoxFrame = Instance.new("Frame")
-    SearchBoxFrame.Size = UDim2.new(1, 0, 0, 32)
-    SearchBoxFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    SearchBoxFrame.Parent = ScriptbloxGroup.ContentHolder
-    Instance.new("UICorner", SearchBoxFrame).CornerRadius = UDim.new(0, 6)
+        local FloatingContainer = Instance.new("Frame")
+        FloatingContainer.Name = "FloatingContainer"
+        FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
+        FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
+        FloatingContainer.BackgroundTransparency = 1
+        FloatingContainer.Visible = false
+        FloatingContainer.Parent = ScreenGui
 
-    local SearchInput = Instance.new("TextBox")
-    SearchInput.Size = UDim2.new(0.7, -5, 1, 0)
-    SearchInput.Position = UDim2.new(0, 8, 0, 0)
-    SearchInput.BackgroundTransparency = 1
-    SearchInput.PlaceholderText = "Cari script..."
-    SearchInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
-    SearchInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SearchInput.TextSize = 11
-    SearchInput.Font = currentFont
-    SearchInput.TextXAlignment = Enum.TextXAlignment.Left
-    SearchInput.Parent = SearchBoxFrame
+        local SpinOuterIcon = Instance.new("ImageLabel")
+        SpinOuterIcon.Name = "SpinOuterIcon"
+        SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
+        SpinOuterIcon.Position = UDim2.new(0, -9, 0, -9)
+        SpinOuterIcon.BackgroundTransparency = 1
+        SpinOuterIcon.Image = Library.Icons["SpinOuter"]
+        SpinOuterIcon.Parent = FloatingContainer
 
-    local SearchBtn = Instance.new("TextButton")
-    SearchBtn.Size = UDim2.new(0.3, -8, 1, -6)
-    SearchBtn.Position = UDim2.new(0.7, 2, 0, 3)
-    SearchBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
-    SearchBtn.Text = "Cari"
-    SearchBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SearchBtn.TextSize = 11
-    SearchBtn.Font = Enum.Font.GothamBold
-    SearchBtn.Parent = SearchBoxFrame
-    Instance.new("UICorner", SearchBtn).CornerRadius = UDim.new(0, 4)
+        RunService.RenderStepped:Connect(function()
+            if FloatingContainer.Visible then
+                SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+            end
+        end)
 
-    local ResultsHolder = Instance.new("Frame")
-    ResultsHolder.Size = UDim2.new(1, 0, 0, 0)
-    ResultsHolder.BackgroundTransparency = 1
-    ResultsHolder.Parent = ScriptbloxGroup.ContentHolder
+        local FloatingLogoBtn = Instance.new("ImageButton")
+        FloatingLogoBtn.Name = "FloatingLogoBtn"
+        FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
+        FloatingLogoBtn.Position = UDim2.new(0, 0, 0, 0)
+        FloatingLogoBtn.BackgroundTransparency = 1
+        FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
+        FloatingLogoBtn.Parent = FloatingContainer
 
-    local ResultsLayout = Instance.new("UIListLayout")
-    ResultsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    ResultsLayout.Padding = UDim.new(0, 6)
-    ResultsLayout.Parent = ResultsHolder
+        makeDraggable(FloatingContainer, FloatingLogoBtn)
 
-    ResultsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        ResultsHolder.Size = UDim2.new(1, 0, 0, ResultsLayout.AbsoluteContentSize.Y)
-    end)
+        HideBtn.MouseButton1Click:Connect(function()
+            Main.Visible = false
+            FloatingContainer.Visible = true
+        end)
 
-    local function performScriptbloxSearch(query)
-        for _, child in ipairs(ResultsHolder:GetChildren()) do
-            if child:IsA("Frame") then child:Destroy() end
-        end
+        FloatingLogoBtn.MouseButton1Click:Connect(function()
+            Main.Visible = true
+            FloatingContainer.Visible = false
+        end)
 
-        if query == "" then return end
-        Library:Notify({ Title = "Scriptblox", Content = "Mencari: " .. query .. "...", Type = "Info" })
+        local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", false)
+        local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
+        local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
 
         task.spawn(function()
-            pcall(function()
-                local url = "https://scriptblox.com/api/script/search?q=" .. HttpService:UrlEncode(query)
-                local response = game:HttpGet(url)
-                local data = HttpService:JSONDecode(response)
-
-                if data and data.result and data.result.scripts and #data.result.scripts > 0 then
-                    for i, item in ipairs(data.result.scripts) do
-                        if i > scriptbloxLimit then break end
-
-                        local scriptTitle = item.title or "No Title"
-                        local rawScript = item.script or ""
-
-                        local Card = Instance.new("Frame")
-                        Card.Size = UDim2.new(1, 0, 0, 50)
-                        Card.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-                        Card.Parent = ResultsHolder
-                        Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
-
-                        local TitleLbl = Instance.new("TextLabel")
-                        TitleLbl.Size = UDim2.new(1, -12, 0, 20)
-                        TitleLbl.Position = UDim2.new(0, 6, 0, 4)
-                        TitleLbl.BackgroundTransparency = 1
-                        TitleLbl.Text = scriptTitle
-                        TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-                        TitleLbl.TextSize = 10
-                        TitleLbl.Font = Enum.Font.GothamBold
-                        TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-                        TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
-                        TitleLbl.Parent = Card
-
-                        local ExecBtn = Instance.new("TextButton")
-                        ExecBtn.Size = UDim2.new(0.48, -4, 0, 20)
-                        ExecBtn.Position = UDim2.new(0, 6, 0, 25)
-                        ExecBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-                        ExecBtn.Text = "Execute"
-                        ExecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-                        ExecBtn.TextSize = 10
-                        ExecBtn.Font = Enum.Font.GothamBold
-                        ExecBtn.Parent = Card
-                        Instance.new("UICorner", ExecBtn).CornerRadius = UDim.new(0, 4)
-
-                        local CopyBtn = Instance.new("TextButton")
-                        CopyBtn.Size = UDim2.new(0.48, -4, 0, 20)
-                        CopyBtn.Position = UDim2.new(0.52, 0, 0, 25)
-                        CopyBtn.BackgroundColor3 = Color3.fromRGB(241, 196, 15)
-                        CopyBtn.Text = "Copy Script"
-                        CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-                        CopyBtn.TextSize = 10
-                        CopyBtn.Font = Enum.Font.GothamBold
-                        CopyBtn.Parent = Card
-                        Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 4)
-
-                        ExecBtn.MouseButton1Click:Connect(function()
-                            Library:Notify({ Title = "Scriptblox", Content = "Menjalankan: " .. scriptTitle, Type = "Info" })
-                            task.spawn(function()
-                                pcall(function() loadstring(rawScript)() end)
-                            end)
-                        end)
-
-                        CopyBtn.MouseButton1Click:Connect(function()
-                            if setclipboard then
-                                setclipboard(rawScript)
-                                Library:Notify({ Title = "Scriptblox", Content = "Script disalin ke Clipboard!", Type = "Success" })
-                            else
-                                Library:Notify({ Title = "Scriptblox", Content = "Executor tidak mendukung setclipboard", Type = "Error" })
-                            end
-                        end)
-                    end
-                else
-                    Library:Notify({ Title = "Scriptblox", Content = "Script tidak ditemukan!", Type = "Warning" })
+            while ScreenGui and ScreenGui.Parent do
+                if currentKeyExpiresTimestamp > 0 then
+                    local remainingSec = math.max(0, currentKeyExpiresTimestamp - os.time())
+                    local hours = math.floor(remainingSec / 3600)
+                    local mins = math.floor((remainingSec % 3600) / 60)
+                    local secs = remainingSec % 60
+                    KeyExpireLblSetting.Text = string.format("Sisa Waktu: %02d:%02d:%02d", hours, mins, secs)
                 end
-            end)
-        end)
-    end
-
-    SearchBtn.MouseButton1Click:Connect(function()
-        performScriptbloxSearch(SearchInput.Text)
-    end)
-
-    SearchInput.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            performScriptbloxSearch(SearchInput.Text)
-        end
-    end)
-
-    -- PENGATURAN UKURAN TOMBOL HIDE/SHOW
-    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
-    FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
-        FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
-        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
-    end)
-    FloatSizeGroup:AddButton("Sedang (65px)", nil, function()
-        FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
-        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Sedang", Type = "Success" })
-    end)
-    FloatSizeGroup:AddButton("Besar (85px)", nil, function()
-        FloatingContainer.Size = UDim2.new(0, 85, 0, 85)
-        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
-    end)
-
-    -- WAKTU BERMAIN (Play Time Tracker)
-    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
-    local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
-    local startTime = tick()
-    
-    task.spawn(function()
-        while ScreenGui and ScreenGui.Parent do
-            local totalSeconds = math.floor(tick() - startTime)
-            local days = math.floor(totalSeconds / 86400)
-            local hours = math.floor((totalSeconds % 86400) / 3600)
-            local minutes = math.floor((totalSeconds % 3600) / 60)
-            local seconds = totalSeconds % 60
-            
-            PlayTimeLabel.Text = string.format("Waktu Bermain: %d hari, %02d:%02d:%02d", days, hours, minutes, seconds)
-            task.wait(1)
-        end
-    end)
-
-    -- PROFIL PLAYER & AVATAR LOBBY
-    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
-    
-    local AvatarFrame = Instance.new("Frame")
-    AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
-    AvatarFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    AvatarFrame.Parent = PlayerGroup.ContentHolder
-    Instance.new("UICorner", AvatarFrame).CornerRadius = UDim.new(0, 6)
-
-    local AvatarImg = Instance.new("ImageLabel")
-    AvatarImg.Size = UDim2.new(0, 48, 0, 48)
-    AvatarImg.Position = UDim2.new(0, 6, 0.5, -24)
-    AvatarImg.BackgroundTransparency = 1
-    AvatarImg.Parent = AvatarFrame
-    Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
-
-    pcall(function()
-        local thumbType = Enum.ThumbnailType.HeadShot
-        local thumbSize = Enum.ThumbnailSize.Size150x150
-        local content = Players:GetUserThumbnailAsync(LocalPlayer.UserId, thumbType, thumbSize)
-        AvatarImg.Image = content
-    end)
-
-    local AvatarTextLbl = Instance.new("TextLabel")
-    AvatarTextLbl.Size = UDim2.new(1, -60, 1, 0)
-    AvatarTextLbl.Position = UDim2.new(0, 58, 0, 0)
-    AvatarTextLbl.BackgroundTransparency = 1
-    AvatarTextLbl.Text = LocalPlayer.DisplayName .. "\n(@" .. LocalPlayer.Name .. ")"
-    AvatarTextLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    AvatarTextLbl.TextSize = 11
-    AvatarTextLbl.Font = Enum.Font.GothamBold
-    AvatarTextLbl.TextXAlignment = Enum.TextXAlignment.Left
-    AvatarTextLbl.Parent = AvatarFrame
-
-    local pGameName = "Mendeteksi..."
-    pcall(function()
-        pGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
-    end)
-    PlayerGroup:AddLabel("Game: " .. pGameName)
-    PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
-    PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
-
-    -- PERFORMA & TAMBAHAN
-    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
-    
-    PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
-        pcall(function()
-            if state then
-                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
-                    if v:IsA("BasePart") then
-                        v.Material = Enum.Material.SmoothPlastic
-                    end
-                end
-                Library:Notify({ Title = "Performa", Content = "FPS Boost Diaktifkan!", Type = "Success" })
-            end
-        end)
-    end)
-
-    PerfGroup:AddButton("Render Chunk", nil, function()
-        Library:Notify({ Title = "Performa", Content = "Render Chunk Diperbarui!", Type = "Success" })
-    end)
-
-    local instantPromptConn
-    PerfGroup:AddToggle("Instant Proximity Prompt", nil, false, function(state)
-        pcall(function()
-            if state then
-                for _, v in pairs(game:GetDescendants()) do
-                    if v:IsA("ProximityPrompt") then
-                        v.HoldDuration = 0
-                    end
-                end
-                instantPromptConn = game.DescendantAdded:Connect(function(v)
-                    if v:IsA("ProximityPrompt") then
-                        v.HoldDuration = 0
-                    end
-                end)
-                Library:Notify({ Title = "Interaksi", Content = "Instant Proximity Prompt Aktif!", Type = "Success" })
-            else
-                if instantPromptConn then instantPromptConn:Disconnect() end
-                Library:Notify({ Title = "Interaksi", Content = "Instant Proximity Prompt Dimatikan", Type = "Info" })
-            end
-        end)
-    end)
-
-    local antiAfkConn
-    PerfGroup:AddToggle("Anti AFK", nil, true, function(state)
-        if state then
-            antiAfkConn = LocalPlayer.Idled:Connect(function()
-                game:GetService("VirtualUser"):Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
                 task.wait(1)
-                game:GetService("VirtualUser"):Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-            end)
-            Library:Notify({ Title = "System", Content = "Anti AFK Aktif!", Type = "Success" })
-        else
-            if antiAfkConn then antiAfkConn:Disconnect() end
-            Library:Notify({ Title = "System", Content = "Anti AFK Dimatikan", Type = "Info" })
-        end
-    end)
+            end
+        end)
 
-    -- SCRIPT POPULER (15 SCRIPT)
-    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
+        local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
 
-    local popularScriptsList = {
-        {Name = "1. Infinite Yield (Admin Commands)", Url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
-        {Name = "2. Dex Explorer (V3 Fix)", Url = "https://raw.githubusercontent.com/inforyou/Dex/main/dex.lua"},
-        {Name = "3. Remote Spy (SimpleSpy V2)", Url = "https://raw.githubusercontent.com/exunys/SimpleSpy-V2/main/script.lua"},
-        {Name = "4. Fly Script (Universal Mobile)", Url = "https://raw.githubusercontent.com/XNEO-Script/Fly-Script/main/Fly.lua"},
-        {Name = "5. ESP / Wallhack (Universal)", Url = "https://raw.githubusercontent.com/ic3w0lf22/Unnamed-ESP/master/Uncompressed.lua"},
-        {Name = "6. Aimbot Script (Universal)", Url = "https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Source.lua"},
-        {Name = "7. Keyboard Script (Mobile Keybd)", Url = "https://raw.githubusercontent.com/advizes/ROBLOX/main/MobileKeyboard.lua"},
-        {Name = "8. Shiftlock Mobile (Universal)", Url = "https://raw.githubusercontent.com/MiniScribe/ShiftLock/main/ShiftLock.lua"},
-        {Name = "9. Anti AFK (Disconnector Fix)", Url = "https://raw.githubusercontent.com/K33R3/AntiAFK/main/AntiAFK.lua"},
-        {Name = "10. Rejoin Server Utility", Url = "https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/RejoinServer.lua"},
-        {Name = "11. Btools (Building Tools)", Url = "https://raw.githubusercontent.com/K33R3/BTools/main/BTools.lua"},
-        {Name = "12. Speed & Jump Modifier GUI", Url = "https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/SpeedJump.lua"},
-        {Name = "13. Fullbright (Lighting Mode)", Url = "https://raw.githubusercontent.com/K33R3/Fullbright/main/Fullbright.lua"},
-        {Name = "14. Server Hop (Low Player)", Url = "https://raw.githubusercontent.com/K33R3/ServerHop/main/ServerHop.lua"},
-        {Name = "15. Chat Bypasser (Universal)", Url = "https://raw.githubusercontent.com/K33R3/ChatBypasser/main/ChatBypasser.lua"}
-    }
+        local SearchBoxFrame = Instance.new("Frame")
+        SearchBoxFrame.Size = UDim2.new(1, 0, 0, 32)
+        SearchBoxFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+        SearchBoxFrame.Parent = ScriptbloxGroup.ContentHolder
+        Instance.new("UICorner", SearchBoxFrame).CornerRadius = UDim.new(0, 6)
 
-    for _, sc in ipairs(popularScriptsList) do
-        PopularGroup:AddButton(sc.Name, nil, function()
-            Library:Notify({ Title = "Script Executor", Content = L("Executing") .. sc.Name, Type = "Info", Duration = 3 })
+        local SearchInput = Instance.new("TextBox")
+        SearchInput.Size = UDim2.new(0.7, -5, 1, 0)
+        SearchInput.Position = UDim2.new(0, 8, 0, 0)
+        SearchInput.BackgroundTransparency = 1
+        SearchInput.PlaceholderText = "Cari script..."
+        SearchInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
+        SearchInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+        SearchInput.TextSize = 11
+        SearchInput.Font = currentFont
+        SearchInput.TextXAlignment = Enum.TextXAlignment.Left
+        SearchInput.Parent = SearchBoxFrame
+
+        local SearchBtn = Instance.new("TextButton")
+        SearchBtn.Size = UDim2.new(0.3, -8, 1, -6)
+        SearchBtn.Position = UDim2.new(0.7, 2, 0, 3)
+        SearchBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+        SearchBtn.Text = "Cari"
+        SearchBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        SearchBtn.TextSize = 11
+        SearchBtn.Font = Enum.Font.GothamBold
+        SearchBtn.Parent = SearchBoxFrame
+        Instance.new("UICorner", SearchBtn).CornerRadius = UDim.new(0, 4)
+
+        local ResultsHolder = Instance.new("Frame")
+        ResultsHolder.Size = UDim2.new(1, 0, 0, 0)
+        ResultsHolder.BackgroundTransparency = 1
+        ResultsHolder.Parent = ScriptbloxGroup.ContentHolder
+
+        local ResultsLayout = Instance.new("UIListLayout")
+        ResultsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        ResultsLayout.Padding = UDim.new(0, 6)
+        ResultsLayout.Parent = ResultsHolder
+
+        ResultsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            ResultsHolder.Size = UDim2.new(1, 0, 0, ResultsLayout.AbsoluteContentSize.Y)
+        end)
+
+        local function performScriptbloxSearch(query)
+            for _, child in ipairs(ResultsHolder:GetChildren()) do
+                if child:IsA("Frame") then child:Destroy() end
+            end
+
+            if query == "" then return end
+            Library:Notify({ Title = "Scriptblox", Content = "Mencari: " .. query .. "...", Type = "Info" })
+
             task.spawn(function()
                 pcall(function()
-                    loadstring(game:HttpGet(sc.Url))()
+                    local url = "https://scriptblox.com/api/script/search?q=" .. HttpService:UrlEncode(query)
+                    local response = game:HttpGet(url)
+                    local data = HttpService:JSONDecode(response)
+
+                    if data and data.result and data.result.scripts and #data.result.scripts > 0 then
+                        for i, item in ipairs(data.result.scripts) do
+                            if i > scriptbloxLimit then break end
+
+                            local scriptTitle = item.title or "No Title"
+                            local rawScript = item.script or ""
+
+                            local Card = Instance.new("Frame")
+                            Card.Size = UDim2.new(1, 0, 0, 50)
+                            Card.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+                            Card.Parent = ResultsHolder
+                            Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
+
+                            local TitleLbl = Instance.new("TextLabel")
+                            TitleLbl.Size = UDim2.new(1, -12, 0, 20)
+                            TitleLbl.Position = UDim2.new(0, 6, 0, 4)
+                            TitleLbl.BackgroundTransparency = 1
+                            TitleLbl.Text = scriptTitle
+                            TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+                            TitleLbl.TextSize = 10
+                            TitleLbl.Font = Enum.Font.GothamBold
+                            TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+                            TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
+                            TitleLbl.Parent = Card
+
+                            local ExecBtn = Instance.new("TextButton")
+                            ExecBtn.Size = UDim2.new(0.48, -4, 0, 20)
+                            ExecBtn.Position = UDim2.new(0, 6, 0, 25)
+                            ExecBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+                            ExecBtn.Text = "Execute"
+                            ExecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                            ExecBtn.TextSize = 10
+                            ExecBtn.Font = Enum.Font.GothamBold
+                            ExecBtn.Parent = Card
+                            Instance.new("UICorner", ExecBtn).CornerRadius = UDim.new(0, 4)
+
+                            local CopyBtn = Instance.new("TextButton")
+                            CopyBtn.Size = UDim2.new(0.48, -4, 0, 20)
+                            CopyBtn.Position = UDim2.new(0.52, 0, 0, 25)
+                            CopyBtn.BackgroundColor3 = Color3.fromRGB(241, 196, 15)
+                            CopyBtn.Text = "Copy Script"
+                            CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                            CopyBtn.TextSize = 10
+                            CopyBtn.Font = Enum.Font.GothamBold
+                            CopyBtn.Parent = Card
+                            Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 4)
+
+                            ExecBtn.MouseButton1Click:Connect(function()
+                                Library:Notify({ Title = "Scriptblox", Content = "Menjalankan: " .. scriptTitle, Type = "Info" })
+                                task.spawn(function()
+                                    pcall(function() loadstring(rawScript)() end)
+                                end)
+                            end)
+
+                            CopyBtn.MouseButton1Click:Connect(function()
+                                if setclipboard then
+                                    setclipboard(rawScript)
+                                    Library:Notify({ Title = "Scriptblox", Content = "Script disalin ke Clipboard!", Type = "Success" })
+                                else
+                                    Library:Notify({ Title = "Scriptblox", Content = "Executor tidak mendukung setclipboard", Type = "Error" })
+                                end
+                            end)
+                        end
+                    else
+                        Library:Notify({ Title = "Scriptblox", Content = "Script tidak ditemukan!", Type = "Warning" })
+                    end
                 end)
             end)
-        end)
-    end
-
-    -- WARNA TEKS
-    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
-    
-    TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
-        isRgbTextActive = true
-        Library:Notify({ Title = "Warna Teks", Content = "Mode RGB Rainbow Diaktifkan!", Type = "Success", Duration = 2 })
-    end)
-
-    for _, cInfo in ipairs(colorList) do
-        local name, col = cInfo[1], cInfo[2]
-        TextColorGroup:AddButton(name, nil, function()
-            updateGlobalTextColor(col)
-            Library:Notify({ Title = "Warna Teks", Content = "Warna diubah ke " .. name, Type = "Success", Duration = 2 })
-        end)
-    end
-
-    -- TEMA BACKGROUND UI
-    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
-
-    ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
-        isRgbThemeActive = true
-        Library:Notify({ Title = "Tema UI", Content = "Mode Tema RGB Diaktifkan!", Type = "Success", Duration = 2 })
-    end)
-
-    for _, cInfo in ipairs(colorList) do
-        local name, col = cInfo[1], cInfo[2]
-        ThemeGroup:AddButton("Tema " .. name, nil, function()
-            updateGlobalThemeColor(col)
-            Library:Notify({ Title = "Tema UI", Content = "Tema diubah ke " .. name, Type = "Success", Duration = 2 })
-        end)
-    end
-
-    -- GRUP MUSIK
-    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
-    
-    local currentSound = Instance.new("Sound")
-    currentSound.Parent = SoundService
-    
-    local selectedSongId = "142376088"
-    local isMusicPlaying = false
-    local isMusicLoop = false
-
-    local NowPlayingLbl = MusicGroup:AddLabel(L("ActiveSong") .. "Raining Tacos (142376088)")
-
-    local musicDatabase = {
-        {Name = "Raining Tacos", Id = "142376088"},
-        {Name = "Spooky Scary Skeletons", Id = "148677707"},
-        {Name = "Megalovania", Id = "183884457"},
-        {Name = "Crab Rave", Id = "248737242"}
-    }
-
-    local function playSelectedMusic()
-        currentSound.SoundId = "rbxassetid://" .. selectedSongId
-        currentSound.Looped = isMusicLoop
-        if isMusicPlaying then
-            currentSound:Stop()
-            currentSound:Play()
         end
-    end
 
-    for _, song in ipairs(musicDatabase) do
-        MusicGroup:AddButton("🎵 " .. song.Name, nil, function()
-            selectedSongId = song.Id
-            NowPlayingLbl.Text = L("ActiveSong") .. song.Name .. " (" .. song.Id .. ")"
-            playSelectedMusic()
-            Library:Notify({ Title = "Musik", Content = "Memilih lagu: " .. song.Name, Type = "Success" })
+        SearchBtn.MouseButton1Click:Connect(function()
+            performScriptbloxSearch(SearchInput.Text)
         end)
-    end
 
-    MusicGroup:AddToggle("Putar Musik (On/Off)", nil, false, function(state)
-        isMusicPlaying = state
-        if state then
+        SearchInput.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                performScriptbloxSearch(SearchInput.Text)
+            end
+        end)
+
+        local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
+        FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
+            FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
+            Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
+        end)
+        FloatSizeGroup:AddButton("Sedang (65px)", nil, function()
+            FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
+            Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Sedang", Type = "Success" })
+        end)
+        FloatSizeGroup:AddButton("Besar (85px)", nil, function()
+            FloatingContainer.Size = UDim2.new(0, 85, 0, 85)
+            Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
+        end)
+
+        local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
+        local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
+        local startTime = tick()
+        
+        task.spawn(function()
+            while ScreenGui and ScreenGui.Parent do
+                local totalSeconds = math.floor(tick() - startTime)
+                local days = math.floor(totalSeconds / 86400)
+                local hours = math.floor((totalSeconds % 86400) / 3600)
+                local minutes = math.floor((totalSeconds % 3600) / 60)
+                local seconds = totalSeconds % 60
+                
+                PlayTimeLabel.Text = string.format("Waktu Bermain: %d hari, %02d:%02d:%02d", days, hours, minutes, seconds)
+                task.wait(1)
+            end
+        end)
+
+        local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
+        
+        local AvatarFrame = Instance.new("Frame")
+        AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
+        AvatarFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+        AvatarFrame.Parent = PlayerGroup.ContentHolder
+        Instance.new("UICorner", AvatarFrame).CornerRadius = UDim.new(0, 6)
+
+        local AvatarImg = Instance.new("ImageLabel")
+        AvatarImg.Size = UDim2.new(0, 48, 0, 48)
+        AvatarImg.Position = UDim2.new(0, 6, 0.5, -24)
+        AvatarImg.BackgroundTransparency = 1
+        AvatarImg.Parent = AvatarFrame
+        Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
+
+        pcall(function()
+            local thumbType = Enum.ThumbnailType.HeadShot
+            local thumbSize = Enum.ThumbnailSize.Size150x150
+            local content = Players:GetUserThumbnailAsync(LocalPlayer.UserId, thumbType, thumbSize)
+            AvatarImg.Image = content
+        end)
+
+        local AvatarTextLbl = Instance.new("TextLabel")
+        AvatarTextLbl.Size = UDim2.new(1, -60, 1, 0)
+        AvatarTextLbl.Position = UDim2.new(0, 58, 0, 0)
+        AvatarTextLbl.BackgroundTransparency = 1
+        AvatarTextLbl.Text = LocalPlayer.DisplayName .. "\n(@" .. LocalPlayer.Name .. ")"
+        AvatarTextLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        AvatarTextLbl.TextSize = 11
+        AvatarTextLbl.Font = Enum.Font.GothamBold
+        AvatarTextLbl.TextXAlignment = Enum.TextXAlignment.Left
+        AvatarTextLbl.Parent = AvatarFrame
+
+        local pGameName = "Mendeteksi..."
+        pcall(function()
+            pGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
+        end)
+        PlayerGroup:AddLabel("Game: " .. pGameName)
+        PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
+        PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
+
+        local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
+        
+        PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
+            pcall(function()
+                if state then
+                    for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                        if v:IsA("BasePart") then
+                            v.Material = Enum.Material.SmoothPlastic
+                        end
+                    end
+                    Library:Notify({ Title = "Performa", Content = "FPS Boost Diaktifkan!", Type = "Success" })
+                end
+            end)
+        end)
+
+        PerfGroup:AddButton("Render Chunk", nil, function()
+            Library:Notify({ Title = "Performa", Content = "Render Chunk Diperbarui!", Type = "Success" })
+        end)
+
+        local instantPromptConn
+        PerfGroup:AddToggle("Instant Proximity Prompt", nil, false, function(state)
+            pcall(function()
+                if state then
+                    for _, v in pairs(game:GetDescendants()) do
+                        if v:IsA("ProximityPrompt") then
+                            v.HoldDuration = 0
+                        end
+                    end
+                    instantPromptConn = game.DescendantAdded:Connect(function(v)
+                        if v:IsA("ProximityPrompt") then
+                            v.HoldDuration = 0
+                        end
+                    end)
+                    Library:Notify({ Title = "Interaksi", Content = "Instant Proximity Prompt Aktif!", Type = "Success" })
+                else
+                    if instantPromptConn then instantPromptConn:Disconnect() end
+                    Library:Notify({ Title = "Interaksi", Content = "Instant Proximity Prompt Dimatikan", Type = "Info" })
+                end
+            end)
+        end)
+
+        local antiAfkConn
+        PerfGroup:AddToggle("Anti AFK", nil, true, function(state)
+            if state then
+                antiAfkConn = LocalPlayer.Idled:Connect(function()
+                    game:GetService("VirtualUser"):Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                    task.wait(1)
+                    game:GetService("VirtualUser"):Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                end)
+                Library:Notify({ Title = "System", Content = "Anti AFK Aktif!", Type = "Success" })
+            else
+                if antiAfkConn then antiAfkConn:Disconnect() end
+                Library:Notify({ Title = "System", Content = "Anti AFK Dimatikan", Type = "Info" })
+            end
+        end)
+
+        local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
+
+        local popularScriptsList = {
+            {Name = "1. Infinite Yield (Admin Commands)", Url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
+            {Name = "2. Dex Explorer (V3 Fix)", Url = "https://raw.githubusercontent.com/inforyou/Dex/main/dex.lua"},
+            {Name = "3. Remote Spy (SimpleSpy V2)", Url = "https://raw.githubusercontent.com/exunys/SimpleSpy-V2/main/script.lua"},
+            {Name = "4. Fly Script (Universal Mobile)", Url = "https://raw.githubusercontent.com/XNEO-Script/Fly-Script/main/Fly.lua"},
+            {Name = "5. ESP / Wallhack (Universal)", Url = "https://raw.githubusercontent.com/ic3w0lf22/Unnamed-ESP/master/Uncompressed.lua"},
+            {Name = "6. Aimbot Script (Universal)", Url = "https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Source.lua"},
+            {Name = "7. Keyboard Script (Mobile Keybd)", Url = "https://raw.githubusercontent.com/advizes/ROBLOX/main/MobileKeyboard.lua"},
+            {Name = "8. Shiftlock Mobile (Universal)", Url = "https://raw.githubusercontent.com/MiniScribe/ShiftLock/main/ShiftLock.lua"},
+            {Name = "9. Anti AFK (Disconnector Fix)", Url = "https://raw.githubusercontent.com/K33R3/AntiAFK/main/AntiAFK.lua"},
+            {Name = "10. Rejoin Server Utility", Url = "https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/RejoinServer.lua"},
+            {Name = "11. Btools (Building Tools)", Url = "https://raw.githubusercontent.com/K33R3/BTools/main/BTools.lua"},
+            {Name = "12. Speed & Jump Modifier GUI", Url = "https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/SpeedJump.lua"},
+            {Name = "13. Fullbright (Lighting Mode)", Url = "https://raw.githubusercontent.com/K33R3/Fullbright/main/Fullbright.lua"},
+            {Name = "14. Server Hop (Low Player)", Url = "https://raw.githubusercontent.com/K33R3/ServerHop/main/ServerHop.lua"},
+            {Name = "15. Chat Bypasser (Universal)", Url = "https://raw.githubusercontent.com/K33R3/ChatBypasser/main/ChatBypasser.lua"}
+        }
+
+        for _, sc in ipairs(popularScriptsList) do
+            PopularGroup:AddButton(sc.Name, nil, function()
+                Library:Notify({ Title = "Script Executor", Content = L("Executing") .. sc.Name, Type = "Info", Duration = 3 })
+                task.spawn(function()
+                    pcall(function()
+                        loadstring(game:HttpGet(sc.Url))()
+                    end)
+                end)
+            end)
+        end
+
+        local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
+        
+        TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
+            isRgbTextActive = true
+            Library:Notify({ Title = "Warna Teks", Content = "Mode RGB Rainbow Diaktifkan!", Type = "Success", Duration = 2 })
+        end)
+
+        for _, cInfo in ipairs(colorList) do
+            local name, col = cInfo[1], cInfo[2]
+            TextColorGroup:AddButton(name, nil, function()
+                updateGlobalTextColor(col)
+                Library:Notify({ Title = "Warna Teks", Content = "Warna diubah ke " .. name, Type = "Success", Duration = 2 })
+            end)
+        end
+
+        local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
+
+        ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
+            isRgbThemeActive = true
+            Library:Notify({ Title = "Tema UI", Content = "Mode Tema RGB Diaktifkan!", Type = "Success", Duration = 2 })
+        end)
+
+        for _, cInfo in ipairs(colorList) do
+            local name, col = cInfo[1], cInfo[2]
+            ThemeGroup:AddButton("Tema " .. name, nil, function()
+                updateGlobalThemeColor(col)
+                Library:Notify({ Title = "Tema UI", Content = "Tema diubah ke " .. name, Type = "Success", Duration = 2 })
+            end)
+        end
+
+        local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
+        
+        local currentSound = Instance.new("Sound")
+        currentSound.Parent = SoundService
+        
+        local selectedSongId = "142376088"
+        local isMusicPlaying = false
+        local isMusicLoop = false
+
+        local NowPlayingLbl = MusicGroup:AddLabel(L("ActiveSong") .. "Raining Tacos (142376088)")
+
+        local musicDatabase = {
+            {Name = "Raining Tacos", Id = "142376088"},
+            {Name = "Spooky Scary Skeletons", Id = "148677707"},
+            {Name = "Megalovania", Id = "183884457"},
+            {Name = "Crab Rave", Id = "248737242"}
+        }
+
+        local function playSelectedMusic()
             currentSound.SoundId = "rbxassetid://" .. selectedSongId
             currentSound.Looped = isMusicLoop
-            currentSound:Play()
-            Library:Notify({ Title = "Musik", Content = "Musik Diputar", Type = "Success" })
-        else
-            currentSound:Stop()
-            Library:Notify({ Title = "Musik", Content = "Musik Dimatikan", Type = "Info" })
+            if isMusicPlaying then
+                currentSound:Stop()
+                currentSound:Play()
+            end
         end
-    end)
 
-    MusicGroup:AddToggle("Loop Lagu (Ulangi)", nil, false, function(state)
-        isMusicLoop = state
-        currentSound.Looped = state
-        Library:Notify({ Title = "Musik", Content = "Looping: " .. tostring(state), Type = "Info" })
-    end)
-
-    local CustomInputFrame = Instance.new("Frame")
-    CustomInputFrame.Size = UDim2.new(1, 0, 0, 32)
-    CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    CustomInputFrame.Parent = MusicGroup.ContentHolder
-
-    local CustomTextBox = Instance.new("TextBox")
-    CustomTextBox.Size = UDim2.new(0.65, -5, 1, 0)
-    CustomTextBox.Position = UDim2.new(0, 0, 0, 0)
-    CustomTextBox.BackgroundTransparency = 1
-    CustomTextBox.TextColor3 = currentTextColor
-    CustomTextBox.TextSize = 11
-    CustomTextBox.Font = currentFont
-    CustomTextBox.Parent = CustomInputFrame
-    registerTranslation(CustomTextBox, "SongPlaceholder", "PlaceholderText")
-
-    local SaveCustomBtn = Instance.new("TextButton")
-    SaveCustomBtn.Size = UDim2.new(0.35, -5, 1, 0)
-    SaveCustomBtn.Position = UDim2.new(0.65, 5, 0, 0)
-    SaveCustomBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-    SaveCustomBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SaveCustomBtn.TextSize = 11
-    SaveCustomBtn.Font = Enum.Font.GothamBold
-    SaveCustomBtn.Parent = CustomInputFrame
-    Instance.new("UICorner", SaveCustomBtn).CornerRadius = UDim.new(0, 6)
-    registerTranslation(SaveCustomBtn, "CustomSong")
-
-    SaveCustomBtn.MouseButton1Click:Connect(function()
-        local customId = CustomTextBox.Text
-        if customId ~= "" and tonumber(customId) then
-            selectedSongId = customId
-            NowPlayingLbl.Text = L("ActiveSong") .. "Custom (" .. customId .. ")"
-            playSelectedMusic()
-            Library:Notify({ Title = "Musik", Content = "ID Lagu " .. customId .. " disimpan & diputar!", Type = "Success" })
-        else
-            Library:Notify({ Title = "Musik", Content = "ID Lagu tidak valid!", Type = "Error" })
+        for _, song in ipairs(musicDatabase) do
+            MusicGroup:AddButton("🎵 " .. song.Name, nil, function()
+                selectedSongId = song.Id
+                NowPlayingLbl.Text = L("ActiveSong") .. song.Name .. " (" .. song.Id .. ")"
+                playSelectedMusic()
+                Library:Notify({ Title = "Musik", Content = "Memilih lagu: " .. song.Name, Type = "Success" })
+            end)
         end
-    end)
 
-    -- PILIH BAHASA
-    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
-    LangGroup:AddButton("Bahasa Indonesia", nil, function()
-        currentLang = "Indonesian"
-        updateAllTranslations()
-        Library:Notify({ Title = "Bahasa", Content = "Bahasa diubah ke Bahasa Indonesia", Type = "Success" })
-    end)
-    LangGroup:AddButton("English", nil, function()
-        currentLang = "English"
-        updateAllTranslations()
-        Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
-    end)
+        MusicGroup:AddToggle("Putar Musik (On/Off)", nil, false, function(state)
+            isMusicPlaying = state
+            if state then
+                currentSound.SoundId = "rbxassetid://" .. selectedSongId
+                currentSound.Looped = isMusicLoop
+                currentSound:Play()
+                Library:Notify({ Title = "Musik", Content = "Musik Diputar", Type = "Success" })
+            else
+                currentSound:Stop()
+                Library:Notify({ Title = "Musik", Content = "Musik Dimatikan", Type = "Info" })
+            end
+        end)
 
-    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
-    TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
-        Main.BackgroundTransparency = val / 100
-    end)
+        MusicGroup:AddToggle("Loop Lagu (Ulangi)", nil, false, function(state)
+            isMusicLoop = state
+            currentSound.Looped = state
+            Library:Notify({ Title = "Musik", Content = "Looping: " .. tostring(state), Type = "Info" })
+        end)
 
-    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
-    for fontName, enumFont in pairs(Fonts) do
-        FontGroup:AddButton(fontName, nil, function()
-            currentFont = enumFont
-            for _, obj in ipairs(ScreenGui:GetDescendants()) do
-                if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-                    obj.Font = enumFont
+        local CustomInputFrame = Instance.new("Frame")
+        CustomInputFrame.Size = UDim2.new(1, 0, 0, 32)
+        CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+        CustomInputFrame.Parent = MusicGroup.ContentHolder
+
+        local CustomTextBox = Instance.new("TextBox")
+        CustomTextBox.Size = UDim2.new(0.65, -5, 1, 0)
+        CustomTextBox.Position = UDim2.new(0, 0, 0, 0)
+        CustomTextBox.BackgroundTransparency = 1
+        CustomTextBox.TextColor3 = currentTextColor
+        CustomTextBox.TextSize = 11
+        CustomTextBox.Font = currentFont
+        CustomTextBox.Parent = CustomInputFrame
+        registerTranslation(CustomTextBox, "SongPlaceholder", "PlaceholderText")
+
+        local SaveCustomBtn = Instance.new("TextButton")
+        SaveCustomBtn.Size = UDim2.new(0.35, -5, 1, 0)
+        SaveCustomBtn.Position = UDim2.new(0.65, 5, 0, 0)
+        SaveCustomBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+        SaveCustomBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        SaveCustomBtn.TextSize = 11
+        SaveCustomBtn.Font = Enum.Font.GothamBold
+        SaveCustomBtn.Parent = CustomInputFrame
+        Instance.new("UICorner", SaveCustomBtn).CornerRadius = UDim.new(0, 6)
+        registerTranslation(SaveCustomBtn, "CustomSong")
+
+        SaveCustomBtn.MouseButton1Click:Connect(function()
+            local customId = CustomTextBox.Text
+            if customId ~= "" and tonumber(customId) then
+                selectedSongId = customId
+                NowPlayingLbl.Text = L("ActiveSong") .. "Custom (" .. customId .. ")"
+                playSelectedMusic()
+                Library:Notify({ Title = "Musik", Content = "ID Lagu " .. customId .. " disimpan & diputar!", Type = "Success" })
+            else
+                Library:Notify({ Title = "Musik", Content = "ID Lagu tidak valid!", Type = "Error" })
+            end
+        end)
+
+        local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
+        LangGroup:AddButton("Bahasa Indonesia", nil, function()
+            currentLang = "Indonesian"
+            updateAllTranslations()
+            Library:Notify({ Title = "Bahasa", Content = "Bahasa diubah ke Bahasa Indonesia", Type = "Success" })
+        end)
+        LangGroup:AddButton("English", nil, function()
+            currentLang = "English"
+            updateAllTranslations()
+            Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
+        end)
+
+        local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
+        TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
+            Main.BackgroundTransparency = val / 100
+        end)
+
+        local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
+        for fontName, enumFont in pairs(Fonts) do
+            FontGroup:AddButton(fontName, nil, function()
+                currentFont = enumFont
+                for _, obj in ipairs(ScreenGui:GetDescendants()) do
+                    if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                        obj.Font = enumFont
+                    end
+                end
+            end)
+        end
+
+        local ResizeGrip = Instance.new("Frame")
+        ResizeGrip.Name = "ResizeGrip"
+        ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
+        ResizeGrip.Position = UDim2.new(1, -14, 1, -14)
+        ResizeGrip.BackgroundTransparency = 1
+        ResizeGrip.Parent = Main
+
+        local GripIcon = Instance.new("TextLabel")
+        GripIcon.Size = UDim2.new(1, 0, 1, 0)
+        GripIcon.BackgroundTransparency = 1
+        GripIcon.Text = "◢"
+        GripIcon.TextColor3 = Color3.fromRGB(150, 150, 160)
+        GripIcon.TextSize = 10
+        GripIcon.Font = Enum.Font.GothamBold
+        GripIcon.Parent = ResizeGrip
+
+        makeResizable(Main, ResizeGrip, 200, 150)
+
+        function Window:EnableScroll(state)
+            state = (state == nil) and true or state
+            Container.ScrollingEnabled = state
+            if not state then
+                Container.CanvasPosition = Vector2.new(0, 0)
+            end
+        end
+
+        function Window:SetScroll(state)
+            Window:EnableScroll(state)
+        end
+
+        playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
+            TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 240, 0, 270)
+            }):Play()
+
+            Library:Notify({
+                Title = titleText,
+                Content = L("Executed"),
+                Type = "Success",
+                Duration = 3
+            })
+        end)
+
+        local isMinimized = false
+        local normalHeight = 270
+
+        MinBtn.MouseButton1Click:Connect(function()
+            isMinimized = not isMinimized
+            if isMinimized then
+                normalHeight = Main.AbsoluteSize.Y
+                Container.Visible = false
+                SettingsContainer.Visible = false
+                if AiContainer then AiContainer.Visible = false end
+                MinBtn.Image = Library.Icons["lucide-chevron-down"]
+                
+                TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
+                }):Play()
+            else
+                MinBtn.Image = Library.Icons["lucide-chevron-up"]
+                
+                TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
+                }):Play()
+                task.delay(0.2, function()
+                    Container.Visible = not showingSettings and not showingAi
+                    SettingsContainer.Visible = showingSettings
+                    if AiContainer then AiContainer.Visible = showingAi end
+                end)
+            end
+        end)
+
+        CloseBtn.MouseButton1Click:Connect(function()
+            local closeTween = TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+                Size = UDim2.new(0, 240, 0, 0)
+            })
+            closeTween:Play()
+            closeTween.Completed:Connect(function()
+                ScreenGui:Destroy()
+            end)
+        end)
+
+        function Window:AddButton(text, icon, callback)
+            return createButton(Container, text, icon, callback)
+        end
+
+        function Window:AddToggle(text, icon, default, callback)
+            return createToggle(Container, text, icon, default, callback)
+        end
+
+        function Window:AddSlider(text, icon, min, max, default, callback)
+            return createSlider(Container, text, icon, min, max, default, callback)
+        end
+
+        function Window:AddGroup(groupNameKey, icon, defaultCollapsed)
+            return buildGroupInContainer(Container, groupNameKey, icon, defaultCollapsed)
+        end
+
+        Window.AddSection = Window.AddGroup
+    end
+
+    -- ==========================================
+    -- LAYAR HITAM & PEMINDAIAN SIDIK JARI 5 DETIK
+    -- ==========================================
+    task.spawn(function()
+        local LockScreen = Instance.new("Frame")
+        LockScreen.Name = "LockScreen"
+        LockScreen.Size = UDim2.new(1, 0, 1, 0)
+        LockScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        LockScreen.BorderSizePixel = 0
+        LockScreen.ZIndex = 9999999
+        LockScreen.Parent = ScreenGui
+
+        local FingerprintBtn = Instance.new("ImageButton")
+        FingerprintBtn.Size = UDim2.new(0, 100, 0, 100)
+        FingerprintBtn.Position = UDim2.new(0.5, -50, 0.5, -60)
+        FingerprintBtn.BackgroundTransparency = 1
+        FingerprintBtn.Image = Library.Icons["lucide-fingerprint"]
+        FingerprintBtn.ZIndex = 10000000
+        FingerprintBtn.Parent = LockScreen
+
+        local LockTitle = Instance.new("TextLabel")
+        LockTitle.Size = UDim2.new(1, -40, 0, 25)
+        LockTitle.Position = UDim2.new(0, 20, 0.5, -100)
+        LockTitle.BackgroundTransparency = 1
+        LockTitle.Text = titleText .. " - Keamanan Sidik Jari"
+        LockTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        LockTitle.TextSize = 15
+        LockTitle.Font = Enum.Font.GothamBold
+        LockTitle.TextXAlignment = Enum.TextXAlignment.Center
+        LockTitle.ZIndex = 10000000
+        LockTitle.Parent = LockScreen
+
+        local LockInfoLbl = Instance.new("TextLabel")
+        LockInfoLbl.Size = UDim2.new(1, -40, 0, 30)
+        LockInfoLbl.Position = UDim2.new(0, 20, 0.5, 45)
+        LockInfoLbl.BackgroundTransparency = 1
+        LockInfoLbl.Text = "Tekan dan tahan ikon sidik jari selama 5 detik dengan jempol"
+        LockInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
+        LockInfoLbl.TextSize = 11
+        LockInfoLbl.Font = Enum.Font.Gotham
+        LockInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
+        LockInfoLbl.TextWrapped = true
+        LockInfoLbl.ZIndex = 10000000
+        LockInfoLbl.Parent = LockScreen
+
+        local holdingFinger = false
+        local holdCounter = 0
+        local requiredHoldSeconds = 5.0
+        local isUnlocked = false
+
+        local function startHolding()
+            if isUnlocked then return end
+            holdingFinger = true
+            holdCounter = 0
+        end
+
+        local function stopHolding()
+            if isUnlocked then return end
+            holdingFinger = false
+            holdCounter = 0
+            LockInfoLbl.Text = "Tekan dan tahan ikon sidik jari selama 5 detik dengan jempol"
+        end
+
+        FingerprintBtn.MouseButton1Down:Connect(startHolding)
+        FingerprintBtn.MouseButton1Up:Connect(stopHolding)
+        FingerprintBtn.TouchStarted:Connect(startHolding)
+        FingerprintBtn.TouchEnded:Connect(stopHolding)
+
+        local lockConn
+        lockConn = RunService.RenderStepped:Connect(function(dt)
+            if isUnlocked then 
+                if lockConn then lockConn:Disconnect() end
+                return 
+            end
+            if holdingFinger then
+                holdCounter = holdCounter + dt
+                local remain = math.max(0, requiredHoldSeconds - holdCounter)
+                LockInfoLbl.Text = string.format("Memindai sidik jari... (%.1f detik lagi)", remain)
+                
+                if holdCounter >= requiredHoldSeconds then
+                    isUnlocked = true
+                    holdingFinger = false
+                    LockInfoLbl.Text = "Verifikasi Sidik Jari Berhasil!"
+                    LockInfoLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+                    
+                    TweenService:Create(LockScreen, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
+                    TweenService:Create(FingerprintBtn, TweenInfo.new(0.6), {ImageTransparency = 1}):Play()
+                    TweenService:Create(LockTitle, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
+                    TweenService:Create(LockInfoLbl, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
+                    
+                    task.delay(0.6, function()
+                        LockScreen:Destroy()
+                        startMainUI()
+                    end)
+                    if lockConn then lockConn:Disconnect() end
                 end
             end
         end)
-    end
-
-    local ResizeGrip = Instance.new("Frame")
-    ResizeGrip.Name = "ResizeGrip"
-    ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
-    ResizeGrip.Position = UDim2.new(1, -14, 1, -14)
-    ResizeGrip.BackgroundTransparency = 1
-    ResizeGrip.Parent = Main
-
-    local GripIcon = Instance.new("TextLabel")
-    GripIcon.Size = UDim2.new(1, 0, 1, 0)
-    GripIcon.BackgroundTransparency = 1
-    GripIcon.Text = "◢"
-    GripIcon.TextColor3 = Color3.fromRGB(150, 150, 160)
-    GripIcon.TextSize = 10
-    GripIcon.Font = Enum.Font.GothamBold
-    GripIcon.Parent = ResizeGrip
-
-    makeResizable(Main, ResizeGrip, 200, 150)
-
-    function Window:EnableScroll(state)
-        state = (state == nil) and true or state
-        Container.ScrollingEnabled = state
-        if not state then
-            Container.CanvasPosition = Vector2.new(0, 0)
-        end
-    end
-
-    function Window:SetScroll(state)
-        Window:EnableScroll(state)
-    end
-
-    playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
-        TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 240, 0, 270)
-        }):Play()
-
-        Library:Notify({
-            Title = titleText,
-            Content = L("Executed"),
-            Type = "Success",
-            Duration = 3
-        })
     end)
-
-    local isMinimized = false
-    local normalHeight = 270
-
-    MinBtn.MouseButton1Click:Connect(function()
-        isMinimized = not isMinimized
-        if isMinimized then
-            normalHeight = Main.AbsoluteSize.Y
-            Container.Visible = false
-            SettingsContainer.Visible = false
-            if AiContainer then AiContainer.Visible = false end
-            MinBtn.Image = Library.Icons["lucide-chevron-down"]
-            
-            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
-            }):Play()
-        else
-            MinBtn.Image = Library.Icons["lucide-chevron-up"]
-            
-            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
-            }):Play()
-            task.delay(0.2, function()
-                Container.Visible = not showingSettings and not showingAi
-                SettingsContainer.Visible = showingSettings
-                if AiContainer then AiContainer.Visible = showingAi end
-            end)
-        end
-    end)
-
-    CloseBtn.MouseButton1Click:Connect(function()
-        local closeTween = TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 240, 0, 0)
-        })
-        closeTween:Play()
-        closeTween.Completed:Connect(function()
-            ScreenGui:Destroy()
-        end)
-    end)
-
-    function Window:AddButton(text, icon, callback)
-        return createButton(Container, text, icon, callback)
-    end
-
-    function Window:AddToggle(text, icon, default, callback)
-        return createToggle(Container, text, icon, default, callback)
-    end
-
-    function Window:AddSlider(text, icon, min, max, default, callback)
-        return createSlider(Container, text, icon, min, max, default, callback)
-    end
-
-    function Window:AddGroup(groupNameKey, icon, defaultCollapsed)
-        return buildGroupInContainer(Container, groupNameKey, icon, defaultCollapsed)
-    end
-
-    Window.AddSection = Window.AddGroup
 
     return Window
 end
