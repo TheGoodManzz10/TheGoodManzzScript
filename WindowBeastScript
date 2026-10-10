@@ -21,7 +21,8 @@ Library.Icons = {
     ["lucide-alarm-clock"]      = "rbxassetid://10709752630",
     ["lucide-navigation"]       = "rbxassetid://10734906744",
     ["lucide-info"]             = "rbxassetid://10723415903",
-    ["lucide-key"]              = "rbxassetid://10723346959"
+    ["lucide-key"]              = "rbxassetid://10723346959",
+    ["lucide-search"]           = "rbxassetid://10734941499"
 }
 
 -- SISTEM BAHASA DENGAN TRANSLATION LENGKAP
@@ -44,7 +45,8 @@ local Translations = {
         PlayerInfo     = "Informasi Pemain",
         PlayTimeTitle  = "Waktu Bermain",
         PerfGroup      = "Fitur & Performa",
-        FloatSizeGroup = "Ukuran Tombol Hide/Show"
+        FloatSizeGroup = "Ukuran Tombol Hide/Show",
+        ScriptbloxGroup = "Cari Script (Scriptblox)"
     },
     English = {
         NotifTitle     = "Notification",
@@ -64,7 +66,8 @@ local Translations = {
         PlayerInfo     = "Player Information",
         PlayTimeTitle  = "Play Time Tracker",
         PerfGroup      = "Features & Performance",
-        FloatSizeGroup = "Hide/Show Button Size"
+        FloatSizeGroup = "Hide/Show Button Size",
+        ScriptbloxGroup = "Search Script (Scriptblox)"
     }
 }
 
@@ -323,15 +326,17 @@ function Library:Notify(options)
     end)
 end
 
--- LOOP NOTIFIKASI OTOMATIS SETIAP 3-5 MENIT
+-- ==========================================
+-- FITUR BARU: LOOP NOTIFIKASI OTOMATIS SETIAP 4-5 MENIT
+-- ==========================================
 task.spawn(function()
-    while task.wait(math.random(180, 300)) do
+    while task.wait(math.random(240, 300)) do -- 240 detik (4 menit) hingga 300 detik (5 menit)
         if ScreenGui and ScreenGui.Parent then
             Library:Notify({
                 Title = "Dark Hub Community",
-                Content = "Suka dengan UI/Hub kami? Bergabunglah dengan komunitas kami segera!",
+                Content = "Suka Dengan library ini? Bergabunglah dengan kami untuk mendapatkan kenyamanan lebih",
                 Type = "Info",
-                Duration = 5
+                Duration = 6
             })
         end
     end
@@ -818,17 +823,16 @@ function Library:CreateWindow(config)
     local text3 = config.Text3 or "Menyiapkan Ui"
     local flashText = config.FlashText or "GOODMANZ"
 
-    -- KONFIGURASI KEY SYSTEM DARI LUAR
+    -- KONFIGURASI KEY SYSTEM DARI LUAR (MENDUKUNG MULTI-KEY & BEDA DURASI)
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
-    local validKeys = KeySystemConfig.Keys or { KeySystemConfig.Key or "GoodManzz2026" }
+    local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", Duration = "Permanen" } }
     local keyGetUrl = KeySystemConfig.KeyURL or "https://discord.gg/yourlink"
-    local keyExpiresText = KeySystemConfig.Expires or "1 Hari / 24 Jam"
 
     local Window = {}
 
     -- ==========================================
-    -- SISTEM KEY UI (JIKA DIAKTIFKAN)
+    -- SISTEM KEY UI (DENGAN DETAIL DURASI)
     -- ==========================================
     if isKeySystemEnabled then
         local keyVerified = false
@@ -863,7 +867,7 @@ function Library:CreateWindow(config)
         KeyInfoLbl.Size = UDim2.new(1, -20, 0, 18)
         KeyInfoLbl.Position = UDim2.new(0, 10, 0, 32)
         KeyInfoLbl.BackgroundTransparency = 1
-        KeyInfoLbl.Text = "Durasi Key: " .. keyExpiresText
+        KeyInfoLbl.Text = "Masukkan Key Anda Untuk Melanjutkan"
         KeyInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
         KeyInfoLbl.TextSize = 10
         KeyInfoLbl.Font = Enum.Font.Gotham
@@ -930,17 +934,30 @@ function Library:CreateWindow(config)
 
         KeyVerifyBtn.MouseButton1Click:Connect(function()
             local input = KeyInputBox.Text
-            local isMatch = false
-            for _, k in ipairs(validKeys) do
-                if input == k then
-                    isMatch = true
+            local matchedKeyData = nil
+
+            for _, keyData in ipairs(validKeys) do
+                if type(keyData) == "table" and keyData.Key == input then
+                    matchedKeyData = keyData
+                    break
+                elseif type(keyData) == "string" and keyData == input then
+                    matchedKeyData = { Key = keyData, Duration = "Aktif" }
                     break
                 end
             end
 
-            if isMatch then
-                KeyStatusLbl.Text = "Key Benar! Buka Menu..."
+            if matchedKeyData then
+                local durasiText = matchedKeyData.Duration or "Aktif"
+                KeyStatusLbl.Text = "Key Benar! (" .. durasiText .. ")"
                 KeyStatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+                
+                Library:Notify({
+                    Title = "Key Verified",
+                    Content = "Akses Diberikan! Durasi Key: " .. durasiText,
+                    Type = "Success",
+                    Duration = 4
+                })
+
                 task.wait(1)
                 KeyFrame:Destroy()
                 keyVerified = true
@@ -1321,7 +1338,149 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- FITUR BARU: PENGATURAN UKURAN TOMBOL HIDE/SHOW
+    -- FITUR BARU: SEARCH SCRIPTBLOX DI PENGATURAN
+    -- ==========================================
+    local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
+
+    local SearchBoxFrame = Instance.new("Frame")
+    SearchBoxFrame.Size = UDim2.new(1, 0, 0, 32)
+    SearchBoxFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    SearchBoxFrame.Parent = ScriptbloxGroup.ContentHolder
+    Instance.new("UICorner", SearchBoxFrame).CornerRadius = UDim.new(0, 6)
+
+    local SearchInput = Instance.new("TextBox")
+    SearchInput.Size = UDim2.new(0.7, -5, 1, 0)
+    SearchInput.Position = UDim2.new(0, 8, 0, 0)
+    SearchInput.BackgroundTransparency = 1
+    SearchInput.PlaceholderText = "Cari script..."
+    SearchInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
+    SearchInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SearchInput.TextSize = 11
+    SearchInput.Font = currentFont
+    SearchInput.TextXAlignment = Enum.TextXAlignment.Left
+    SearchInput.Parent = SearchBoxFrame
+
+    local SearchBtn = Instance.new("TextButton")
+    SearchBtn.Size = UDim2.new(0.3, -8, 1, -6)
+    SearchBtn.Position = UDim2.new(0.7, 2, 0, 3)
+    SearchBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+    SearchBtn.Text = "Cari"
+    SearchBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SearchBtn.TextSize = 11
+    SearchBtn.Font = Enum.Font.GothamBold
+    SearchBtn.Parent = SearchBoxFrame
+    Instance.new("UICorner", SearchBtn).CornerRadius = UDim.new(0, 4)
+
+    local ResultsHolder = Instance.new("Frame")
+    ResultsHolder.Size = UDim2.new(1, 0, 0, 0)
+    ResultsHolder.BackgroundTransparency = 1
+    ResultsHolder.Parent = ScriptbloxGroup.ContentHolder
+
+    local ResultsLayout = Instance.new("UIListLayout")
+    ResultsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ResultsLayout.Padding = UDim.new(0, 6)
+    ResultsLayout.Parent = ResultsHolder
+
+    ResultsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        ResultsHolder.Size = UDim2.new(1, 0, 0, ResultsLayout.AbsoluteContentSize.Y)
+    end)
+
+    local function performScriptbloxSearch(query)
+        for _, child in ipairs(ResultsHolder:GetChildren()) do
+            if child:IsA("Frame") then child:Destroy() end
+        end
+
+        if query == "" then return end
+        Library:Notify({ Title = "Scriptblox", Content = "Mencari: " .. query .. "...", Type = "Info" })
+
+        task.spawn(function()
+            pcall(function()
+                local url = "https://scriptblox.com/api/script/search?q=" .. HttpService:UrlEncode(query)
+                local response = game:HttpGet(url)
+                local data = HttpService:JSONDecode(response)
+
+                if data and data.result and data.result.scripts and #data.result.scripts > 0 then
+                    for i, item in ipairs(data.result.scripts) do
+                        if i > 8 then break end -- Batasi 8 hasil teratas agar ringan
+
+                        local scriptTitle = item.title or "No Title"
+                        local rawScript = item.script or ""
+
+                        local Card = Instance.new("Frame")
+                        Card.Size = UDim2.new(1, 0, 0, 50)
+                        Card.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+                        Card.Parent = ResultsHolder
+                        Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
+
+                        local TitleLbl = Instance.new("TextLabel")
+                        TitleLbl.Size = UDim2.new(1, -12, 0, 20)
+                        TitleLbl.Position = UDim2.new(0, 6, 0, 4)
+                        TitleLbl.BackgroundTransparency = 1
+                        TitleLbl.Text = scriptTitle
+                        TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        TitleLbl.TextSize = 10
+                        TitleLbl.Font = Enum.Font.GothamBold
+                        TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+                        TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
+                        TitleLbl.Parent = Card
+
+                        local ExecBtn = Instance.new("TextButton")
+                        ExecBtn.Size = UDim2.new(0.48, -4, 0, 20)
+                        ExecBtn.Position = UDim2.new(0, 6, 0, 25)
+                        ExecBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+                        ExecBtn.Text = "Execute"
+                        ExecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        ExecBtn.TextSize = 10
+                        ExecBtn.Font = Enum.Font.GothamBold
+                        ExecBtn.Parent = Card
+                        Instance.new("UICorner", ExecBtn).CornerRadius = UDim.new(0, 4)
+
+                        local CopyBtn = Instance.new("TextButton")
+                        CopyBtn.Size = UDim2.new(0.48, -4, 0, 20)
+                        CopyBtn.Position = UDim2.new(0.52, 0, 0, 25)
+                        CopyBtn.BackgroundColor3 = Color3.fromRGB(241, 196, 15)
+                        CopyBtn.Text = "Copy Script"
+                        CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        CopyBtn.TextSize = 10
+                        CopyBtn.Font = Enum.Font.GothamBold
+                        CopyBtn.Parent = Card
+                        Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 4)
+
+                        ExecBtn.MouseButton1Click:Connect(function()
+                            Library:Notify({ Title = "Scriptblox", Content = "Menjalankan: " .. scriptTitle, Type = "Info" })
+                            task.spawn(function()
+                                pcall(function() loadstring(rawScript)() end)
+                            end)
+                        end)
+
+                        CopyBtn.MouseButton1Click:Connect(function()
+                            if setclipboard then
+                                setclipboard(rawScript)
+                                Library:Notify({ Title = "Scriptblox", Content = "Script disalin ke Clipboard!", Type = "Success" })
+                            else
+                                Library:Notify({ Title = "Scriptblox", Content = "Executor tidak mendukung setclipboard", Type = "Error" })
+                            end
+                        end)
+                    end
+                else
+                    Library:Notify({ Title = "Scriptblox", Content = "Script tidak ditemukan!", Type = "Warning" })
+                end
+            end)
+        end)
+    end
+
+    SearchBtn.MouseButton1Click:Connect(function()
+        performScriptbloxSearch(SearchInput.Text)
+    end)
+
+    SearchInput.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            performScriptbloxSearch(SearchInput.Text)
+        end
+    end)
+
+    -- ==========================================
+    -- FITUR: PENGATURAN UKURAN TOMBOL HIDE/SHOW
     -- ==========================================
     local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
