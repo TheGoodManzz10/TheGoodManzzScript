@@ -5,17 +5,8 @@ Library.CurrentKeyExpire = nil
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
-    ["lucide-key"]              = "rbxassetid://10723416652",
-    ["lucide-sliders"]          = "rbxassetid://10734963400",
-    ["lucide-languages"]        = "rbxassetid://10723417703",
-    ["lucide-type"]             = "rbxassetid://10747364761",
-    ["lucide-palette"]          = "rbxassetid://10734910430",
-    ["lucide-paint-bucket"]     = "rbxassetid://10734909847",
-    ["lucide-music"]            = "rbxassetid://10734905958",
-    ["lucide-menu"]             = "rbxassetid://10734887784",
-    ["lucide-x"]                = "rbxassetid://10747384394",
     ["SpinOuter"]               = "rbxassetid://109694296016043",
-    ["lucide-accessibility"] = "rbxassetid://10709751939",
+   ["lucide-accessibility"] = "rbxassetid://10709751939",
     ["lucide-activity"] = "rbxassetid://10709752035",
     ["lucide-air-vent"] = "rbxassetid://10709752131",
     ["lucide-airplay"] = "rbxassetid://10709752254",
@@ -980,17 +971,14 @@ local function updateGlobalThemeColor(color)
         mainWindowRef.BackgroundColor3 = color
     end
 
-    -- Mengubah semua background komponen di dalam UI (Tombol, Container, Box, dll)
+    -- Mengubah semua background komponen di dalam UI secara menyeluruh
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-            -- Kecuali notifikasi, resize grip, dan floating icon di luar
             if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" then
                 if obj.BackgroundTransparency < 1 then
-                    -- Memberi nuansa warna yang cocok/gelap sedikit untuk latar elemen internal
                     if obj.Name == "Main" then
                         obj.BackgroundColor3 = color
                     else
-                        -- Elemen di dalam dibuat sedikit lebih terang/kontras dari background utama
                         local h, s, v = color:ToHSV()
                         obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v + 0.08, 0, 1))
                     end
@@ -1029,6 +1017,7 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+end)
 
 local NotifHolder = Instance.new("Frame")
 NotifHolder.Name = "NotifHolder"
@@ -1059,6 +1048,7 @@ function Library:Notify(options)
     local sideColor = typeColors[notifType] or typeColors.Info
 
     local Card = Instance.new("Frame")
+    Card.Name = "NotifCard"
     Card.Size = UDim2.new(1, 0, 0, 52)
     Card.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
     Card.BackgroundTransparency = 1
@@ -2120,7 +2110,6 @@ function Library:CreateWindow(config)
         return Group
     end
 
-    -- Daftar Pilihan Warna (Termasuk Hitam di Urutan Pertama)
     local colorList = {
         {"Hitam (Black)", Color3.fromRGB(0, 0, 0)},
         {"Putih (White)", Color3.fromRGB(255, 255, 255)},
@@ -2151,7 +2140,7 @@ function Library:CreateWindow(config)
     }
 
     -- ==========================================
-    -- FITUR 1: WARNA TEKS (Menggunakan Icon Palette)
+    -- FITUR 1: WARNA TEKS
     -- ==========================================
     local TextColorGroup = buildGroupInContainer(SettingsContainer, L("TextColorGroup"), "lucide-palette", true)
     
@@ -2169,7 +2158,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR 2: TEMA BACKGROUND UI (Menggunakan Icon Paint Bucket)
+    -- FITUR 2: TEMA BACKGROUND UI
     -- ==========================================
     local ThemeGroup = buildGroupInContainer(SettingsContainer, L("ThemeGroup"), "lucide-paint-bucket", true)
 
@@ -2187,7 +2176,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FITUR 3: GRUP MUSIK (Menggunakan Icon Music)
+    -- FITUR 3: GRUP MUSIK
     -- ==========================================
     local MusicGroup = buildGroupInContainer(SettingsContainer, L("MusicGroup"), "lucide-music", true)
     
@@ -2284,7 +2273,7 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- PENGATURAN LAINNYA (Dengan Icon Lucide Pilihan)
+    -- PENGATURAN LAINNYA
     -- ==========================================
     local TimerGroup = buildGroupInContainer(SettingsContainer, L("KeyTimerTitle"), "lucide-key", false)
     local TimerLabel = TimerGroup:AddLabel("Calculating...")
@@ -2372,7 +2361,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FLOATING ICON & NAGA 2X LEBIH BESAR DI LUAR KOTAK
+    -- FLOATING ICON & NAGA 2X LEBIH BESAR (112px) DI LUAR KOTAK
     -- ==========================================
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
