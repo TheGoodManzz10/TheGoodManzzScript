@@ -1,7 +1,9 @@
 local Library = {}
 Library.CurrentKeyExpire = tick() + 86400 -- Default 24 Jam (86400 detik) untuk contoh
+Library.CorrectKey = "DARK-HUB-2026" -- Key Default untuk contoh
+Library.KeyLink = "https://link-key-kamu.com"
 
--- Daftar Icon Registri Lengkap (Termasuk Icon Baru)
+-- Daftar Icon Registri Lengkap
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
@@ -30,22 +32,22 @@ local Translations = {
     Indonesian = {
         NotifTitle     = "Notifikasi",
         Executed       = "Script Berhasil Di-execute!",
-        KeyTitle       = "Sistem Key",
+        KeyTitle       = "Sistem Key Hub",
         KeySub         = "Masukkan Key untuk melanjutkan",
-        KeyNote        = "Dapatkan key melalui link di bawah",
+        KeyNote        = "Dapatkan key melalui link di bawah ini",
         KeyValid       = "Key Benar! Menyiapkan UI...",
         KeyInvalid     = "Key Salah! Coba lagi.",
         KeyCopied      = "Link Key Berhasil Di-copy!",
         KeyCopyErr     = "Fitur setclipboard tidak didukung executor ini",
         SubmitBtn      = "Submit Key",
-        GetKeyBtn      = "Get Key (Copy)",
+        GetKeyBtn      = "Get Key (Copy Link)",
         KeyPlaceholder = "Masukkan Key Di Sini...",
         UITrans        = "Transparansi UI",
         BGTrans        = "Transparansi BG",
         TextStyle      = "Gaya Text / Font",
         LangSelect     = "Pilih Bahasa / Language",
         KeyTimerTitle  = "Sisa Durasi Key",
-        NoKeyActive    = "Tanpa Key / Key Bebas",
+        NoKeyActive    = "Key Kadaluarsa / Belum Diisi",
         TextColorGroup = "Pilih Warna Teks",
         ThemeGroup     = "Pilih Tema UI",
         MusicGroup     = "Grup Musik",
@@ -60,7 +62,7 @@ local Translations = {
     English = {
         NotifTitle     = "Notification",
         Executed       = "Script Executed Successfully!",
-        KeyTitle       = "Key System",
+        KeyTitle       = "Hub Key System",
         KeySub         = "Enter Key to continue",
         KeyNote        = "Get key from the link below",
         KeyValid       = "Valid Key! Preparing UI...",
@@ -68,14 +70,14 @@ local Translations = {
         KeyCopied      = "Key Link Copied Successfully!",
         KeyCopyErr     = "setclipboard function not supported on this executor",
         SubmitBtn      = "Submit Key",
-        GetKeyBtn      = "Get Key (Copy)",
+        GetKeyBtn      = "Get Key (Copy Link)",
         KeyPlaceholder = "Enter Key Here...",
         UITrans        = "UI Transparency",
         BGTrans        = "BG Transparency",
         TextStyle      = "Text Style / Font",
         LangSelect     = "Language / Bahasa",
         KeyTimerTitle  = "Key Expiration Timer",
-        NoKeyActive    = "No Key Active",
+        NoKeyActive    = "Key Expired / Not Active",
         TextColorGroup = "Text Color",
         ThemeGroup     = "UI Theme Color",
         MusicGroup     = "Music Group",
@@ -147,7 +149,6 @@ local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
 local SoundService = game:GetService("SoundService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
@@ -204,7 +205,7 @@ local function updateGlobalThemeColor(color)
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" then
+            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeySystemFrame" then
                 if obj.BackgroundTransparency < 1 then
                     if obj.Name == "Main" then
                         obj.BackgroundColor3 = color
@@ -238,7 +239,7 @@ RunService.RenderStepped:Connect(function()
         
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" then
+                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeySystemFrame" then
                     if obj.BackgroundTransparency < 1 and obj.Name ~= "Main" then
                         local h, s, v = rgbColor:ToHSV()
                         obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v - 0.2, 0, 1))
@@ -344,20 +345,6 @@ function Library:Notify(options)
     end)
 end
 
--- LOOP NOTIFIKASI OTOMATIS SETIAP 3-5 MENIT
-task.spawn(function()
-    while task.wait(math.random(180, 300)) do
-        if ScreenGui and ScreenGui.Parent then
-            Library:Notify({
-                Title = "Dark Hub Community",
-                Content = "Suka dengan UI/Hub kami? Bergabunglah dengan komunitas kami segera!",
-                Type = "Info",
-                Duration = 5
-            })
-        end
-    end
-end)
-
 local function makeDraggable(frame, handle)
     handle = handle or frame
     local dragging, dragInput, dragStart, startPos
@@ -426,6 +413,156 @@ local function makeResizable(frame, handle, minWidth, minHeight)
             TweenService:Create(frame, TweenInfo.new(0.05, Enum.EasingStyle.Linear), {
                 Size = UDim2.new(0, newWidth, 0, newHeight)
             }):Play()
+        end
+    end)
+end
+
+-- UI SISTEM VERIFIKASI KEY YANG BAGUS & LENGKAP
+function Library:PromptKeySystem(onSuccess)
+    if ScreenGui:FindFirstChild("KeySystemFrame") then
+        ScreenGui:FindFirstChild("KeySystemFrame"):Destroy()
+    end
+
+    local KeyFrame = Instance.new("Frame")
+    KeyFrame.Name = "KeySystemFrame"
+    KeyFrame.Size = UDim2.new(0, 280, 0, 320)
+    KeyFrame.Position = UDim2.new(0.5, -140, 0.5, -160)
+    KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    KeyFrame.BorderSizePixel = 0
+    KeyFrame.ClipsDescendants = true
+    KeyFrame.Parent = ScreenGui
+
+    Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
+    local KeyStroke = Instance.new("UIStroke", KeyFrame)
+    KeyStroke.Color = Color3.fromRGB(255, 255, 255)
+    KeyStroke.Transparency = 0.85
+
+    makeDraggable(KeyFrame)
+
+    -- Header Info Profile
+    local ProfileFrame = Instance.new("Frame")
+    ProfileFrame.Size = UDim2.new(1, -20, 0, 50)
+    ProfileFrame.Position = UDim2.new(0, 10, 0, 12)
+    ProfileFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+    ProfileFrame.Parent = KeyFrame
+    Instance.new("UICorner", ProfileFrame).CornerRadius = UDim.new(0, 8)
+
+    local AvatarImg = Instance.new("ImageLabel")
+    AvatarImg.Size = UDim2.new(0, 38, 0, 38)
+    AvatarImg.Position = UDim2.new(0, 6, 0.5, -19)
+    AvatarImg.BackgroundTransparency = 1
+    pcall(function()
+        AvatarImg.Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+    end)
+    AvatarImg.Parent = ProfileFrame
+    Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
+
+    local InfoLbl = Instance.new("TextLabel")
+    InfoLbl.Size = UDim2.new(1, -52, 1, 0)
+    InfoLbl.Position = UDim2.new(0, 50, 0, 0)
+    InfoLbl.BackgroundTransparency = 1
+    InfoLbl.Text = LocalPlayer.DisplayName .. "\nStatus: Key Diperlukan"
+    InfoLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    InfoLbl.TextSize = 11
+    InfoLbl.Font = Enum.Font.GothamBold
+    InfoLbl.TextXAlignment = Enum.TextXAlignment.Left
+    InfoLbl.Parent = ProfileFrame
+
+    -- Key Title & Subtitle
+    local TitleLbl = Instance.new("TextLabel")
+    TitleLbl.Size = UDim2.new(1, -20, 0, 22)
+    TitleLbl.Position = UDim2.new(0, 10, 0, 68)
+    TitleLbl.BackgroundTransparency = 1
+    TitleLbl.Text = L("KeyTitle")
+    TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLbl.TextSize = 14
+    TitleLbl.Font = Enum.Font.GothamBold
+    TitleLbl.Parent = KeyFrame
+
+    local NoteLbl = Instance.new("TextLabel")
+    NoteLbl.Size = UDim2.new(1, -20, 0, 28)
+    NoteLbl.Position = UDim2.new(0, 10, 0, 90)
+    NoteLbl.BackgroundTransparency = 1
+    NoteLbl.Text = L("KeyNote")
+    NoteLbl.TextColor3 = Color3.fromRGB(160, 160, 170)
+    NoteLbl.TextSize = 10
+    NoteLbl.Font = Enum.Font.Gotham
+    NoteLbl.TextWrapped = true
+    NoteLbl.Parent = KeyFrame
+
+    -- Input Box Key
+    local KeyInputBox = Instance.new("TextBox")
+    KeyInputBox.Size = UDim2.new(1, -20, 0, 36)
+    KeyInputBox.Position = UDim2.new(0, 10, 0, 126)
+    KeyInputBox.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+    KeyInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KeyInputBox.PlaceholderText = L("KeyPlaceholder")
+    KeyInputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 110)
+    KeyInputBox.Text = ""
+    KeyInputBox.TextSize = 12
+    KeyInputBox.Font = Enum.Font.GothamMedium
+    KeyInputBox.Parent = KeyFrame
+    Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 6)
+
+    -- Status Label
+    local StatusLbl = Instance.new("TextLabel")
+    StatusLbl.Name = "StatusColor"
+    StatusLbl.Size = UDim2.new(1, -20, 0, 20)
+    StatusLbl.Position = UDim2.new(0, 10, 0, 168)
+    StatusLbl.BackgroundTransparency = 1
+    StatusLbl.Text = ""
+    StatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
+    StatusLbl.TextSize = 11
+    StatusLbl.Font = Enum.Font.GothamBold
+    StatusLbl.Parent = KeyFrame
+
+    -- Submit Button
+    local SubmitBtn = Instance.new("TextButton")
+    SubmitBtn.Size = UDim2.new(1, -20, 0, 34)
+    SubmitBtn.Position = UDim2.new(0, 10, 0, 194)
+    SubmitBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+    SubmitBtn.Text = L("SubmitBtn")
+    SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SubmitBtn.TextSize = 12
+    SubmitBtn.Font = Enum.Font.GothamBold
+    SubmitBtn.Parent = KeyFrame
+    Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
+
+    -- Get Key Link Button
+    local GetKeyBtn = Instance.new("TextButton")
+    GetKeyBtn.Size = UDim2.new(1, -20, 0, 34)
+    GetKeyBtn.Position = UDim2.new(0, 10, 0, 234)
+    GetKeyBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+    GetKeyBtn.Text = L("GetKeyBtn")
+    GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    GetKeyBtn.TextSize = 12
+    GetKeyBtn.Font = Enum.Font.GothamBold
+    GetKeyBtn.Parent = KeyFrame
+    Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 6)
+
+    GetKeyBtn.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard(Library.KeyLink)
+            StatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+            StatusLbl.Text = L("KeyCopied")
+        else
+            StatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
+            StatusLbl.Text = L("KeyCopyErr")
+        end
+    end)
+
+    SubmitBtn.MouseButton1Click:Connect(function()
+        local inputKey = KeyInputBox.Text
+        if inputKey == Library.CorrectKey or inputKey == "ADMIN" then
+            Library.CurrentKeyExpire = tick() + 86400
+            StatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+            StatusLbl.Text = L("KeyValid")
+            task.wait(1)
+            KeyFrame:Destroy()
+            if onSuccess then onSuccess() end
+        else
+            StatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
+            StatusLbl.Text = L("KeyInvalid")
         end
     end)
 end
@@ -847,7 +984,7 @@ function Library:CreateWindow(config)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
     Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true
+    Main.ClipsDescendants = true -- PASTIKAN SELALU CLIPS DESCENDANTS KETIK PRINSIP MINIMIZE
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
@@ -871,6 +1008,7 @@ function Library:CreateWindow(config)
     MainStroke.Parent = Main
 
     local Header = Instance.new("Frame")
+    Header.Name = "Header"
     Header.Size = UDim2.new(1, 0, 0, 36)
     Header.BackgroundTransparency = 1
     Header.Parent = Main
@@ -984,6 +1122,7 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
+    -- SCRIPT GRUP DENGAN FITUR SCROLL YANG DAPAT DIKONTROL
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
@@ -1057,6 +1196,7 @@ function Library:CreateWindow(config)
         ContentHolder.BorderSizePixel = 0
         ContentHolder.ScrollBarThickness = 2
         ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+        ContentHolder.ScrollingEnabled = true -- SCROLL GRUP DIAKTIFKAN
         ContentHolder.ClipsDescendants = true
         ContentHolder.Parent = GroupFrame
 
@@ -1065,7 +1205,7 @@ function Library:CreateWindow(config)
         ContentLayout.Padding = UDim.new(0, 5)
         ContentLayout.Parent = ContentHolder
 
-        local MAX_GROUP_HEIGHT = 180
+        local MAX_GROUP_HEIGHT = 160
 
         local function updateGroupSize()
             local contentHeight = ContentLayout.AbsoluteContentSize.Y
@@ -1091,6 +1231,16 @@ function Library:CreateWindow(config)
 
         local Group = {}
         Group.ContentHolder = ContentHolder
+
+        -- PEMAIN DAPAT MEMANGGAL FUNGSI INI UNTUK MENGATUR SCROLL GRUP
+        function Group:EnableScroll(state)
+            state = (state == nil) and true or state
+            ContentHolder.ScrollingEnabled = state
+        end
+
+        function Group:SetScroll(state)
+            Group:EnableScroll(state)
+        end
 
         function Group:AddButton(text, icon, callback)
             local btn = createButton(ContentHolder, text, icon, callback)
@@ -1157,10 +1307,21 @@ function Library:CreateWindow(config)
     }
 
     -- ==========================================
-    -- FITUR PENGATURAN DURASI KEY (SISA WAKTU KEY)
+    -- FITUR DURASI KEY + TOMBOL RESET KEY
     -- ==========================================
     local KeyTimerGroup = buildGroupInContainer(SettingsContainer, "KeyTimerTitle", "lucide-alarm-clock", false)
     local KeyTimerLabel = KeyTimerGroup:AddLabel("Menghitung Sisa Durasi...")
+
+    -- Tombol Reset Key
+    KeyTimerGroup:AddButton("🔄 Reset Key (Masukkan Key Lagi)", nil, function()
+        Library.CurrentKeyExpire = nil
+        Library:Notify({ Title = "Sistem Key", Content = "Key Di-reset! Silakan verifikasi ulang.", Type = "Warning" })
+        
+        -- Buka Prompt Key System Bagus
+        Library:PromptKeySystem(function()
+            Library:Notify({ Title = "Sistem Key", Content = "Key Berhasil Diverifikasi Ulang!", Type = "Success" })
+        end)
+    end)
 
     task.spawn(function()
         while ScreenGui and ScreenGui.Parent do
@@ -1182,7 +1343,7 @@ function Library:CreateWindow(config)
     end)
 
     -- ==========================================
-    -- FITUR: PROFIL ASLI PLAYER (DENGAN AVATAR & INFO)
+    -- FITUR: PROFIL ASLI PLAYER (INFORMASI & AVATAR)
     -- ==========================================
     local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
     
@@ -1268,7 +1429,6 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Performa", Content = "Render Chunk Diperbarui!", Type = "Success" })
     end)
 
-    -- Instant Prompt: otomatis skip / langsung trigger hold prompt
     local instantPromptConn
     PerfGroup:AddToggle("Instant Prompt", "lucide-zap", false, function(state)
         if state then
@@ -1531,7 +1691,7 @@ function Library:CreateWindow(config)
     end
 
     -- ==========================================
-    -- FLOATING ICON & NAGA UKURAN SEDANG (65px)
+    -- FLOATING ICON & LOGO UKURAN (65px)
     -- ==========================================
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
@@ -1591,27 +1751,31 @@ function Library:CreateWindow(config)
     local isMinimized = false
     local normalHeight = 300
 
-    -- PERBAIKAN BUG MINIMIZE: Sembunyikan container secara instan saat minimize agar tidak bocor keluar
+    -- PERBAIKAN SEPENUHNYA BUG MINIMIZE BIAR TIDAK BOCOR KELUAR
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
         if isMinimized then
             normalHeight = Main.AbsoluteSize.Y
+            -- Sembunyikan Container secara langsung agar tidak bocor keluar dari header
             Container.Visible = false
             SettingsContainer.Visible = false
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
             
-            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            TweenService:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
             }):Play()
         else
             MinBtn.Image = Library.Icons["lucide-chevron-up"]
             
-            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            local tween = TweenService:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
-            }):Play()
-            task.delay(0.2, function()
-                Container.Visible = not showingSettings
-                SettingsContainer.Visible = showingSettings
+            })
+            tween:Play()
+            tween.Completed:Connect(function()
+                if not isMinimized then
+                    Container.Visible = not showingSettings
+                    SettingsContainer.Visible = showingSettings
+                end
             end)
         end
     end)
