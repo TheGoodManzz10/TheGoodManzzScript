@@ -825,163 +825,8 @@ function Library:CreateWindow(config)
     local text1 = config.Text1 or ("by:" .. authorText)
     local text2 = config.Text2 or "Injeksi Game"
     local text3 = config.Text3 or "Menyiapkan Ui"
-    flashText = config.FlashText or "GOODMANZ"
+    local flashText = config.FlashText or "GOODMANZ"
 
-    -- ==========================================
-    -- SISTEM PEMERIKSAAN SIDIK JARI (FINGERPRINT)
-    -- ==========================================
-    local FPFrame = Instance.new("Frame")
-    FPFrame.Name = "FingerprintScreen"
-    FPFrame.Size = UDim2.new(1, 0, 1, 0)
-    FPFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    FPFrame.BorderSizePixel = 0
-    FPFrame.ZIndex = 100000
-    FPFrame.Parent = ScreenGui
-
-    -- Background Kode Biner Warna Biru Full Layar
-    local BinaryHolder = Instance.new("Frame")
-    BinaryHolder.Size = UDim2.new(1, 0, 1, 0)
-    BinaryHolder.BackgroundTransparency = 1
-    BinaryHolder.ZIndex = 100001
-    BinaryHolder.Parent = FPFrame
-
-    task.spawn(function()
-        for i = 1, 40 do
-            local binLbl = Instance.new("TextLabel")
-            binLbl.Size = UDim2.new(0, 50, 1, 0)
-            binLbl.Position = UDim2.new(math.random(), -25, 0, 0)
-            binLbl.BackgroundTransparency = 1
-            binLbl.TextColor3 = Color3.fromRGB(0, 130, 255)
-            binLbl.TextTransparency = 0.55
-            binLbl.TextSize = 13
-            binLbl.Font = Enum.Font.Code
-            binLbl.TextWrapped = true
-            binLbl.ZIndex = 100001
-            
-            local str = ""
-            for j = 1, 40 do
-                str = str .. (math.random() > 0.5 and "1" else "0") .. "\n"
-            end
-            binLbl.Text = str
-            binLbl.Parent = BinaryHolder
-        end
-    end)
-
-    local CenterContent = Instance.new("Frame")
-    CenterContent.Size = UDim2.new(0, 320, 0, 240)
-    CenterContent.Position = UDim2.new(0.5, -160, 0.5, -120)
-    CenterContent.BackgroundTransparency = 1
-    CenterContent.ZIndex = 100002
-    CenterContent.Parent = FPFrame
-
-    local FPIconBtn = Instance.new("ImageButton")
-    FPIconBtn.Size = UDim2.new(0, 110, 0, 110)
-    FPIconBtn.Position = UDim2.new(0.5, -55, 0, 10)
-    FPIconBtn.BackgroundTransparency = 1
-    FPIconBtn.Image = getIconId("lucide-fingerprint")
-    FPIconBtn.ImageColor3 = Color3.fromRGB(0, 150, 255)
-    FPIconBtn.ZIndex = 100003
-    FPIconBtn.Parent = CenterContent
-
-    local FPInfoLbl = Instance.new("TextLabel")
-    FPInfoLbl.Size = UDim2.new(1, 0, 0, 50)
-    FPInfoLbl.Position = UDim2.new(0, 0, 0, 135)
-    FPInfoLbl.BackgroundTransparency = 1
-    FPInfoLbl.Text = "Pencet 5 kali dan tahan 2 detik\nuntuk memunculkan verifikasi key / loading"
-    FPInfoLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    FPInfoLbl.TextSize = 12
-    FPInfoLbl.Font = Enum.Font.GothamBold
-    FPInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
-    FPInfoLbl.TextWrapped = true
-    FPInfoLbl.ZIndex = 100003
-    FPInfoLbl.Parent = CenterContent
-
-    local FPProgress = Instance.new("Frame")
-    FPProgress.Size = UDim2.new(0, 0, 0, 5)
-    FPProgress.Position = UDim2.new(0.5, -90, 0, 200)
-    FPProgress.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-    FPProgress.BorderSizePixel = 0
-    FPProgress.ZIndex = 100003
-    FPProgress.Parent = CenterContent
-    Instance.new("UICorner", FPProgress).CornerRadius = UDim.new(1, 0)
-
-    local fpVerified = false
-    local clickCount = 0
-    local isHolding = false
-    local holdTimer = 0
-    local holdDurationReq = 2.0
-
-    FPIconBtn.MouseButton1Click:Connect(function()
-        if fpVerified then return end
-        clickCount = clickCount + 1
-        
-        TweenService:Create(FPIconBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 96, 0, 96), Position = UDim2.new(0.5, -48, 0, 17)}):Play()
-        task.wait(0.1)
-        TweenService:Create(FPIconBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 110, 0, 110), Position = UDim2.new(0.5, -55, 0, 10)}):Play()
-
-        if clickCount < 5 then
-            FPInfoLbl.Text = string.format("Tekan %d/5 kali lagi...", 5 - clickCount)
-            FPInfoLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
-        else
-            FPInfoLbl.Text = "Tahan sidik jari selama 2 detik..."
-            FPInfoLbl.TextColor3 = Color3.fromRGB(0, 150, 255)
-        end
-    end)
-
-    FPIconBtn.MouseButton1Down:Connect(function()
-        if clickCount >= 5 and not fpVerified then
-            isHolding = true
-            holdTimer = 0
-        end
-    end)
-
-    FPIconBtn.MouseButton1Up:Connect(function()
-        if isHolding and not fpVerified then
-            isHolding = false
-            holdTimer = 0
-            TweenService:Create(FPProgress, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 0, 5)}):Play()
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if isHolding and not fpVerified then
-                isHolding = false
-                holdTimer = 0
-                TweenService:Create(FPProgress, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 0, 5)}):Play()
-            end
-        end
-    end)
-
-    RunService.RenderStepped:Connect(function(dt)
-        if isHolding and not fpVerified then
-            holdTimer = holdTimer + dt
-            local p = math.clamp(holdTimer / holdDurationReq, 0, 1)
-            FPProgress.Size = UDim2.new(0, 180 * p, 0, 5)
-            
-            if holdTimer >= holdDurationReq then
-                fpVerified = true
-                isHolding = false
-                FPInfoLbl.Text = "Verifikasi Sidik Jari Berhasil!"
-                FPInfoLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-                FPIconBtn.ImageColor3 = Color3.fromRGB(46, 204, 113)
-                FPProgress.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-                
-                task.wait(0.6)
-                local fade = TweenService:Create(FPFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1})
-                TweenService:Create(CenterContent, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -160, 0.5, -140)}):Play()
-                fade:Play()
-                fade.Completed:Connect(function()
-                    FPFrame:Destroy()
-                end)
-            end
-        end
-    end)
-
-    -- Menunggu sampai verifikasi sidik jari sukses baru lanjut ke Key System / Loading
-    repeat task.wait() until fpVerified
-
-    -- KONFIGURASI KEY SYSTEM DARI LUAR
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
     local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", DurationDays = 365, DurationText = "Permanen" } }
@@ -994,7 +839,6 @@ function Library:CreateWindow(config)
 
     local Window = {}
 
-    -- HELPER UTAMA SAVE/READ KEY SYSTEM
     local function parseDurationSeconds(keyData)
         if keyData.DurationSeconds then return keyData.DurationSeconds end
         if keyData.DurationDays then return keyData.DurationDays * 86400 end
@@ -1035,152 +879,311 @@ function Library:CreateWindow(config)
         end
     end
 
-    -- ==========================================
-    -- SISTEM KEY UI (AUTO SAVE & EXPIRE CHECK)
-    -- ==========================================
-    if isKeySystemEnabled then
-        local isAlreadyValid = checkSavedKeyValid()
+    local function startMainUIProcess()
+        if isKeySystemEnabled then
+            local isAlreadyValid = checkSavedKeyValid()
 
-        if not isAlreadyValid then
-            local keyVerified = false
+            if not isAlreadyValid then
+                local keyVerified = false
 
-            local KeyFrame = Instance.new("Frame")
-            KeyFrame.Name = "KeyFrame"
-            KeyFrame.Size = UDim2.new(0, 250, 0, 170)
-            KeyFrame.Position = UDim2.new(0.5, -125, 0.5, -85)
-            KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-            KeyFrame.BorderSizePixel = 0
-            KeyFrame.Parent = ScreenGui
+                local KeyFrame = Instance.new("Frame")
+                KeyFrame.Name = "KeyFrame"
+                KeyFrame.Size = UDim2.new(0, 250, 0, 170)
+                KeyFrame.Position = UDim2.new(0.5, -125, 0.5, -85)
+                KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+                KeyFrame.BorderSizePixel = 0
+                KeyFrame.Parent = ScreenGui
 
-            Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
-            local KeyStroke = Instance.new("UIStroke", KeyFrame)
-            KeyStroke.Color = Color3.fromRGB(255, 255, 255)
-            KeyStroke.Transparency = 0.85
+                Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
+                local KeyStroke = Instance.new("UIStroke", KeyFrame)
+                KeyStroke.Color = Color3.fromRGB(255, 255, 255)
+                KeyStroke.Transparency = 0.85
 
-            makeDraggable(KeyFrame)
+                makeDraggable(KeyFrame)
 
-            local KeyTitle = Instance.new("TextLabel")
-            KeyTitle.Size = UDim2.new(1, -20, 0, 25)
-            KeyTitle.Position = UDim2.new(0, 10, 0, 8)
-            KeyTitle.BackgroundTransparency = 1
-            KeyTitle.Text = titleText .. " - Key System"
-            KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyTitle.TextSize = 13
-            KeyTitle.Font = Enum.Font.GothamBold
-            KeyTitle.TextXAlignment = Enum.TextXAlignment.Center
-            KeyTitle.Parent = KeyFrame
+                local KeyTitle = Instance.new("TextLabel")
+                KeyTitle.Size = UDim2.new(1, -20, 0, 25)
+                KeyTitle.Position = UDim2.new(0, 10, 0, 8)
+                KeyTitle.BackgroundTransparency = 1
+                KeyTitle.Text = titleText .. " - Key System"
+                KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeyTitle.TextSize = 13
+                KeyTitle.Font = Enum.Font.GothamBold
+                KeyTitle.TextXAlignment = Enum.TextXAlignment.Center
+                KeyTitle.Parent = KeyFrame
 
-            local KeyInfoLbl = Instance.new("TextLabel")
-            KeyInfoLbl.Size = UDim2.new(1, -20, 0, 18)
-            KeyInfoLbl.Position = UDim2.new(0, 10, 0, 32)
-            KeyInfoLbl.BackgroundTransparency = 1
-            KeyInfoLbl.Text = "Masukkan Key Anda Untuk Melanjutkan"
-            KeyInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
-            KeyInfoLbl.TextSize = 10
-            KeyInfoLbl.Font = Enum.Font.Gotham
-            KeyInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
-            KeyInfoLbl.Parent = KeyFrame
+                local KeyInfoLbl = Instance.new("TextLabel")
+                KeyInfoLbl.Size = UDim2.new(1, -20, 0, 18)
+                KeyInfoLbl.Position = UDim2.new(0, 10, 0, 32)
+                KeyInfoLbl.BackgroundTransparency = 1
+                KeyInfoLbl.Text = "Masukkan Key Anda Untuk Melanjutkan"
+                KeyInfoLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
+                KeyInfoLbl.TextSize = 10
+                KeyInfoLbl.Font = Enum.Font.Gotham
+                KeyInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
+                KeyInfoLbl.Parent = KeyFrame
 
-            local KeyInputBox = Instance.new("TextBox")
-            KeyInputBox.Size = UDim2.new(1, -24, 0, 32)
-            KeyInputBox.Position = UDim2.new(0, 12, 0, 56)
-            KeyInputBox.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-            KeyInputBox.PlaceholderText = "Masukkan Key Di Sini..."
-            KeyInputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
-            KeyInputBox.Text = ""
-            KeyInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyInputBox.TextSize = 11
-            KeyInputBox.Font = Enum.Font.Gotham
-            KeyInputBox.Parent = KeyFrame
-            Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 6)
+                local KeyInputBox = Instance.new("TextBox")
+                KeyInputBox.Size = UDim2.new(1, -24, 0, 32)
+                KeyInputBox.Position = UDim2.new(0, 12, 0, 56)
+                KeyInputBox.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+                KeyInputBox.PlaceholderText = "Masukkan Key Di Sini..."
+                KeyInputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
+                KeyInputBox.Text = ""
+                KeyInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeyInputBox.TextSize = 11
+                KeyInputBox.Font = Enum.Font.Gotham
+                KeyInputBox.Parent = KeyFrame
+                Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 6)
 
-            local KeyVerifyBtn = Instance.new("TextButton")
-            KeyVerifyBtn.Size = UDim2.new(0.48, -8, 0, 30)
-            KeyVerifyBtn.Position = UDim2.new(0, 12, 0, 96)
-            KeyVerifyBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-            KeyVerifyBtn.Text = "Verify Key"
-            KeyVerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyVerifyBtn.TextSize = 11
-            KeyVerifyBtn.Font = Enum.Font.GothamBold
-            KeyVerifyBtn.Parent = KeyFrame
-            Instance.new("UICorner", KeyVerifyBtn).CornerRadius = UDim.new(0, 6)
+                local KeyVerifyBtn = Instance.new("TextButton")
+                KeyVerifyBtn.Size = UDim2.new(0.48, -8, 0, 30)
+                KeyVerifyBtn.Position = UDim2.new(0, 12, 0, 96)
+                KeyVerifyBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+                KeyVerifyBtn.Text = "Verify Key"
+                KeyVerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeyVerifyBtn.TextSize = 11
+                KeyVerifyBtn.Font = Enum.Font.GothamBold
+                KeyVerifyBtn.Parent = KeyFrame
+                Instance.new("UICorner", KeyVerifyBtn).CornerRadius = UDim.new(0, 6)
 
-            local KeyGetBtn = Instance.new("TextButton")
-            KeyGetBtn.Size = UDim2.new(0.48, -8, 0, 30)
-            KeyGetBtn.Position = UDim2.new(0.52, 4, 0, 96)
-            KeyGetBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
-            KeyGetBtn.Text = "Get Key (Copy)"
-            KeyGetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeyGetBtn.TextSize = 11
-            KeyGetBtn.Font = Enum.Font.GothamBold
-            KeyGetBtn.Parent = KeyFrame
-            Instance.new("UICorner", KeyGetBtn).CornerRadius = UDim.new(0, 6)
+                local KeyGetBtn = Instance.new("TextButton")
+                KeyGetBtn.Size = UDim2.new(0.48, -8, 0, 30)
+                KeyGetBtn.Position = UDim2.new(0.52, 4, 0, 96)
+                KeyGetBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+                KeyGetBtn.Text = "Get Key (Copy)"
+                KeyGetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeyGetBtn.TextSize = 11
+                KeyGetBtn.Font = Enum.Font.GothamBold
+                KeyGetBtn.Parent = KeyFrame
+                Instance.new("UICorner", KeyGetBtn).CornerRadius = UDim.new(0, 6)
 
-            local KeyStatusLbl = Instance.new("TextLabel")
-            KeyStatusLbl.Name = "StatusColor"
-            KeyStatusLbl.Size = UDim2.new(1, -20, 0, 20)
-            KeyStatusLbl.Position = UDim2.new(0, 10, 0, 134)
-            KeyStatusLbl.BackgroundTransparency = 1
-            KeyStatusLbl.Text = "Status: Menunggu Key..."
-            KeyStatusLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
-            KeyStatusLbl.TextSize = 10
-            KeyStatusLbl.Font = Enum.Font.GothamMedium
-            KeyStatusLbl.TextXAlignment = Enum.TextXAlignment.Center
-            KeyStatusLbl.Parent = KeyFrame
+                local KeyStatusLbl = Instance.new("TextLabel")
+                KeyStatusLbl.Name = "StatusColor"
+                KeyStatusLbl.Size = UDim2.new(1, -20, 0, 20)
+                KeyStatusLbl.Position = UDim2.new(0, 10, 0, 134)
+                KeyStatusLbl.BackgroundTransparency = 1
+                KeyStatusLbl.Text = "Status: Menunggu Key..."
+                KeyStatusLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+                KeyStatusLbl.TextSize = 10
+                KeyStatusLbl.Font = Enum.Font.GothamMedium
+                KeyStatusLbl.TextXAlignment = Enum.TextXAlignment.Center
+                KeyStatusLbl.Parent = KeyFrame
 
-            KeyGetBtn.MouseButton1Click:Connect(function()
-                if setclipboard then
-                    setclipboard(keyGetUrl)
-                    KeyStatusLbl.Text = "Link Key Berhasil Disalin!"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(52, 152, 219)
-                else
-                    KeyStatusLbl.Text = "Gagal Salin Link (Gunakan PC/Delta Browser)"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
-                end
-            end)
-
-            KeyVerifyBtn.MouseButton1Click:Connect(function()
-                local input = KeyInputBox.Text
-                local matchedKeyData = nil
-
-                for _, keyData in ipairs(validKeys) do
-                    if type(keyData) == "table" and keyData.Key == input then
-                        matchedKeyData = keyData
-                        break
-                    elseif type(keyData) == "string" and keyData == input then
-                        matchedKeyData = { Key = keyData, DurationDays = 1, DurationText = "1 Hari" }
-                        break
+                KeyGetBtn.MouseButton1Click:Connect(function()
+                    if setclipboard then
+                        setclipboard(keyGetUrl)
+                        KeyStatusLbl.Text = "Link Key Berhasil Disalin!"
+                        KeyStatusLbl.TextColor3 = Color3.fromRGB(52, 152, 219)
+                    else
+                        KeyStatusLbl.Text = "Gagal Salin Link"
+                        KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
                     end
-                end
+                end)
 
-                if matchedKeyData then
-                    local durText = matchedKeyData.DurationText or (matchedKeyData.DurationDays and (matchedKeyData.DurationDays .. " Hari")) or "Aktif"
-                    local durSec = parseDurationSeconds(matchedKeyData)
+                KeyVerifyBtn.MouseButton1Click:Connect(function()
+                    local input = KeyInputBox.Text
+                    local matchedKeyData = nil
 
-                    saveKeyLocally(matchedKeyData.Key, durSec, durText)
+                    for _, keyData in ipairs(validKeys) do
+                        if type(keyData) == "table" and keyData.Key == input then
+                            matchedKeyData = keyData
+                            break
+                        elseif type(keyData) == "string" and keyData == input then
+                            matchedKeyData = { Key = keyData, DurationDays = 1, DurationText = "1 Hari" }
+                            break
+                        end
+                    end
 
-                    KeyStatusLbl.Text = "Key Benar & Disimpan! (" .. durText .. ")"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-                    
-                    Library:Notify({
-                        Title = "Key Verified",
-                        Content = "Akses Diberikan! Durasi: " .. durText,
-                        Type = "Success",
-                        Duration = 4
-                    })
+                    if matchedKeyData then
+                        local durText = matchedKeyData.DurationText or (matchedKeyData.DurationDays and (matchedKeyData.DurationDays .. " Hari")) or "Aktif"
+                        local durSec = parseDurationSeconds(matchedKeyData)
 
-                    task.wait(1)
-                    KeyFrame:Destroy()
-                    keyVerified = true
-                else
-                    KeyStatusLbl.Text = "Key Salah / Kadaluarsa!"
-                    KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
-                end
-            end)
+                        saveKeyLocally(matchedKeyData.Key, durSec, durText)
 
-            repeat task.wait() until keyVerified
+                        KeyStatusLbl.Text = "Key Benar & Disimpan! (" .. durText .. ")"
+                        KeyStatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+                        
+                        Library:Notify({
+                            Title = "Key Verified",
+                            Content = "Akses Diberikan! Durasi: " .. durText,
+                            Type = "Success",
+                            Duration = 4
+                        })
+
+                        task.wait(1)
+                        KeyFrame:Destroy()
+                        keyVerified = true
+                    else
+                        KeyStatusLbl.Text = "Key Salah / Kadaluarsa!"
+                        KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
+                    end
+                end)
+
+                repeat task.wait() until keyVerified
+            end
         end
+
+        playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
+            TweenService:Create(mainWindowRef, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 240, 0, 270)
+            }):Play()
+
+            Library:Notify({
+                Title = titleText,
+                Content = L("Executed"),
+                Type = "Success",
+                Duration = 3
+            })
+        end)
     end
+
+    -- SISTEM PEMERIKSAAN SIDIK JARI (FINGERPRINT)
+    task.spawn(function()
+        local FPFrame = Instance.new("Frame")
+        FPFrame.Name = "FingerprintScreen"
+        FPFrame.Size = UDim2.new(1, 0, 1, 0)
+        FPFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        FPFrame.BorderSizePixel = 0
+        FPFrame.ZIndex = 100000
+        FPFrame.Parent = ScreenGui
+
+        local BinaryHolder = Instance.new("Frame")
+        BinaryHolder.Size = UDim2.new(1, 0, 1, 0)
+        BinaryHolder.BackgroundTransparency = 1
+        BinaryHolder.ZIndex = 100001
+        BinaryHolder.Parent = FPFrame
+
+        for i = 1, 35 do
+            local binLbl = Instance.new("TextLabel")
+            binLbl.Size = UDim2.new(0, 50, 1, 0)
+            binLbl.Position = UDim2.new(math.random(), -25, 0, 0)
+            binLbl.BackgroundTransparency = 1
+            binLbl.TextColor3 = Color3.fromRGB(0, 130, 255)
+            binLbl.TextTransparency = 0.6
+            binLbl.TextSize = 12
+            binLbl.Font = Enum.Font.Code
+            binLbl.TextWrapped = true
+            binLbl.ZIndex = 100001
+            
+            local str = ""
+            for j = 1, 35 do
+                str = str .. (math.random() > 0.5 and "1" else "0") .. "\n"
+            end
+            binLbl.Text = str
+            binLbl.Parent = BinaryHolder
+        end
+
+        local CenterContent = Instance.new("Frame")
+        CenterContent.Size = UDim2.new(0, 320, 0, 240)
+        CenterContent.Position = UDim2.new(0.5, -160, 0.5, -120)
+        CenterContent.BackgroundTransparency = 1
+        CenterContent.ZIndex = 100002
+        CenterContent.Parent = FPFrame
+
+        local FPIconBtn = Instance.new("ImageButton")
+        FPIconBtn.Size = UDim2.new(0, 110, 0, 110)
+        FPIconBtn.Position = UDim2.new(0.5, -55, 0, 10)
+        FPIconBtn.BackgroundTransparency = 1
+        FPIconBtn.Image = getIconId("lucide-fingerprint")
+        FPIconBtn.ImageColor3 = Color3.fromRGB(0, 150, 255)
+        FPIconBtn.ZIndex = 100003
+        FPIconBtn.Parent = CenterContent
+
+        local FPInfoLbl = Instance.new("TextLabel")
+        FPInfoLbl.Size = UDim2.new(1, 0, 0, 50)
+        FPInfoLbl.Position = UDim2.new(0, 0, 0, 135)
+        FPInfoLbl.BackgroundTransparency = 1
+        FPInfoLbl.Text = "Pencet 5 kali dan tahan 2 detik\nuntuk verifikasi"
+        FPInfoLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        FPInfoLbl.TextSize = 12
+        FPInfoLbl.Font = Enum.Font.GothamBold
+        FPInfoLbl.TextXAlignment = Enum.TextXAlignment.Center
+        FPInfoLbl.TextWrapped = true
+        FPInfoLbl.ZIndex = 100003
+        FPInfoLbl.Parent = CenterContent
+
+        local FPProgress = Instance.new("Frame")
+        FPProgress.Size = UDim2.new(0, 0, 0, 5)
+        FPProgress.Position = UDim2.new(0.5, -90, 0, 200)
+        FPProgress.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+        FPProgress.BorderSizePixel = 0
+        FPProgress.ZIndex = 100003
+        FPProgress.Parent = CenterContent
+        Instance.new("UICorner", FPProgress).CornerRadius = UDim.new(1, 0)
+
+        local clickCount = 0
+        local isHolding = false
+        local holdTimer = 0
+        local holdReq = 2.0
+        local fpVerified = false
+
+        FPIconBtn.MouseButton1Click:Connect(function()
+            if fpVerified then return end
+            clickCount = clickCount + 1
+            TweenService:Create(FPIconBtn, TweenInfo.new(0.08), {Size = UDim2.new(0, 95, 0, 95), Position = UDim2.new(0.5, -47, 0, 17)}):Play()
+            task.wait(0.08)
+            TweenService:Create(FPIconBtn, TweenInfo.new(0.08), {Size = UDim2.new(0, 110, 0, 110), Position = UDim2.new(0.5, -55, 0, 10)}):Play()
+
+            if clickCount < 5 then
+                FPInfoLbl.Text = string.format("Tekan %d/5 kali lagi...", 5 - clickCount)
+            else
+                FPInfoLbl.Text = "Tahan sidik jari selama 2 detik..."
+                FPInfoLbl.TextColor3 = Color3.fromRGB(0, 150, 255)
+            end
+        end)
+
+        FPIconBtn.MouseButton1Down:Connect(function()
+            if clickCount >= 5 and not fpVerified then
+                isHolding = true
+                holdTimer = 0
+            end
+        end)
+
+        local function endHold()
+            if isHolding and not fpVerified then
+                isHolding = false
+                holdTimer = 0
+                TweenService:Create(FPProgress, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 0, 5)}):Play()
+            end
+        end
+
+        FPIconBtn.MouseButton1Up:Connect(endHold)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                endHold()
+            end
+        end)
+
+        local conn
+        conn = RunService.RenderStepped:Connect(function(dt)
+            if isHolding and not fpVerified then
+                holdTimer = holdTimer + dt
+                local p = math.clamp(holdTimer / holdReq, 0, 1)
+                FPProgress.Size = UDim2.new(0, 180 * p, 0, 5)
+
+                if holdTimer >= holdReq then
+                    fpVerified = true
+                    isHolding = false
+                    conn:Disconnect()
+
+                    FPInfoLbl.Text = "Sidik Jari Diverifikasi!"
+                    FPInfoLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+                    FPIconBtn.ImageColor3 = Color3.fromRGB(46, 204, 113)
+                    FPProgress.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+
+                    task.wait(0.5)
+                    local fade = TweenService:Create(FPFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1})
+                    fade:Play()
+                    fade.Completed:Connect(function()
+                        FPFrame:Destroy()
+                    end)
+
+                    startMainUIProcess()
+                end
+            end
+        end)
+    end)
 
     local Main = Instance.new("Frame")
     Main.Name = "Main"
@@ -1375,16 +1378,13 @@ function Library:CreateWindow(config)
         TitleLbl.Size = UDim2.new(1, -(xOffset + 35), 1, 0)
         TitleLbl.Position = UDim2.new(0, xOffset, 0, 0)
         TitleLbl.BackgroundTransparency = 1
+        TitleLbl.Text = tostring(groupNameKey or "Group")
         TitleLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
         TitleLbl.TextSize = 12
         TitleLbl.Font = currentFont
         TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
         TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
         TitleLbl.Parent = GroupHeader
-        
-        if groupNameKey then
-            registerTranslation(TitleLbl, groupNameKey)
-        end
 
         local ArrowLbl = Instance.new("TextLabel")
         ArrowLbl.Size = UDim2.new(0, 20, 0, 20)
@@ -2048,19 +2048,6 @@ function Library:CreateWindow(config)
     function Window:SetScroll(state)
         Window:EnableScroll(state)
     end
-
-    playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
-        TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 240, 0, 270)
-        }):Play()
-
-        Library:Notify({
-            Title = titleText,
-            Content = L("Executed"),
-            Type = "Success",
-            Duration = 3
-        })
-    end)
 
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
