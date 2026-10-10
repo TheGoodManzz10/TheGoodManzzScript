@@ -1,7 +1,7 @@
 local Library = {}
-Library.CurrentKeyExpire = getgenv().DarkHubKeyExpire or nil
+Library.CurrentKeyExpire = tick() + 86400 -- Default 24 Jam (86400 detik) untuk contoh
 
--- Daftar Icon Registri Lengkap
+-- Daftar Icon Registri Lengkap (Termasuk Icon Baru)
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
@@ -30,22 +30,22 @@ local Translations = {
     Indonesian = {
         NotifTitle     = "Notifikasi",
         Executed       = "Script Berhasil Di-execute!",
-        KeyTitle       = "Sistem Key Keamanan",
-        KeySub         = "Masukkan Key yang valid untuk melanjutkan",
-        KeyNote        = "Dapatkan key resmi melalui link di bawah",
+        KeyTitle       = "Sistem Key",
+        KeySub         = "Masukkan Key untuk melanjutkan",
+        KeyNote        = "Dapatkan key melalui link di bawah",
         KeyValid       = "Key Benar! Menyiapkan UI...",
-        KeyInvalid     = "Key Salah! Silakan coba lagi.",
+        KeyInvalid     = "Key Salah! Coba lagi.",
         KeyCopied      = "Link Key Berhasil Di-copy!",
         KeyCopyErr     = "Fitur setclipboard tidak didukung executor ini",
-        SubmitBtn      = "Verifikasi Key",
-        GetKeyBtn      = "Dapatkan Key (Copy)",
+        SubmitBtn      = "Submit Key",
+        GetKeyBtn      = "Get Key (Copy)",
         KeyPlaceholder = "Masukkan Key Di Sini...",
         UITrans        = "Transparansi UI",
         BGTrans        = "Transparansi BG",
         TextStyle      = "Gaya Text / Font",
         LangSelect     = "Pilih Bahasa / Language",
         KeyTimerTitle  = "Sisa Durasi Key",
-        NoKeyActive    = "Tanpa Key / Key Belum Aktif",
+        NoKeyActive    = "Tanpa Key / Key Bebas",
         TextColorGroup = "Pilih Warna Teks",
         ThemeGroup     = "Pilih Tema UI",
         MusicGroup     = "Grup Musik",
@@ -60,14 +60,14 @@ local Translations = {
     English = {
         NotifTitle     = "Notification",
         Executed       = "Script Executed Successfully!",
-        KeyTitle       = "Security Key System",
-        KeySub         = "Enter valid Key to continue",
+        KeyTitle       = "Key System",
+        KeySub         = "Enter Key to continue",
         KeyNote        = "Get key from the link below",
         KeyValid       = "Valid Key! Preparing UI...",
         KeyInvalid     = "Invalid Key! Try again.",
         KeyCopied      = "Key Link Copied Successfully!",
         KeyCopyErr     = "setclipboard function not supported on this executor",
-        SubmitBtn      = "Verify Key",
+        SubmitBtn      = "Submit Key",
         GetKeyBtn      = "Get Key (Copy)",
         KeyPlaceholder = "Enter Key Here...",
         UITrans        = "UI Transparency",
@@ -152,14 +152,6 @@ local SoundService = game:GetService("SoundService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
 local LocalPlayer = Players.LocalPlayer
-
-local function getPlayerAvatar()
-    local userId = LocalPlayer.UserId
-    local thumbType = Enum.ThumbnailType.HeadShot
-    local thumbSize = Enum.ThumbnailSize.Size150x150
-    local content, isReady = Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
-    return content
-end
 
 local TargetParent
 pcall(function()
@@ -747,7 +739,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     AuthorLbl.TextXAlignment = Enum.TextXAlignment.Left
     AuthorLbl.Parent = Card
 
-    local duration = 5.0
+    local duration = 10.0
     local elapsed = 0
     local rotation = 0
 
@@ -763,9 +755,9 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
         local dotCount = (math.floor(elapsed * 3) % 4) + 1
         local dots = string.rep(".", dotCount)
 
-        if elapsed < 2.0 then
+        if elapsed < 4.0 then
             AuthorLbl.Text = txt1
-        elseif elapsed < 3.5 then
+        elseif elapsed < 7.0 then
             AuthorLbl.Text = txt2 .. " " .. dots
         else
             AuthorLbl.Text = txt3 .. " " .. dots
@@ -798,7 +790,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             task.spawn(function()
                 for i = 1, #targetFlashText do
                     BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(0.08)
+                    task.wait(1)
                 end
             end)
 
@@ -823,7 +815,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                 Size = UDim2.new(0, targetWidth, 0, 4)
             }):Play()
 
-            task.delay(1.5, function()
+            task.delay(10.0, function()
                 local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
                 TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
                 fadeTween:Play()
@@ -832,129 +824,6 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                     if onComplete then onComplete() end
                 end)
             end)
-        end
-    end)
-end
-
--- ==========================================
--- MODAL KEY SYSTEM
--- ==========================================
-local function showKeySystemModal(onSuccessCallback)
-    local KeyModal = Instance.new("Frame")
-    KeyModal.Name = "KeyModal"
-    KeyModal.Size = UDim2.new(0, 300, 0, 200)
-    KeyModal.Position = UDim2.new(0.5, -150, 0.5, -100)
-    KeyModal.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-    KeyModal.BorderSizePixel = 0
-    KeyModal.Parent = ScreenGui
-
-    Instance.new("UICorner", KeyModal).CornerRadius = UDim.new(0, 12)
-    local KeyStroke = Instance.new("UIStroke", KeyModal)
-    KeyStroke.Color = Color3.fromRGB(255, 255, 255)
-    KeyStroke.Transparency = 0.8
-
-    local KeyHeader = Instance.new("Frame")
-    KeyHeader.Size = UDim2.new(1, 0, 0, 36)
-    KeyHeader.BackgroundTransparency = 1
-    KeyHeader.Parent = KeyModal
-    makeDraggable(KeyModal, KeyHeader)
-
-    local KeyIcon = Instance.new("ImageLabel")
-    KeyIcon.Size = UDim2.new(0, 18, 0, 18)
-    KeyIcon.Position = UDim2.new(0, 12, 0, 9)
-    KeyIcon.BackgroundTransparency = 1
-    KeyIcon.Image = Library.Icons["lucide-key"]
-    KeyIcon.Parent = KeyHeader
-
-    local KeyTitle = Instance.new("TextLabel")
-    KeyTitle.Size = UDim2.new(1, -40, 1, 0)
-    KeyTitle.Position = UDim2.new(0, 36, 0, 0)
-    KeyTitle.BackgroundTransparency = 1
-    KeyTitle.Text = L("KeyTitle")
-    KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    KeyTitle.Font = Enum.Font.GothamBold
-    KeyTitle.TextSize = 13
-    KeyTitle.TextXAlignment = Enum.TextXAlignment.Left
-    KeyTitle.Parent = KeyHeader
-
-    local SubLbl = Instance.new("TextLabel")
-    SubLbl.Size = UDim2.new(1, -24, 0, 20)
-    SubLbl.Position = UDim2.new(0, 12, 0, 42)
-    SubLbl.BackgroundTransparency = 1
-    SubLbl.Text = L("KeySub")
-    SubLbl.TextColor3 = Color3.fromRGB(170, 170, 180)
-    SubLbl.Font = Enum.Font.Gotham
-    SubLbl.TextSize = 11
-    SubLbl.TextXAlignment = Enum.TextXAlignment.Left
-    SubLbl.Parent = KeyModal
-
-    local KeyInputBox = Instance.new("TextBox")
-    KeyInputBox.Size = UDim2.new(1, -24, 0, 36)
-    KeyInputBox.Position = UDim2.new(0, 12, 0, 72)
-    KeyInputBox.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    KeyInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    KeyInputBox.PlaceholderText = L("KeyPlaceholder")
-    KeyInputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 110)
-    KeyInputBox.TextSize = 12
-    KeyInputBox.Font = Enum.Font.Gotham
-    KeyInputBox.Text = ""
-    KeyInputBox.Parent = KeyModal
-    Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 6)
-
-    local SubmitKeyBtn = Instance.new("TextButton")
-    SubmitKeyBtn.Size = UDim2.new(0.48, -4, 0, 36)
-    SubmitKeyBtn.Position = UDim2.new(0, 12, 0, 118)
-    SubmitKeyBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-    SubmitKeyBtn.Text = L("SubmitBtn")
-    SubmitKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SubmitKeyBtn.Font = Enum.Font.GothamBold
-    SubmitKeyBtn.TextSize = 12
-    SubmitKeyBtn.Parent = KeyModal
-    Instance.new("UICorner", SubmitKeyBtn).CornerRadius = UDim.new(0, 6)
-
-    local GetKeyBtn = Instance.new("TextButton")
-    GetKeyBtn.Size = UDim2.new(0.48, -4, 0, 36)
-    GetKeyBtn.Position = UDim2.new(0.5, 4, 0, 118)
-    GetKeyBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
-    GetKeyBtn.Text = L("GetKeyBtn")
-    GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    GetKeyBtn.Font = Enum.Font.GothamBold
-    GetKeyBtn.TextSize = 12
-    GetKeyBtn.Parent = KeyModal
-    Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 6)
-
-    local NoteLbl = Instance.new("TextLabel")
-    NoteLbl.Size = UDim2.new(1, -24, 0, 18)
-    NoteLbl.Position = UDim2.new(0, 12, 0, 166)
-    NoteLbl.BackgroundTransparency = 1
-    NoteLbl.Text = L("KeyNote")
-    NoteLbl.TextColor3 = Color3.fromRGB(140, 140, 150)
-    NoteLbl.Font = Enum.Font.Gotham
-    NoteLbl.TextSize = 10
-    NoteLbl.TextXAlignment = Enum.TextXAlignment.Center
-    NoteLbl.Parent = KeyModal
-
-    GetKeyBtn.MouseButton1Click:Connect(function()
-        pcall(function()
-            if setclipboard then
-                setclipboard("https://linkvertise.com/example-key-system")
-                Library:Notify({ Title = "Key System", Content = L("KeyCopied"), Type = "Success" })
-            else
-                Library:Notify({ Title = "Key System", Content = L("KeyCopyErr"), Type = "Error" })
-            end
-        end)
-    end)
-
-    SubmitKeyBtn.MouseButton1Click:Connect(function()
-        local enteredKey = KeyInputBox.Text
-        if enteredKey == "GOODMANZ" or enteredKey == "DARKHUB2026" then
-            Library.CurrentKeyExpire = tick() + 86400
-            getgenv().DarkHubKeyExpire = Library.CurrentKeyExpire
-            Library:Notify({ Title = "Key System", Content = L("KeyValid"), Type = "Success" })
-            KeyModal:Destroy()
-            if onSuccessCallback then onSuccessCallback() end
-        else
-            Library:Notify({ Title = "Key System", Content = L("KeyInvalid"), Type = "Error" })
         end
     end)
 end
@@ -972,842 +841,785 @@ function Library:CreateWindow(config)
 
     local Window = {}
 
-    local function initWindowFlow()
-        local Main = Instance.new("Frame")
-        Main.Name = "Main"
-        Main.Size = UDim2.new(0, 240, 0, 0)
-        Main.Position = UDim2.new(0.5, -120, 0.5, -135)
-        Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        Main.BorderSizePixel = 0
-        Main.ClipsDescendants = true
-        Main.Parent = ScreenGui
+    local Main = Instance.new("Frame")
+    Main.Name = "Main"
+    Main.Size = UDim2.new(0, 240, 0, 0)
+    Main.Position = UDim2.new(0.5, -120, 0.5, -135)
+    Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Main.BorderSizePixel = 0
+    Main.ClipsDescendants = true
+    Main.Parent = ScreenGui
 
-        mainWindowRef = Main
+    mainWindowRef = Main
 
-        Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-        local MainGradient = Instance.new("UIGradient")
-        MainGradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 24)),
-            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 8, 10)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
-        })
-        MainGradient.Rotation = 135
-        MainGradient.Parent = Main
-        mainGradientRef = MainGradient
+    local MainGradient = Instance.new("UIGradient")
+    MainGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 24)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 8, 10)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+    })
+    MainGradient.Rotation = 135
+    MainGradient.Parent = Main
+    mainGradientRef = MainGradient
 
-        local MainStroke = Instance.new("UIStroke")
-        MainStroke.Color = Color3.fromRGB(255, 255, 255)
-        MainStroke.Thickness = 1
-        MainStroke.Transparency = 0.85
-        MainStroke.Parent = Main
+    local MainStroke = Instance.new("UIStroke")
+    MainStroke.Color = Color3.fromRGB(255, 255, 255)
+    MainStroke.Thickness = 1
+    MainStroke.Transparency = 0.85
+    MainStroke.Parent = Main
 
-        local Header = Instance.new("Frame")
-        Header.Size = UDim2.new(1, 0, 0, 36)
-        Header.BackgroundTransparency = 1
-        Header.Parent = Main
+    local Header = Instance.new("Frame")
+    Header.Size = UDim2.new(1, 0, 0, 36)
+    Header.BackgroundTransparency = 1
+    Header.Parent = Main
 
-        makeDraggable(Main, Header)
+    makeDraggable(Main, Header)
 
-        if mainLogo then
-            local HeaderIcon = Instance.new("ImageLabel")
-            HeaderIcon.Size = UDim2.new(0, 18, 0, 18)
-            HeaderIcon.Position = UDim2.new(0, 10, 0, 9)
-            HeaderIcon.BackgroundTransparency = 1
-            HeaderIcon.Image = mainLogo
-            HeaderIcon.Parent = Header
+    if mainLogo then
+        local HeaderIcon = Instance.new("ImageLabel")
+        HeaderIcon.Size = UDim2.new(0, 18, 0, 18)
+        HeaderIcon.Position = UDim2.new(0, 10, 0, 9)
+        HeaderIcon.BackgroundTransparency = 1
+        HeaderIcon.Image = mainLogo
+        HeaderIcon.Parent = Header
+    end
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, mainLogo and -125 or -115, 1, 0)
+    Title.Position = UDim2.new(0, mainLogo and 34 or 12, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = titleText
+    Title.TextColor3 = currentTextColor
+    Title.TextSize = 13
+    Title.Font = Enum.Font.GothamBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.TextTruncate = Enum.TextTruncate.AtEnd
+    Title.Parent = Header
+
+    local MinBtn = Instance.new("ImageButton")
+    MinBtn.Size = UDim2.new(0, 22, 0, 22)
+    MinBtn.Position = UDim2.new(1, -100, 0, 7)
+    MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    MinBtn.Image = Library.Icons["lucide-chevron-up"]
+    MinBtn.Parent = Header
+    Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+
+    local SettingsBtn = Instance.new("ImageButton")
+    SettingsBtn.Size = UDim2.new(0, 22, 0, 22)
+    SettingsBtn.Position = UDim2.new(1, -75, 0, 7)
+    SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    SettingsBtn.Image = Library.Icons["Settings"]
+    SettingsBtn.Parent = Header
+    Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 6)
+
+    local HideBtn = Instance.new("ImageButton")
+    HideBtn.Size = UDim2.new(0, 22, 0, 22)
+    HideBtn.Position = UDim2.new(1, -50, 0, 7)
+    HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    HideBtn.Image = mainLogo or Library.Icons["Logo"]
+    HideBtn.Parent = Header
+    Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
+
+    local CloseBtn = Instance.new("ImageButton")
+    CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+    CloseBtn.Position = UDim2.new(1, -25, 0, 7)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    CloseBtn.Image = Library.Icons["lucide-x"]
+    CloseBtn.Parent = Header
+    Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+    local Container = Instance.new("ScrollingFrame")
+    Container.Name = "MainContainer"
+    Container.Size = UDim2.new(1, -16, 1, -44)
+    Container.Position = UDim2.new(0, 8, 0, 38)
+    Container.BackgroundTransparency = 1
+    Container.BorderSizePixel = 0
+    Container.ScrollBarThickness = 2
+    Container.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+    Container.ScrollingEnabled = true
+    Container.ClipsDescendants = true
+    Container.Parent = Main
+
+    local Layout = Instance.new("UIListLayout")
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.Padding = UDim.new(0, 6)
+    Layout.Parent = Container
+
+    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Container.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 8)
+    end)
+
+    local SettingsContainer = Instance.new("ScrollingFrame")
+    SettingsContainer.Name = "SettingsContainer"
+    SettingsContainer.Size = UDim2.new(1, -16, 1, -44)
+    SettingsContainer.Position = UDim2.new(0, 8, 0, 38)
+    SettingsContainer.BackgroundTransparency = 1
+    SettingsContainer.BorderSizePixel = 0
+    SettingsContainer.ScrollBarThickness = 2
+    SettingsContainer.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+    SettingsContainer.ScrollingEnabled = true
+    SettingsContainer.ClipsDescendants = true
+    SettingsContainer.Visible = false
+    SettingsContainer.Parent = Main
+
+    local SettingsLayout = Instance.new("UIListLayout")
+    SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    SettingsLayout.Padding = UDim.new(0, 6)
+    SettingsLayout.Parent = SettingsContainer
+
+    SettingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 8)
+    end)
+
+    local showingSettings = false
+    SettingsBtn.MouseButton1Click:Connect(function()
+        showingSettings = not showingSettings
+        Container.Visible = not showingSettings
+        SettingsContainer.Visible = showingSettings
+        
+        TweenService:Create(SettingsBtn, TweenInfo.new(0.2), {
+            ImageColor3 = showingSettings and Color3.fromRGB(52, 152, 219) or Color3.fromRGB(255, 255, 255)
+        }):Play()
+    end)
+
+    local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
+        if type(icon) == "boolean" then
+            defaultCollapsed = icon
+            icon = nil
+        end
+        local iconId = getIconId(icon)
+        local isCollapsed = defaultCollapsed or false
+
+        local GroupFrame = Instance.new("Frame")
+        GroupFrame.Name = "GroupFrame"
+        GroupFrame.Size = UDim2.new(1, 0, 0, 32)
+        GroupFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+        GroupFrame.BorderSizePixel = 0
+        GroupFrame.ClipsDescendants = true
+        GroupFrame.Parent = parentContainer
+
+        Instance.new("UICorner", GroupFrame).CornerRadius = UDim.new(0, 8)
+        local GroupStroke = Instance.new("UIStroke", GroupFrame)
+        GroupStroke.Color = Color3.fromRGB(255, 255, 255)
+        GroupStroke.Transparency = 0.93
+
+        local GroupHeader = Instance.new("TextButton")
+        GroupHeader.Name = "GroupHeader"
+        GroupHeader.Size = UDim2.new(1, 0, 0, 32)
+        GroupHeader.BackgroundTransparency = 1
+        GroupHeader.Text = ""
+        GroupHeader.Parent = GroupFrame
+
+        local xOffset = 10
+        if iconId then
+            local GIcon = Instance.new("ImageLabel")
+            GIcon.Size = UDim2.new(0, 16, 0, 16)
+            GIcon.Position = UDim2.new(0, 10, 0.5, -8)
+            GIcon.BackgroundTransparency = 1
+            GIcon.Image = iconId
+            GIcon.Parent = GroupHeader
+            xOffset = 32
         end
 
-        local Title = Instance.new("TextLabel")
-        Title.Size = UDim2.new(1, mainLogo and -125 or -115, 1, 0)
-        Title.Position = UDim2.new(0, mainLogo and 34 or 12, 0, 0)
-        Title.BackgroundTransparency = 1
-        Title.Text = titleText
-        Title.TextColor3 = currentTextColor
-        Title.TextSize = 13
-        Title.Font = Enum.Font.GothamBold
-        Title.TextXAlignment = Enum.TextXAlignment.Left
-        Title.TextTruncate = Enum.TextTruncate.AtEnd
-        Title.Parent = Header
+        local TitleLbl = Instance.new("TextLabel")
+        TitleLbl.Name = "GroupTitleLbl"
+        TitleLbl.Size = UDim2.new(1, -(xOffset + 35), 1, 0)
+        TitleLbl.Position = UDim2.new(0, xOffset, 0, 0)
+        TitleLbl.BackgroundTransparency = 1
+        TitleLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
+        TitleLbl.TextSize = 12
+        TitleLbl.Font = currentFont
+        TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+        TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
+        TitleLbl.Parent = GroupHeader
+        
+        if groupNameKey then
+            registerTranslation(TitleLbl, groupNameKey)
+        end
 
-        local MinBtn = Instance.new("ImageButton")
-        MinBtn.Size = UDim2.new(0, 22, 0, 22)
-        MinBtn.Position = UDim2.new(1, -100, 0, 7)
-        MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        MinBtn.Image = Library.Icons["lucide-chevron-up"]
-        MinBtn.Parent = Header
-        Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+        local ArrowLbl = Instance.new("TextLabel")
+        ArrowLbl.Size = UDim2.new(0, 20, 0, 20)
+        ArrowLbl.Position = UDim2.new(1, -25, 0.5, -10)
+        ArrowLbl.BackgroundTransparency = 1
+        ArrowLbl.Text = isCollapsed and "▼" or "▲"
+        ArrowLbl.TextColor3 = Color3.fromRGB(160, 160, 170)
+        ArrowLbl.TextSize = 11
+        ArrowLbl.Font = Enum.Font.GothamBold
+        ArrowLbl.Parent = GroupHeader
 
-        local SettingsBtn = Instance.new("ImageButton")
-        SettingsBtn.Size = UDim2.new(0, 22, 0, 22)
-        SettingsBtn.Position = UDim2.new(1, -75, 0, 7)
-        SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        SettingsBtn.Image = Library.Icons["Settings"]
-        SettingsBtn.Parent = Header
-        Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 6)
+        local ContentHolder = Instance.new("ScrollingFrame")
+        ContentHolder.Name = "ContentHolder"
+        ContentHolder.Size = UDim2.new(1, -12, 0, 0)
+        ContentHolder.Position = UDim2.new(0, 6, 0, 34)
+        ContentHolder.BackgroundTransparency = 1
+        ContentHolder.BorderSizePixel = 0
+        ContentHolder.ScrollBarThickness = 2
+        ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+        ContentHolder.ClipsDescendants = true
+        ContentHolder.Parent = GroupFrame
 
-        local HideBtn = Instance.new("ImageButton")
-        HideBtn.Size = UDim2.new(0, 22, 0, 22)
-        HideBtn.Position = UDim2.new(1, -50, 0, 7)
-        HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        HideBtn.Image = mainLogo or Library.Icons["Logo"]
-        HideBtn.Parent = Header
-        Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
+        local ContentLayout = Instance.new("UIListLayout")
+        ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        ContentLayout.Padding = UDim.new(0, 5)
+        ContentLayout.Parent = ContentHolder
 
-        local CloseBtn = Instance.new("ImageButton")
-        CloseBtn.Size = UDim2.new(0, 22, 0, 22)
-        CloseBtn.Position = UDim2.new(1, -25, 0, 7)
-        CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        CloseBtn.Image = Library.Icons["lucide-x"]
-        CloseBtn.Parent = Header
-        Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+        local MAX_GROUP_HEIGHT = 180
 
-        local Container = Instance.new("ScrollingFrame")
-        Container.Name = "MainContainer"
-        Container.Size = UDim2.new(1, -16, 1, -44)
-        Container.Position = UDim2.new(0, 8, 0, 38)
-        Container.BackgroundTransparency = 1
-        Container.BorderSizePixel = 0
-        Container.ScrollBarThickness = 2
-        Container.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
-        Container.ScrollingEnabled = true
-        Container.ClipsDescendants = true
-        Container.Parent = Main
-
-        local Layout = Instance.new("UIListLayout")
-        Layout.SortOrder = Enum.SortOrder.LayoutOrder
-        Layout.Padding = UDim.new(0, 6)
-        Layout.Parent = Container
-
-        Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            Container.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 8)
-        end)
-
-        local SettingsContainer = Instance.new("ScrollingFrame")
-        SettingsContainer.Name = "SettingsContainer"
-        SettingsContainer.Size = UDim2.new(1, -16, 1, -44)
-        SettingsContainer.Position = UDim2.new(0, 8, 0, 38)
-        SettingsContainer.BackgroundTransparency = 1
-        SettingsContainer.BorderSizePixel = 0
-        SettingsContainer.ScrollBarThickness = 2
-        SettingsContainer.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
-        SettingsContainer.ScrollingEnabled = true
-        SettingsContainer.ClipsDescendants = true
-        SettingsContainer.Visible = false
-        SettingsContainer.Parent = Main
-
-        local SettingsLayout = Instance.new("UIListLayout")
-        SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        SettingsLayout.Padding = UDim.new(0, 6)
-        SettingsLayout.Parent = SettingsContainer
-
-        SettingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 8)
-        end)
-
-        local showingSettings = false
-        SettingsBtn.MouseButton1Click:Connect(function()
-            showingSettings = not showingSettings
-            Container.Visible = not showingSettings
-            SettingsContainer.Visible = showingSettings
+        local function updateGroupSize()
+            local contentHeight = ContentLayout.AbsoluteContentSize.Y
+            ContentHolder.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
             
-            TweenService:Create(SettingsBtn, TweenInfo.new(0.2), {
-                ImageColor3 = showingSettings and Color3.fromRGB(52, 152, 219) or Color3.fromRGB(255, 255, 255)
+            local displayHeight = math.min(contentHeight, MAX_GROUP_HEIGHT)
+            ContentHolder.Size = UDim2.new(1, -12, 0, displayHeight)
+            
+            local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
+            
+            TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 0, targetHeight)
             }):Play()
+        end
+
+        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateGroupSize)
+
+        GroupHeader.MouseButton1Click:Connect(function()
+            isCollapsed = not isCollapsed
+            ArrowLbl.Text = isCollapsed and "▼" or "▲"
+            updateGroupSize()
         end)
 
-        local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
-            if type(icon) == "boolean" then
-                defaultCollapsed = icon
-                icon = nil
-            end
-            local iconId = getIconId(icon)
-            local isCollapsed = defaultCollapsed or false
+        local Group = {}
+        Group.ContentHolder = ContentHolder
 
-            local GroupFrame = Instance.new("Frame")
-            GroupFrame.Name = "GroupFrame"
-            GroupFrame.Size = UDim2.new(1, 0, 0, 32)
-            GroupFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-            GroupFrame.BorderSizePixel = 0
-            GroupFrame.ClipsDescendants = true
-            GroupFrame.Parent = parentContainer
+        function Group:AddButton(text, icon, callback)
+            local btn = createButton(ContentHolder, text, icon, callback)
+            task.defer(updateGroupSize)
+            return btn
+        end
 
-            Instance.new("UICorner", GroupFrame).CornerRadius = UDim.new(0, 8)
-            local GroupStroke = Instance.new("UIStroke", GroupFrame)
-            GroupStroke.Color = Color3.fromRGB(255, 255, 255)
-            GroupStroke.Transparency = 0.93
+        function Group:AddToggle(text, icon, default, callback)
+            local tog = createToggle(ContentHolder, text, icon, default, callback)
+            task.defer(updateGroupSize)
+            return tog
+        end
 
-            local GroupHeader = Instance.new("TextButton")
-            GroupHeader.Name = "GroupHeader"
-            GroupHeader.Size = UDim2.new(1, 0, 0, 32)
-            GroupHeader.BackgroundTransparency = 1
-            GroupHeader.Text = ""
-            GroupHeader.Parent = GroupFrame
+        function Group:AddSlider(text, icon, min, max, default, callback)
+            local sld = createSlider(ContentHolder, text, icon, min, max, default, callback)
+            task.defer(updateGroupSize)
+            return sld
+        end
 
-            local xOffset = 10
-            if iconId then
-                local GIcon = Instance.new("ImageLabel")
-                GIcon.Size = UDim2.new(0, 16, 0, 16)
-                GIcon.Position = UDim2.new(0, 10, 0.5, -8)
-                GIcon.BackgroundTransparency = 1
-                GIcon.Image = iconId
-                GIcon.Parent = GroupHeader
-                xOffset = 32
-            end
+        function Group:AddLabel(text)
+            local LblFrame = Instance.new("Frame")
+            LblFrame.Size = UDim2.new(1, 0, 0, 28)
+            LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+            LblFrame.Parent = ContentHolder
 
-            local TitleLbl = Instance.new("TextLabel")
-            TitleLbl.Name = "GroupTitleLbl"
-            TitleLbl.Size = UDim2.new(1, -(xOffset + 35), 1, 0)
-            TitleLbl.Position = UDim2.new(0, xOffset, 0, 0)
-            TitleLbl.BackgroundTransparency = 1
-            TitleLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
-            TitleLbl.TextSize = 12
-            TitleLbl.Font = currentFont
-            TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-            TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
-            TitleLbl.Parent = GroupHeader
-            
-            if groupNameKey then
-                registerTranslation(TitleLbl, groupNameKey)
-            end
+            Instance.new("UICorner", LblFrame).CornerRadius = UDim.new(0, 6)
+            local Stroke = Instance.new("UIStroke", LblFrame)
+            Stroke.Color = Color3.fromRGB(255, 255, 255)
+            Stroke.Transparency = 0.9
 
-            local ArrowLbl = Instance.new("TextLabel")
-            ArrowLbl.Size = UDim2.new(0, 20, 0, 20)
-            ArrowLbl.Position = UDim2.new(1, -25, 0.5, -10)
-            ArrowLbl.BackgroundTransparency = 1
-            ArrowLbl.Text = isCollapsed and "▼" or "▲"
-            ArrowLbl.TextColor3 = Color3.fromRGB(160, 160, 170)
-            ArrowLbl.TextSize = 11
-            ArrowLbl.Font = Enum.Font.GothamBold
-            ArrowLbl.Parent = GroupHeader
-
-            local ContentHolder = Instance.new("ScrollingFrame")
-            ContentHolder.Name = "ContentHolder"
-            ContentHolder.Size = UDim2.new(1, -12, 0, 0)
-            ContentHolder.Position = UDim2.new(0, 6, 0, 34)
-            ContentHolder.BackgroundTransparency = 1
-            ContentHolder.BorderSizePixel = 0
-            ContentHolder.ScrollBarThickness = 2
-            ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
-            ContentHolder.ClipsDescendants = true
-            ContentHolder.Parent = GroupFrame
-
-            local ContentLayout = Instance.new("UIListLayout")
-            ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            ContentLayout.Padding = UDim.new(0, 5)
-            ContentLayout.Parent = ContentHolder
-
-            local MAX_GROUP_HEIGHT = 180
-
-            local function updateGroupSize()
-                local contentHeight = ContentLayout.AbsoluteContentSize.Y
-                ContentHolder.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
-                
-                local displayHeight = math.min(contentHeight, MAX_GROUP_HEIGHT)
-                ContentHolder.Size = UDim2.new(1, -12, 0, displayHeight)
-                
-                local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
-                
-                TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(1, 0, 0, targetHeight)
-                }):Play()
-            end
-
-            ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateGroupSize)
-
-            GroupHeader.MouseButton1Click:Connect(function()
-                isCollapsed = not isCollapsed
-                ArrowLbl.Text = isCollapsed and "▼" or "▲"
-                updateGroupSize()
-            end)
-
-            local Group = {}
-            Group.ContentHolder = ContentHolder
-
-            function Group:AddButton(text, icon, callback)
-                local btn = createButton(ContentHolder, text, icon, callback)
-                task.defer(updateGroupSize)
-                return btn
-            end
-
-            function Group:AddToggle(text, icon, default, callback)
-                local tog = createToggle(ContentHolder, text, icon, default, callback)
-                task.defer(updateGroupSize)
-                return tog
-            end
-
-            function Group:AddSlider(text, icon, min, max, default, callback)
-                local sld = createSlider(ContentHolder, text, icon, min, max, default, callback)
-                task.defer(updateGroupSize)
-                return sld
-            end
-
-            function Group:AddLabel(text)
-                local LblFrame = Instance.new("Frame")
-                LblFrame.Size = UDim2.new(1, 0, 0, 28)
-                LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-                LblFrame.Parent = ContentHolder
-
-                Instance.new("UICorner", LblFrame).CornerRadius = UDim.new(0, 6)
-                local Stroke = Instance.new("UIStroke", LblFrame)
-                Stroke.Color = Color3.fromRGB(255, 255, 255)
-                Stroke.Transparency = 0.9
-
-                local Lbl = Instance.new("TextLabel")
-                Lbl.Size = UDim2.new(1, -12, 1, 0)
-                Lbl.Position = UDim2.new(0, 6, 0, 0)
-                Lbl.BackgroundTransparency = 1
-                Lbl.Text = tostring(text or "")
-                Lbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-                Lbl.TextSize = 11
-                Lbl.Font = Enum.Font.GothamBold
-                Lbl.TextXAlignment = Enum.TextXAlignment.Left
-                Lbl.TextTruncate = Enum.TextTruncate.AtEnd
-                Lbl.Parent = LblFrame
-
-                task.defer(updateGroupSize)
-                return Lbl
-            end
+            local Lbl = Instance.new("TextLabel")
+            Lbl.Size = UDim2.new(1, -12, 1, 0)
+            Lbl.Position = UDim2.new(0, 6, 0, 0)
+            Lbl.BackgroundTransparency = 1
+            Lbl.Text = tostring(text or "")
+            Lbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+            Lbl.TextSize = 11
+            Lbl.Font = Enum.Font.GothamBold
+            Lbl.TextXAlignment = Enum.TextXAlignment.Left
+            Lbl.TextTruncate = Enum.TextTruncate.AtEnd
+            Lbl.Parent = LblFrame
 
             task.defer(updateGroupSize)
-            return Group
+            return Lbl
         end
 
-        local colorList = {
-            {"Hitam (Black)", Color3.fromRGB(0, 0, 0)},
-            {"Putih (White)", Color3.fromRGB(255, 255, 255)},
-            {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
-            {"Hijau (Green)", Color3.fromRGB(46, 204, 113)},
-            {"Biru (Blue)", Color3.fromRGB(52, 152, 219)},
-            {"Kuning (Yellow)", Color3.fromRGB(241, 196, 15)},
-            {"Ungu (Purple)", Color3.fromRGB(155, 89, 182)},
-            {"Oranye (Orange)", Color3.fromRGB(230, 126, 34)},
-            {"Pink", Color3.fromRGB(255, 105, 180)},
-            {"Cyan", Color3.fromRGB(0, 255, 255)},
-            {"Lime", Color3.fromRGB(0, 255, 0)},
-            {"Magenta", Color3.fromRGB(255, 0, 255)}
-        }
+        task.defer(updateGroupSize)
+        return Group
+    end
 
-        -- ==========================================
-        -- FITUR: SISA WAKTU KEY (ICON ALARM CLOCK)
-        -- ==========================================
-        local KeyTimerGroup = buildGroupInContainer(SettingsContainer, "KeyTimerTitle", "lucide-alarm-clock", false)
-        local KeyTimerLabel = KeyTimerGroup:AddLabel("Menghitung Sisa Durasi...")
+    local colorList = {
+        {"Hitam (Black)", Color3.fromRGB(0, 0, 0)},
+        {"Putih (White)", Color3.fromRGB(255, 255, 255)},
+        {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
+        {"Hijau (Green)", Color3.fromRGB(46, 204, 113)},
+        {"Biru (Blue)", Color3.fromRGB(52, 152, 219)},
+        {"Kuning (Yellow)", Color3.fromRGB(241, 196, 15)},
+        {"Ungu (Purple)", Color3.fromRGB(155, 89, 182)},
+        {"Oranye (Orange)", Color3.fromRGB(230, 126, 34)},
+        {"Pink", Color3.fromRGB(255, 105, 180)},
+        {"Cyan", Color3.fromRGB(0, 255, 255)},
+        {"Lime", Color3.fromRGB(0, 255, 0)},
+        {"Magenta", Color3.fromRGB(255, 0, 255)}
+    }
 
-        task.spawn(function()
-            while ScreenGui and ScreenGui.Parent do
-                if Library.CurrentKeyExpire then
-                    local remainingSec = math.max(0, math.floor(Library.CurrentKeyExpire - tick()))
-                    if remainingSec > 0 then
-                        local h = math.floor(remainingSec / 3600)
-                        local m = math.floor((remainingSec % 3600) / 60)
-                        local s = remainingSec % 60
-                        KeyTimerLabel.Text = string.format("Sisa Waktu: %02d:%02d:%02d", h, m, s)
-                    else
-                        KeyTimerLabel.Text = "Key Expired / Kadaluarsa!"
-                    end
+    -- ==========================================
+    -- FITUR PENGATURAN DURASI KEY (SISA WAKTU KEY)
+    -- ==========================================
+    local KeyTimerGroup = buildGroupInContainer(SettingsContainer, "KeyTimerTitle", "lucide-alarm-clock", false)
+    local KeyTimerLabel = KeyTimerGroup:AddLabel("Menghitung Sisa Durasi...")
+
+    task.spawn(function()
+        while ScreenGui and ScreenGui.Parent do
+            if Library.CurrentKeyExpire then
+                local remainingSec = math.max(0, math.floor(Library.CurrentKeyExpire - tick()))
+                if remainingSec > 0 then
+                    local h = math.floor(remainingSec / 3600)
+                    local m = math.floor((remainingSec % 3600) / 60)
+                    local s = remainingSec % 60
+                    KeyTimerLabel.Text = string.format("Sisa Waktu: %02d:%02d:%02d", h, m, s)
                 else
-                    KeyTimerLabel.Text = L("NoKeyActive")
+                    KeyTimerLabel.Text = "Key Expired / Kadaluarsa!"
                 end
-                task.wait(1)
+            else
+                KeyTimerLabel.Text = L("NoKeyActive")
             end
-        end)
+            task.wait(1)
+        end
+    end)
 
-        -- ==========================================
-        -- FITUR: PROFIL PLAYER DENGAN AVATAR & LOBBY (ICON INFO)
-        -- ==========================================
-        local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
+    -- ==========================================
+    -- FITUR: PROFIL LOBBY & PLAYER (INFORMASI LENGKAP)
+    -- ==========================================
+    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
+    
+    local pName = LocalPlayer.DisplayName .. " (@" .. LocalPlayer.Name .. ")"
+    local pTeam = LocalPlayer.Team and LocalPlayer.Team.Name or "Tanpa Tim / No Team"
+    local pGameName = "Mendeteksi..."
+    pcall(function()
+        pGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
+    end)
+    local pPlaceId = tostring(game.PlaceId)
+    local pAge = tostring(LocalPlayer.AccountAge) .. " Hari"
 
-        local ProfileCard = Instance.new("Frame")
-        ProfileCard.Size = UDim2.new(1, 0, 0, 56)
-        ProfileCard.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-        ProfileCard.Parent = PlayerGroup.ContentHolder
+    PlayerGroup:AddLabel("Nama: " + pName)
+    PlayerGroup:AddLabel("Tim / Team: " .. pTeam)
+    PlayerGroup:AddLabel("Game: " .. pGameName)
+    PlayerGroup:AddLabel("Place ID: " .. pPlaceId)
+    PlayerGroup:AddLabel("Umur Akun: " .. pAge)
+    
+    local PlayTimeLabel = PlayerGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
+    local startTime = tick()
+    
+    task.spawn(function()
+        while ScreenGui and ScreenGui.Parent do
+            local totalSeconds = math.floor(tick() - startTime)
+            
+            local days = math.floor(totalSeconds / 86400)
+            local hours = math.floor((totalSeconds % 86400) / 3600)
+            local minutes = math.floor((totalSeconds % 3600) / 60)
+            local seconds = totalSeconds % 60
+            
+            PlayTimeLabel.Text = string.format("Waktu Bermain: %d hari, %02d:%02d:%02d", days, hours, minutes, seconds)
+            task.wait(1)
+        end
+    end)
 
-        Instance.new("UICorner", ProfileCard).CornerRadius = UDim.new(0, 6)
-        local CardStroke = Instance.new("UIStroke", ProfileCard)
-        CardStroke.Color = Color3.fromRGB(255, 255, 255)
-        CardStroke.Transparency = 0.9
-
-        local AvatarImg = Instance.new("ImageLabel")
-        AvatarImg.Size = UDim2.new(0, 42, 0, 42)
-        AvatarImg.Position = UDim2.new(0, 7, 0.5, -21)
-        AvatarImg.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-        AvatarImg.Image = "rbxassetid://0"
-        AvatarImg.Parent = ProfileCard
-
-        Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
-
-        task.spawn(function()
-            pcall(function()
-                AvatarImg.Image = getPlayerAvatar()
-            end)
-        end)
-
-        local DisplayNameLbl = Instance.new("TextLabel")
-        DisplayNameLbl.Size = UDim2.new(1, -60, 0, 18)
-        DisplayNameLbl.Position = UDim2.new(0, 56, 0, 8)
-        DisplayNameLbl.BackgroundTransparency = 1
-        DisplayNameLbl.Text = LocalPlayer.DisplayName
-        DisplayNameLbl.TextColor3 = currentTextColor
-        DisplayNameLbl.Font = Enum.Font.GothamBold
-        DisplayNameLbl.TextSize = 12
-        DisplayNameLbl.TextXAlignment = Enum.TextXAlignment.Left
-        DisplayNameLbl.TextTruncate = Enum.TextTruncate.AtEnd
-        DisplayNameLbl.Parent = ProfileCard
-
-        local UsernameLbl = Instance.new("TextLabel")
-        UsernameLbl.Size = UDim2.new(1, -60, 0, 16)
-        UsernameLbl.Position = UDim2.new(0, 56, 0, 26)
-        UsernameLbl.BackgroundTransparency = 1
-        UsernameLbl.Text = "@" .. LocalPlayer.Name .. " (" .. tostring(LocalPlayer.UserId) .. ")"
-        UsernameLbl.TextColor3 = Color3.fromRGB(150, 150, 160)
-        UsernameLbl.Font = Enum.Font.Gotham
-        UsernameLbl.TextSize = 10
-        UsernameLbl.TextXAlignment = Enum.TextXAlignment.Left
-        UsernameLbl.TextTruncate = Enum.TextTruncate.AtEnd
-        UsernameLbl.Parent = ProfileCard
-
-        local pGameName = "Mendeteksi..."
+    -- ==========================================
+    -- FITUR: PERFORMA & TAMBAHAN (DENGAN INSTAN PROMPT)
+    -- ==========================================
+    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
+    
+    PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
         pcall(function()
-            pGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
+            if state then
+                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.Material = Enum.Material.SmoothPlastic
+                    end
+                end
+                Library:Notify({ Title = "Performa", Content = "FPS Boost Diaktifkan!", Type = "Success" })
+            end
         end)
-        local pPlaceId = tostring(game.PlaceId)
-        local pAge = tostring(LocalPlayer.AccountAge) .. " Hari"
-        local pTeam = (LocalPlayer.Team and LocalPlayer.Team.Name) or "Tanpa Tim / Solo"
-        local pJobId = string.sub(game.JobId, 1, 8) .. "..."
+    end)
 
-        PlayerGroup:AddLabel("Game: " .. pGameName)
-        PlayerGroup:AddLabel("Tim / Team: " .. pTeam)
-        PlayerGroup:AddLabel("Server Job ID: " .. pJobId)
-        PlayerGroup:AddLabel("Place ID: " .. pPlaceId)
-        PlayerGroup:AddLabel("Umur Akun: " .. pAge)
+    PerfGroup:AddButton("Render Chunk", nil, function()
+        Library:Notify({ Title = "Performa", Content = "Render Chunk Diperbarui!", Type = "Success" })
+    end)
 
-        local PlayTimeLabel = PlayerGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
-        local startTime = tick()
+    local promptConn
+    PerfGroup:AddToggle("Instan Prompt", nil, false, function(state)
+        if state then
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("ProximityPrompt") then
+                    v.HoldDuration = 0
+                end
+            end
+            promptConn = workspace.DescendantAdded:Connect(function(v)
+                if v:IsA("ProximityPrompt") then
+                    v.HoldDuration = 0
+                end
+            end)
+            Library:Notify({ Title = "Interaksi", Content = "Instan Prompt Aktif (Hold = 0s)!", Type = "Success" })
+        else
+            if promptConn then promptConn:Disconnect() end
+            Library:Notify({ Title = "Interaksi", Content = "Instan Prompt Dimatikan", Type = "Info" })
+        end
+    end)
 
-        task.spawn(function()
-            while ScreenGui and ScreenGui.Parent do
-                local totalSeconds = math.floor(tick() - startTime)
-                local days = math.floor(totalSeconds / 86400)
-                local hours = math.floor((totalSeconds % 86400) / 3600)
-                local minutes = math.floor((totalSeconds % 3600) / 60)
-                local seconds = totalSeconds % 60
-                
-                PlayTimeLabel.Text = string.format("Waktu Bermain: %d hari, %02d:%02d:%02d", days, hours, minutes, seconds)
+    local antiAfkConn
+    PerfGroup:AddToggle("Anti AFK", nil, true, function(state)
+        if state then
+            antiAfkConn = LocalPlayer.Idled:Connect(function()
+                game:GetService("VirtualUser"):Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
                 task.wait(1)
-            end
-        end)
-
-        -- ==========================================
-        -- FITUR: PERFORMA & INSTANT PROMPT (ICON NAVIGATION)
-        -- ==========================================
-        local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
-
-        PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
-            pcall(function()
-                if state then
-                    for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
-                        if v:IsA("BasePart") then
-                            v.Material = Enum.Material.SmoothPlastic
-                        end
-                    end
-                    Library:Notify({ Title = "Performa", Content = "FPS Boost Diaktifkan!", Type = "Success" })
-                end
+                game:GetService("VirtualUser"):Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
             end)
-        end)
+            Library:Notify({ Title = "System", Content = "Anti AFK Aktif!", Type = "Success" })
+        else
+            if antiAfkConn then antiAfkConn:Disconnect() end
+            Library:Notify({ Title = "System", Content = "Anti AFK Dimatikan", Type = "Info" })
+        end
+    end)
 
-        PerfGroup:AddButton("Render Chunk", nil, function()
-            Library:Notify({ Title = "Performa", Content = "Render Chunk Diperbarui!", Type = "Success" })
-        end)
+    -- ==========================================
+    -- FITUR: SCRIPT POPULER (15 SCRIPT)
+    -- ==========================================
+    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
 
-        local instantPromptConn
-        PerfGroup:AddToggle("Instant Prompt (Skip Hold)", nil, false, function(state)
-            if state then
-                local function applyInstant(prompt)
-                    if prompt:IsA("ProximityPrompt") then
-                        prompt.HoldDuration = 0
-                    end
-                end
-                for _, obj in pairs(workspace:GetDescendants()) do
-                    applyInstant(obj)
-                end
-                instantPromptConn = workspace.DescendantAdded:Connect(applyInstant)
-                Library:Notify({ Title = "Interaksi", Content = "Instant Prompt Diaktifkan!", Type = "Success" })
-            else
-                if instantPromptConn then instantPromptConn:Disconnect() end
-                Library:Notify({ Title = "Interaksi", Content = "Instant Prompt Dimatikan", Type = "Info" })
-            end
-        end)
+    local popularScriptsList = {
+        {Name = "1. Infinite Yield (Admin Commands)", Url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
+        {Name = "2. Dex Explorer (V3 Fix)", Url = "https://raw.githubusercontent.com/inforyou/Dex/main/dex.lua"},
+        {Name = "3. Remote Spy (SimpleSpy V2)", Url = "https://raw.githubusercontent.com/exunys/SimpleSpy-V2/main/script.lua"},
+        {Name = "4. Fly Script (Universal Mobile)", Url = "https://raw.githubusercontent.com/XNEO-Script/Fly-Script/main/Fly.lua"},
+        {Name = "5. ESP / Wallhack (Universal)", Url = "https://raw.githubusercontent.com/ic3w0lf22/Unnamed-ESP/master/Uncompressed.lua"},
+        {Name = "6. Aimbot Script (Universal)", Url = "https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Source.lua"},
+        {Name = "7. Keyboard Script (Mobile Keybd)", Url = "https://raw.githubusercontent.com/advizes/ROBLOX/main/MobileKeyboard.lua"},
+        {Name = "8. Shiftlock Mobile (Universal)", Url = "https://raw.githubusercontent.com/MiniScribe/ShiftLock/main/ShiftLock.lua"},
+        {Name = "9. Anti AFK (Disconnector Fix)", Url = "https://raw.githubusercontent.com/K33R3/AntiAFK/main/AntiAFK.lua"},
+        {Name = "10. Rejoin Server Utility", Url = "https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/RejoinServer.lua"},
+        {Name = "11. Btools (Building Tools)", Url = "https://raw.githubusercontent.com/K33R3/BTools/main/BTools.lua"},
+        {Name = "12. Speed & Jump Modifier GUI", Url = "https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/SpeedJump.lua"},
+        {Name = "13. Fullbright (Lighting Mode)", Url = "https://raw.githubusercontent.com/K33R3/Fullbright/main/Fullbright.lua"},
+        {Name = "14. Server Hop (Low Player)", Url = "https://raw.githubusercontent.com/K33R3/ServerHop/main/ServerHop.lua"},
+        {Name = "15. Chat Bypasser (Universal)", Url = "https://raw.githubusercontent.com/K33R3/ChatBypasser/main/ChatBypasser.lua"}
+    }
 
-        local antiAfkConn
-        PerfGroup:AddToggle("Anti AFK", nil, true, function(state)
-            if state then
-                antiAfkConn = LocalPlayer.Idled:Connect(function()
-                    game:GetService("VirtualUser"):Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-                    task.wait(1)
-                    game:GetService("VirtualUser"):Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-                end)
-                Library:Notify({ Title = "System", Content = "Anti AFK Aktif!", Type = "Success" })
-            else
-                if antiAfkConn then antiAfkConn:Disconnect() end
-                Library:Notify({ Title = "System", Content = "Anti AFK Dimatikan", Type = "Info" })
-            end
-        end)
-
-        -- ==========================================
-        -- FITUR: SCRIPT POPULER (15 SCRIPT LENGKAP)
-        -- ==========================================
-        local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
-
-        local popularScriptsList = {
-            {Name = "1. Infinite Yield (Admin Commands)", Url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
-            {Name = "2. Dex Explorer (V3 Fix)", Url = "https://raw.githubusercontent.com/inforyou/Dex/main/dex.lua"},
-            {Name = "3. Remote Spy (SimpleSpy V2)", Url = "https://raw.githubusercontent.com/exunys/SimpleSpy-V2/main/script.lua"},
-            {Name = "4. Fly Script (Universal Mobile)", Url = "https://raw.githubusercontent.com/XNEO-Script/Fly-Script/main/Fly.lua"},
-            {Name = "5. ESP / Wallhack (Universal)", Url = "https://raw.githubusercontent.com/ic3w0lf22/Unnamed-ESP/master/Uncompressed.lua"},
-            {Name = "6. Aimbot Script (Universal)", Url = "https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Source.lua"},
-            {Name = "7. Keyboard Script (Mobile Keybd)", Url = "https://raw.githubusercontent.com/advizes/ROBLOX/main/MobileKeyboard.lua"},
-            {Name = "8. Shiftlock Mobile (Universal)", Url = "https://raw.githubusercontent.com/MiniScribe/ShiftLock/main/ShiftLock.lua"},
-            {Name = "9. Anti AFK (Disconnector Fix)", Url = "https://raw.githubusercontent.com/K33R3/AntiAFK/main/AntiAFK.lua"},
-            {Name = "10. Rejoin Server Utility", Url = "https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/RejoinServer.lua"},
-            {Name = "11. Btools (Building Tools)", Url = "https://raw.githubusercontent.com/K33R3/BTools/main/BTools.lua"},
-            {Name = "12. Speed & Jump Modifier GUI", Url = "https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/SpeedJump.lua"},
-            {Name = "13. Fullbright (Lighting Mode)", Url = "https://raw.githubusercontent.com/K33R3/Fullbright/main/Fullbright.lua"},
-            {Name = "14. Server Hop (Low Player)", Url = "https://raw.githubusercontent.com/K33R3/ServerHop/main/ServerHop.lua"},
-            {Name = "15. Chat Bypasser (Universal)", Url = "https://raw.githubusercontent.com/K33R3/ChatBypasser/main/ChatBypasser.lua"}
-        }
-
-        for _, sc in ipairs(popularScriptsList) do
-            PopularGroup:AddButton(sc.Name, nil, function()
-                Library:Notify({ Title = "Script Executor", Content = L("Executing") .. sc.Name, Type = "Info", Duration = 3 })
-                task.spawn(function()
-                    pcall(function()
-                        loadstring(game:HttpGet(sc.Url))()
-                    end)
+    for _, sc in ipairs(popularScriptsList) do
+        PopularGroup:AddButton(sc.Name, nil, function()
+            Library:Notify({ Title = "Script Executor", Content = L("Executing") .. sc.Name, Type = "Info", Duration = 3 })
+            task.spawn(function()
+                pcall(function()
+                    loadstring(game:HttpGet(sc.Url))()
                 end)
             end)
-        end
-
-        -- ==========================================
-        -- FITUR: WARNA TEKS
-        -- ==========================================
-        local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
-
-        TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
-            isRgbTextActive = true
-            Library:Notify({ Title = "Warna Teks", Content = "Mode RGB Rainbow Diaktifkan!", Type = "Success", Duration = 2 })
         end)
+    end
 
-        for _, cInfo in ipairs(colorList) do
-            local name, col = cInfo[1], cInfo[2]
-            TextColorGroup:AddButton(name, nil, function()
-                updateGlobalTextColor(col)
-                Library:Notify({ Title = "Warna Teks", Content = "Warna diubah ke " .. name, Type = "Success", Duration = 2 })
-            end)
-        end
+    -- ==========================================
+    -- FITUR: WARNA TEKS
+    -- ==========================================
+    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
+    
+    TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
+        isRgbTextActive = true
+        Library:Notify({ Title = "Warna Teks", Content = "Mode RGB Rainbow Diaktifkan!", Type = "Success", Duration = 2 })
+    end)
 
-        -- ==========================================
-        -- FITUR: TEMA BACKGROUND UI
-        -- ==========================================
-        local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
-
-        ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
-            isRgbThemeActive = true
-            Library:Notify({ Title = "Tema UI", Content = "Mode Tema RGB Diaktifkan!", Type = "Success", Duration = 2 })
+    for _, cInfo in ipairs(colorList) do
+        local name, col = cInfo[1], cInfo[2]
+        TextColorGroup:AddButton(name, nil, function()
+            updateGlobalTextColor(col)
+            Library:Notify({ Title = "Warna Teks", Content = "Warna diubah ke " .. name, Type = "Success", Duration = 2 })
         end)
+    end
 
-        for _, cInfo in ipairs(colorList) do
-            local name, col = cInfo[1], cInfo[2]
-            ThemeGroup:AddButton("Tema " .. name, nil, function()
-                updateGlobalThemeColor(col)
-                Library:Notify({ Title = "Tema UI", Content = "Tema diubah ke " .. name, Type = "Success", Duration = 2 })
-            end)
+    -- ==========================================
+    -- FITUR: TEMA BACKGROUND UI
+    -- ==========================================
+    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
+
+    ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
+        isRgbThemeActive = true
+        Library:Notify({ Title = "Tema UI", Content = "Mode Tema RGB Diaktifkan!", Type = "Success", Duration = 2 })
+    end)
+
+    for _, cInfo in ipairs(colorList) do
+        local name, col = cInfo[1], cInfo[2]
+        ThemeGroup:AddButton("Tema " .. name, nil, function()
+            updateGlobalThemeColor(col)
+            Library:Notify({ Title = "Tema UI", Content = "Tema diubah ke " .. name, Type = "Success", Duration = 2 })
+        end)
+    end
+
+    -- ==========================================
+    -- FITUR: GRUP MUSIK
+    -- ==========================================
+    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
+    
+    local currentSound = Instance.new("Sound")
+    currentSound.Parent = SoundService
+    
+    local selectedSongId = "142376088"
+    local isMusicPlaying = false
+    local isMusicLoop = false
+
+    local NowPlayingLbl = MusicGroup:AddLabel(L("ActiveSong") .. "Raining Tacos (142376088)")
+
+    local musicDatabase = {
+        {Name = "Raining Tacos", Id = "142376088"},
+        {Name = "Spooky Scary Skeletons", Id = "148677707"},
+        {Name = "Megalovania", Id = "183884457"},
+        {Name = "Crab Rave", Id = "248737242"}
+    }
+
+    local function playSelectedMusic()
+        currentSound.SoundId = "rbxassetid://" .. selectedSongId
+        currentSound.Looped = isMusicLoop
+        if isMusicPlaying then
+            currentSound:Stop()
+            currentSound:Play()
         end
+    end
 
-        -- ==========================================
-        -- FITUR: GRUP MUSIK
-        -- ==========================================
-        local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
+    for _, song in ipairs(musicDatabase) do
+        MusicGroup:AddButton("🎵 " .. song.Name, nil, function()
+            selectedSongId = song.Id
+            NowPlayingLbl.Text = L("ActiveSong") .. song.Name .. " (" .. song.Id .. ")"
+            playSelectedMusic()
+            Library:Notify({ Title = "Musik", Content = "Memilih lagu: " .. song.Name, Type = "Success" })
+        end)
+    end
 
-        local currentSound = Instance.new("Sound")
-        currentSound.Parent = SoundService
-
-        local selectedSongId = "142376088"
-        local isMusicPlaying = false
-        local isMusicLoop = false
-
-        local NowPlayingLbl = MusicGroup:AddLabel(L("ActiveSong") .. "Raining Tacos (142376088)")
-
-        local musicDatabase = {
-            {Name = "Raining Tacos", Id = "142376088"},
-            {Name = "Spooky Scary Skeletons", Id = "148677707"},
-            {Name = "Megalovania", Id = "183884457"},
-            {Name = "Crab Rave", Id = "248737242"}
-        }
-
-        local function playSelectedMusic()
+    MusicGroup:AddToggle("Putar Musik (On/Off)", nil, false, function(state)
+        isMusicPlaying = state
+        if state then
             currentSound.SoundId = "rbxassetid://" .. selectedSongId
             currentSound.Looped = isMusicLoop
-            if isMusicPlaying then
-                currentSound:Stop()
-                currentSound:Play()
-            end
+            currentSound:Play()
+            Library:Notify({ Title = "Musik", Content = "Musik Diputar", Type = "Success" })
+        else
+            currentSound:Stop()
+            Library:Notify({ Title = "Musik", Content = "Musik Dimatikan", Type = "Info" })
         end
+    end)
 
-        for _, song in ipairs(musicDatabase) do
-            MusicGroup:AddButton("🎵 " .. song.Name, nil, function()
-                selectedSongId = song.Id
-                NowPlayingLbl.Text = L("ActiveSong") .. song.Name .. " (" .. song.Id .. ")"
-                playSelectedMusic()
-                Library:Notify({ Title = "Musik", Content = "Memilih lagu: " .. song.Name, Type = "Success" })
-            end)
+    MusicGroup:AddToggle("Loop Lagu (Ulangi)", nil, false, function(state)
+        isMusicLoop = state
+        currentSound.Looped = state
+        Library:Notify({ Title = "Musik", Content = "Looping: " .. tostring(state), Type = "Info" })
+    end)
+
+    local CustomInputFrame = Instance.new("Frame")
+    CustomInputFrame.Size = UDim2.new(1, 0, 0, 32)
+    CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    CustomInputFrame.Parent = MusicGroup.ContentHolder
+
+    local CustomTextBox = Instance.new("TextBox")
+    CustomTextBox.Size = UDim2.new(0.65, -5, 1, 0)
+    CustomTextBox.Position = UDim2.new(0, 0, 0, 0)
+    CustomTextBox.BackgroundTransparency = 1
+    CustomTextBox.TextColor3 = currentTextColor
+    CustomTextBox.TextSize = 11
+    CustomTextBox.Font = currentFont
+    CustomTextBox.Parent = CustomInputFrame
+    registerTranslation(CustomTextBox, "SongPlaceholder", "PlaceholderText")
+
+    local SaveCustomBtn = Instance.new("TextButton")
+    SaveCustomBtn.Size = UDim2.new(0.35, -5, 1, 0)
+    SaveCustomBtn.Position = UDim2.new(0.65, 5, 0, 0)
+    SaveCustomBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+    SaveCustomBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SaveCustomBtn.TextSize = 11
+    SaveCustomBtn.Font = Enum.Font.GothamBold
+    SaveCustomBtn.Parent = CustomInputFrame
+    Instance.new("UICorner", SaveCustomBtn).CornerRadius = UDim.new(0, 6)
+    registerTranslation(SaveCustomBtn, "CustomSong")
+
+    SaveCustomBtn.MouseButton1Click:Connect(function()
+        local customId = CustomTextBox.Text
+        if customId ~= "" and tonumber(customId) then
+            selectedSongId = customId
+            NowPlayingLbl.Text = L("ActiveSong") .. "Custom (" .. customId .. ")"
+            playSelectedMusic()
+            Library:Notify({ Title = "Musik", Content = "ID Lagu " .. customId .. " disimpan & diputar!", Type = "Success" })
+        else
+            Library:Notify({ Title = "Musik", Content = "ID Lagu tidak valid!", Type = "Error" })
         end
+    end)
 
-        MusicGroup:AddToggle("Putar Musik (On/Off)", nil, false, function(state)
-            isMusicPlaying = state
-            if state then
-                currentSound.SoundId = "rbxassetid://" .. selectedSongId
-                currentSound.Looped = isMusicLoop
-                currentSound:Play()
-                Library:Notify({ Title = "Musik", Content = "Musik Diputar", Type = "Success" })
-            else
-                currentSound:Stop()
-                Library:Notify({ Title = "Musik", Content = "Musik Dimatikan", Type = "Info" })
-            end
-        end)
+    -- ==========================================
+    -- FITUR: PILIH BAHASA
+    -- ==========================================
+    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
+    LangGroup:AddButton("Bahasa Indonesia", nil, function()
+        currentLang = "Indonesian"
+        updateAllTranslations()
+        Library:Notify({ Title = "Bahasa", Content = "Bahasa diubah ke Bahasa Indonesia", Type = "Success" })
+    end)
+    LangGroup:AddButton("English", nil, function()
+        currentLang = "English"
+        updateAllTranslations()
+        Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
+    end)
 
-        MusicGroup:AddToggle("Loop Lagu (Ulangi)", nil, false, function(state)
-            isMusicLoop = state
-            currentSound.Looped = state
-            Library:Notify({ Title = "Musik", Content = "Looping: " .. tostring(state), Type = "Info" })
-        end)
+    -- ==========================================
+    -- PENGATURAN LAINNYA
+    -- ==========================================
+    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
+    TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
+        Main.BackgroundTransparency = val / 100
+    end)
 
-        local CustomInputFrame = Instance.new("Frame")
-        CustomInputFrame.Size = UDim2.new(1, 0, 0, 32)
-        CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-        CustomInputFrame.Parent = MusicGroup.ContentHolder
-
-        local CustomTextBox = Instance.new("TextBox")
-        CustomTextBox.Size = UDim2.new(0.65, -5, 1, 0)
-        CustomTextBox.Position = UDim2.new(0, 0, 0, 0)
-        CustomTextBox.BackgroundTransparency = 1
-        CustomTextBox.TextColor3 = currentTextColor
-        CustomTextBox.TextSize = 11
-        CustomTextBox.Font = currentFont
-        CustomTextBox.Parent = CustomInputFrame
-        registerTranslation(CustomTextBox, "SongPlaceholder", "PlaceholderText")
-
-        local SaveCustomBtn = Instance.new("TextButton")
-        SaveCustomBtn.Size = UDim2.new(0.35, -5, 1, 0)
-        SaveCustomBtn.Position = UDim2.new(0.65, 5, 0, 0)
-        SaveCustomBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-        SaveCustomBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        SaveCustomBtn.TextSize = 11
-        SaveCustomBtn.Font = Enum.Font.GothamBold
-        SaveCustomBtn.Parent = CustomInputFrame
-        Instance.new("UICorner", SaveCustomBtn).CornerRadius = UDim.new(0, 6)
-        registerTranslation(SaveCustomBtn, "CustomSong")
-
-        SaveCustomBtn.MouseButton1Click:Connect(function()
-            local customId = CustomTextBox.Text
-            if customId ~= "" and tonumber(customId) then
-                selectedSongId = customId
-                NowPlayingLbl.Text = L("ActiveSong") .. "Custom (" .. customId .. ")"
-                playSelectedMusic()
-                Library:Notify({ Title = "Musik", Content = "ID Lagu " .. customId .. " disimpan & diputar!", Type = "Success" })
-            else
-                Library:Notify({ Title = "Musik", Content = "ID Lagu tidak valid!", Type = "Error" })
-            end
-        end)
-
-        -- ==========================================
-        -- FITUR: PILIH BAHASA
-        -- ==========================================
-        local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
-        LangGroup:AddButton("Bahasa Indonesia", nil, function()
-            currentLang = "Indonesian"
-            updateAllTranslations()
-            Library:Notify({ Title = "Bahasa", Content = "Bahasa diubah ke Bahasa Indonesia", Type = "Success" })
-        end)
-        LangGroup:AddButton("English", nil, function()
-            currentLang = "English"
-            updateAllTranslations()
-            Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
-        end)
-
-        -- ==========================================
-        -- FITUR: TRANSPARANSI & FONT
-        -- ==========================================
-        local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
-        TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
-            Main.BackgroundTransparency = val / 100
-        end)
-
-        local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
-        for fontName, enumFont in pairs(Fonts) do
-            FontGroup:AddButton(fontName, nil, function()
-                currentFont = enumFont
-                for _, obj in ipairs(ScreenGui:GetDescendants()) do
-                    if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-                        obj.Font = enumFont
-                    end
+    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
+    for fontName, enumFont in pairs(Fonts) do
+        FontGroup:AddButton(fontName, nil, function()
+            currentFont = enumFont
+            for _, obj in ipairs(ScreenGui:GetDescendants()) do
+                if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                    obj.Font = enumFont
                 end
-            end)
-        end
-
-        local ResizeGrip = Instance.new("Frame")
-        ResizeGrip.Name = "ResizeGrip"
-        ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
-        ResizeGrip.Position = UDim2.new(1, -14, 1, -14)
-        ResizeGrip.BackgroundTransparency = 1
-        ResizeGrip.Parent = Main
-
-        local GripIcon = Instance.new("TextLabel")
-        GripIcon.Size = UDim2.new(1, 0, 1, 0)
-        GripIcon.BackgroundTransparency = 1
-        GripIcon.Text = "◢"
-        GripIcon.TextColor3 = Color3.fromRGB(150, 150, 160)
-        GripIcon.TextSize = 10
-        GripIcon.Font = Enum.Font.GothamBold
-        GripIcon.Parent = ResizeGrip
-
-        makeResizable(Main, ResizeGrip, 200, 150)
-
-        function Window:EnableScroll(state)
-            state = (state == nil) and true or state
-            Container.ScrollingEnabled = state
-            if not state then
-                Container.CanvasPosition = Vector2.new(0, 0)
             end
-        end
+        end)
+    end
 
-        function Window:SetScroll(state)
-            Window:EnableScroll(state)
-        end
+    local ResizeGrip = Instance.new("Frame")
+    ResizeGrip.Name = "ResizeGrip"
+    ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
+    ResizeGrip.Position = UDim2.new(1, -14, 1, -14)
+    ResizeGrip.BackgroundTransparency = 1
+    ResizeGrip.Parent = Main
 
-        -- ==========================================
-        -- FLOATING ICON
-        -- ==========================================
-        local FloatingContainer = Instance.new("Frame")
-        FloatingContainer.Name = "FloatingContainer"
-        FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
-        FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
-        FloatingContainer.BackgroundTransparency = 1
+    local GripIcon = Instance.new("TextLabel")
+    GripIcon.Size = UDim2.new(1, 0, 1, 0)
+    GripIcon.BackgroundTransparency = 1
+    GripIcon.Text = "◢"
+    GripIcon.TextColor3 = Color3.fromRGB(150, 150, 160)
+    GripIcon.TextSize = 10
+    GripIcon.Font = Enum.Font.GothamBold
+    GripIcon.Parent = ResizeGrip
+
+    makeResizable(Main, ResizeGrip, 200, 150)
+
+    function Window:EnableScroll(state)
+        state = (state == nil) and true or state
+        Container.ScrollingEnabled = state
+        if not state then
+            Container.CanvasPosition = Vector2.new(0, 0)
+        end
+    end
+
+    function Window:SetScroll(state)
+        Window:EnableScroll(state)
+    end
+
+    -- ==========================================
+    -- FLOATING ICON & NAGA UKURAN SEDANG (65px)
+    -- ==========================================
+    local FloatingContainer = Instance.new("Frame")
+    FloatingContainer.Name = "FloatingContainer"
+    FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
+    FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
+    FloatingContainer.BackgroundTransparency = 1
+    FloatingContainer.Visible = false
+    FloatingContainer.Parent = ScreenGui
+
+    local SpinOuterIcon = Instance.new("ImageLabel")
+    SpinOuterIcon.Name = "SpinOuterIcon"
+    SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
+    SpinOuterIcon.Position = UDim2.new(0, -9, 0, -9)
+    SpinOuterIcon.BackgroundTransparency = 1
+    SpinOuterIcon.Image = Library.Icons["SpinOuter"]
+    SpinOuterIcon.Parent = FloatingContainer
+
+    RunService.RenderStepped:Connect(function()
+        if FloatingContainer.Visible then
+            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+        end
+    end)
+
+    local FloatingLogoBtn = Instance.new("ImageButton")
+    FloatingLogoBtn.Name = "FloatingLogoBtn"
+    FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
+    FloatingLogoBtn.Position = UDim2.new(0, 0, 0, 0)
+    FloatingLogoBtn.BackgroundTransparency = 1
+    FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
+    FloatingLogoBtn.Parent = FloatingContainer
+
+    makeDraggable(FloatingContainer, FloatingLogoBtn)
+
+    HideBtn.MouseButton1Click:Connect(function()
+        Main.Visible = false
+        FloatingContainer.Visible = true
+    end)
+
+    FloatingLogoBtn.MouseButton1Click:Connect(function()
+        Main.Visible = true
         FloatingContainer.Visible = false
-        FloatingContainer.Parent = ScreenGui
+    end)
 
-        local SpinOuterIcon = Instance.new("ImageLabel")
-        SpinOuterIcon.Name = "SpinOuterIcon"
-        SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
-        SpinOuterIcon.Position = UDim2.new(0, -9, 0, -9)
-        SpinOuterIcon.BackgroundTransparency = 1
-        SpinOuterIcon.Image = Library.Icons["SpinOuter"]
-        SpinOuterIcon.Parent = FloatingContainer
+    playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
+        TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 240, 0, 270)
+        }):Play()
 
-        RunService.RenderStepped:Connect(function()
-            if FloatingContainer.Visible then
-                SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-            end
-        end)
+        Library:Notify({
+            Title = titleText,
+            Content = L("Executed"),
+            Type = "Success",
+            Duration = 3
+        })
+    end)
 
-        local FloatingLogoBtn = Instance.new("ImageButton")
-        FloatingLogoBtn.Name = "FloatingLogoBtn"
-        FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
-        FloatingLogoBtn.Position = UDim2.new(0, 0, 0, 0)
-        FloatingLogoBtn.BackgroundTransparency = 1
-        FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
-        FloatingLogoBtn.Parent = FloatingContainer
+    local isMinimized = false
+    local normalHeight = 300
 
-        makeDraggable(FloatingContainer, FloatingLogoBtn)
-
-        HideBtn.MouseButton1Click:Connect(function()
-            Main.Visible = false
-            FloatingContainer.Visible = true
-        end)
-
-        FloatingLogoBtn.MouseButton1Click:Connect(function()
-            Main.Visible = true
-            FloatingContainer.Visible = false
-        end)
-
-        playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
-            TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 240, 0, 270)
+    MinBtn.MouseButton1Click:Connect(function()
+        isMinimized = not isMinimized
+        if isMinimized then
+            normalHeight = Main.AbsoluteSize.Y
+            Container.Visible = false
+            SettingsContainer.Visible = false
+            ResizeGrip.Visible = false -- Sembunyikan grip saat minimize agar tidak bocor
+            MinBtn.Image = Library.Icons["lucide-chevron-down"]
+            
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
             }):Play()
-
-            Library:Notify({
-                Title = titleText,
-                Content = L("Executed"),
-                Type = "Success",
-                Duration = 3
-            })
-        end)
-
-        local isMinimized = false
-        local normalHeight = 300
-
-        MinBtn.MouseButton1Click:Connect(function()
-            isMinimized = not isMinimized
-            if isMinimized then
-                normalHeight = Main.AbsoluteSize.Y
-                Container.Visible = false
-                SettingsContainer.Visible = false
-                MinBtn.Image = Library.Icons["lucide-chevron-down"]
-                
-                TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
-                }):Play()
-            else
-                MinBtn.Image = Library.Icons["lucide-chevron-up"]
-                
-                TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
-                }):Play()
-                task.delay(0.2, function()
-                    Container.Visible = not showingSettings
-                    SettingsContainer.Visible = showingSettings
-                end)
-            end
-        end)
-
-        CloseBtn.MouseButton1Click:Connect(function()
-            local closeTween = TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                Size = UDim2.new(0, 240, 0, 0)
-            })
-            closeTween:Play()
-            closeTween.Completed:Connect(function()
-                ScreenGui:Destroy()
+        else
+            MinBtn.Image = Library.Icons["lucide-chevron-up"]
+            
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
+            }):Play()
+            task.delay(0.2, function()
+                Container.Visible = not showingSettings
+                SettingsContainer.Visible = showingSettings
+                ResizeGrip.Visible = true -- Tampilkan kembali saat restore
             end)
+        end
+    end)
+
+    CloseBtn.MouseButton1Click:Connect(function()
+        local closeTween = TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 240, 0, 0)
+        })
+        closeTween:Play()
+        closeTween.Completed:Connect(function()
+            ScreenGui:Destroy()
         end)
+    end)
 
-        function Window:AddButton(text, icon, callback)
-            return createButton(Container, text, icon, callback)
-        end
-
-        function Window:AddToggle(text, icon, default, callback)
-            return createToggle(Container, text, icon, default, callback)
-        end
-
-        function Window:AddSlider(text, icon, min, max, default, callback)
-            return createSlider(Container, text, icon, min, max, default, callback)
-        end
-
-        function Window:AddGroup(groupNameKey, icon, defaultCollapsed)
-            return buildGroupInContainer(Container, groupNameKey, icon, defaultCollapsed)
-        end
-
-        Window.AddSection = Window.AddGroup
-
-        return Window
+    function Window:AddButton(text, icon, callback)
+        return createButton(Container, text, icon, callback)
     end
 
-    if Library.CurrentKeyExpire and tick() < Library.CurrentKeyExpire then
-        task.spawn(initWindowFlow)
-    else
-        showKeySystemModal(function()
-            initWindowFlow()
-        end)
+    function Window:AddToggle(text, icon, default, callback)
+        return createToggle(Container, text, icon, default, callback)
     end
+
+    function Window:AddSlider(text, icon, min, max, default, callback)
+        return createSlider(Container, text, icon, min, max, default, callback)
+    end
+
+    function Window:AddGroup(groupNameKey, icon, defaultCollapsed)
+        return buildGroupInContainer(Container, groupNameKey, icon, defaultCollapsed)
+    end
+
+    Window.AddSection = Window.AddGroup
 
     return Window
 end
