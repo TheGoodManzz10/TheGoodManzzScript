@@ -189,7 +189,7 @@ local function updateGlobalThemeColor(color)
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
+            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "FloatingBGFrame" then
                 if obj.BackgroundTransparency < 1 then
                     if obj.Name == "Main" then
                         obj.BackgroundColor3 = color
@@ -223,7 +223,7 @@ RunService.RenderStepped:Connect(function()
         
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
+                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "FloatingBGFrame" then
                     if obj.BackgroundTransparency < 1 and obj.Name ~= "Main" then
                         local h, s, v = rgbColor:ToHSV()
                         obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v - 0.2, 0, 1))
@@ -1155,12 +1155,14 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
+    -- FUNGSI BUILD GROUP DENGAN DEFAULT COLLAPSED (TERTUTUP) SECARA OTOMATIS
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
         local iconId = getIconId(icon)
+        -- DIBUAT DEFAULT SELALU TERTUTUP (true)
         local isCollapsed = (defaultCollapsed == nil) and true or defaultCollapsed
 
         local GroupFrame = Instance.new("Frame")
@@ -1340,7 +1342,7 @@ function Library:CreateWindow(config)
         {"Magenta", Color3.fromRGB(255, 0, 255)}
     }
 
-    -- FLOATING CONTAINER (KOTAK SISI MELENGKUNG)
+    -- FLOATING CONTAINER KONTROL
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
     FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
@@ -1350,58 +1352,67 @@ function Library:CreateWindow(config)
     FloatingContainer.Visible = false
     FloatingContainer.Parent = ScreenGui
 
-    -- UICORNER KOTAK MELENGKUNG UNTUK FLOATING CONTAINER
-    local FloatCorner = Instance.new("UICorner")
-    FloatCorner.CornerRadius = UDim.new(0, 8)
-    FloatCorner.Parent = FloatingContainer
+    -- KOTAK BACKGROUND MELENGKUNG YANG MENCAKUP NAGA & RUBAH DENGAN STROKE PUTIH TIPIS
+    local FloatingBGFrame = Instance.new("Frame")
+    FloatingBGFrame.Name = "FloatingBGFrame"
+    FloatingBGFrame.Size = UDim2.new(1, 16, 1, 16)
+    FloatingBGFrame.Position = UDim2.new(0, -8, 0, -8)
+    FloatingBGFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    FloatingBGFrame.BackgroundTransparency = 1 -- Transparan secara default
+    FloatingBGFrame.BorderSizePixel = 0
+    FloatingBGFrame.ZIndex = 0
+    FloatingBGFrame.Parent = FloatingContainer
 
-    -- UIGRADIENT PEKAT UNTUK BACKGROUND HITAM FLOATING
+    local FloatCorner = Instance.new("UICorner")
+    FloatCorner.CornerRadius = UDim.new(0, 12)
+    FloatCorner.Parent = FloatingBGFrame
+
     local FloatGradient = Instance.new("UIGradient")
     FloatGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(24, 24, 30)),
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 38)),
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(12, 12, 16)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(4, 4, 6))
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 8))
     })
     FloatGradient.Rotation = 45
     FloatGradient.Enabled = false
-    FloatGradient.Parent = FloatingContainer
+    FloatGradient.Parent = FloatingBGFrame
 
-    -- UISTROKE FRAME FLOATING
+    -- LIST PUTIH TIPIS (GLOW EDGE) PADA BACKGROUND
     local FloatStroke = Instance.new("UIStroke")
     FloatStroke.Color = Color3.fromRGB(255, 255, 255)
     FloatStroke.Transparency = 1
-    FloatStroke.Thickness = 1
-    FloatStroke.Parent = FloatingContainer
+    FloatStroke.Thickness = 1.2
+    FloatStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    FloatStroke.Parent = FloatingBGFrame
 
-    -- NAGA (RING LUAR) - TETAP BERPUTAR 360 DERAJAT
+    -- NAGA (RING LUAR)
     local SpinOuterIcon = Instance.new("ImageLabel")
     SpinOuterIcon.Name = "SpinOuterIcon"
-    SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
-    SpinOuterIcon.Position = UDim2.new(0, -9, 0, -9)
+    SpinOuterIcon.Size = UDim2.new(1, 14, 1, 14)
+    SpinOuterIcon.Position = UDim2.new(0, -7, 0, -7)
     SpinOuterIcon.BackgroundTransparency = 1
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
+    SpinOuterIcon.ZIndex = 1
     SpinOuterIcon.Parent = FloatingContainer
 
-    -- RUBAH (LOGO DALAM) - DIBUAT GOYANG KIRI KANAN
+    -- RUBAH (LOGO DALAM)
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
     FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
     FloatingLogoBtn.Position = UDim2.new(0, 0, 0, 0)
     FloatingLogoBtn.BackgroundTransparency = 1
     FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
+    FloatingLogoBtn.ZIndex = 2
     FloatingLogoBtn.Parent = FloatingContainer
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
 
-    -- LOGIKA ANIMASI DILAKUKAN TERPISAH (NAGA BERPUTAR & RUBAH GOYANG KIRI-KANAN)
     local floatAnimTime = 0
     local floatingSpinActive = true
     RunService.RenderStepped:Connect(function(dt)
         if FloatingContainer.Visible then
-            -- 1. Naga berputar penuh secara teratur
             SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
 
-            -- 2. Rubah khusus berayun / goyang kiri-kanan
             if floatingSpinActive then
                 floatAnimTime = floatAnimTime + dt * 6
                 FloatingLogoBtn.Rotation = math.sin(floatAnimTime) * 18
@@ -1596,16 +1607,15 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Tombol Floating", Content = "Ukuran diubah ke Besar", Type = "Success" })
     end)
 
-    -- TOGGLE BACKGROUND HITAM PEKAT & GRADASI KOTAK MELENGKUNG
+    -- TOGGLE BACKGROUND HITAM GRADASI DENGAN LIST PUTIH TIPIS
     FloatSizeGroup:AddToggle("Background Hitam Floating", nil, false, function(state)
         if state then
-            FloatingContainer.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-            FloatingContainer.BackgroundTransparency = 0 -- Pekat/Solid (tidak transparan)
+            FloatingBGFrame.BackgroundTransparency = 0 -- Pekat meliputi seluruh naga
             FloatGradient.Enabled = true
-            FloatStroke.Transparency = 0.8
-            Library:Notify({ Title = "Floating Button", Content = "Background Hitam Gradasi Diaktifkan", Type = "Success" })
+            FloatStroke.Transparency = 0.65 -- List/Glow putih tipis di pinggir
+            Library:Notify({ Title = "Floating Button", Content = "Background Gradasi & List Putih Diaktifkan", Type = "Success" })
         else
-            FloatingContainer.BackgroundTransparency = 1
+            FloatingBGFrame.BackgroundTransparency = 1
             FloatGradient.Enabled = false
             FloatStroke.Transparency = 1
             Library:Notify({ Title = "Floating Button", Content = "Background Transparan", Type = "Info" })
