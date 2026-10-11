@@ -384,9 +384,6 @@ local function makeResizable(frame, handle, minWidth, minHeight)
     end)
 end
 
--- ==========================================
--- PEMBUATAN ELEMEN DENGAN STROKE 2P
--- ==========================================
 local function createButton(parent, text, icon, callback)
     if type(icon) == "function" then
         callback = icon
@@ -533,9 +530,6 @@ local function createToggle(parent, text, icon, default, callback)
     return ToggleFrame
 end
 
--- ==========================================
--- UPGRADE SLIDER LEBIH BAGUS & ELEGAN
--- ==========================================
 local function createSlider(parent, text, icon, min, max, default, callback)
     if type(icon) == "number" then
         callback = default
@@ -612,7 +606,6 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     Fill.Parent = SliderBar
     Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
 
-    -- Tambahan Knob / Thumb melingkar yang elegan pada slider
     local Thumb = Instance.new("Frame")
     Thumb.Size = UDim2.new(0, 12, 0, 12)
     Thumb.Position = UDim2.new(1, -6, 0.5, -6)
@@ -1050,7 +1043,6 @@ function Library:CreateWindow(config)
 
     makeDraggable(Main, Header)
 
-    -- REQUIREMENT 3: ICON HEADER DIPERBESAR (24x24)
     if mainLogo then
         local HeaderIcon = Instance.new("ImageLabel")
         HeaderIcon.Size = UDim2.new(0, 24, 0, 24)
@@ -1104,7 +1096,6 @@ function Library:CreateWindow(config)
     CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
-    -- CONTAINER UTAMA
     local Container = Instance.new("ScrollingFrame")
     Container.Name = "MainContainer"
     Container.Size = UDim2.new(1, -12, 1, -44)
@@ -1165,15 +1156,11 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
-    -- ==========================================================
-    -- PEMBUATAN GRUP (DEFAULT COLLAPSED = TRUE SESUAI REQUEST #11)
-    -- ==========================================================
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
-        -- Requirement 11: Saat pertama kali UI muncul, semua grup di setting ditutup (true)
         if defaultCollapsed == nil then defaultCollapsed = true end
 
         local iconId = getIconId(icon)
@@ -1341,9 +1328,6 @@ function Library:CreateWindow(config)
         return Group
     end
 
-    -- ==========================================
-    -- 25 TEMA & WARNA TEKS (SESUAI REQUEST #7)
-    -- ==========================================
     local colorList = {
         {"Hitam Klasik", Color3.fromRGB(20, 20, 25)},
         {"Putih Bersih", Color3.fromRGB(240, 240, 240)},
@@ -1388,7 +1372,6 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
-    -- REQUIREMENT 5: LOGO GOYANG ON/OFF
     local isLogoWobbleActive = false
 
     RunService.RenderStepped:Connect(function()
@@ -1411,8 +1394,6 @@ function Library:CreateWindow(config)
     FloatingLogoBtn.Parent = FloatingContainer
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
-
-    local ResizeGrip = Main:FindFirstChild("ResizeGrip") -- Referensi Grip Resize
 
     HideBtn.MouseButton1Click:Connect(function()
         Main.Visible = false
@@ -1441,14 +1422,13 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- REQUIREMENT 5: KONTROL LOGO GOYANG DI SETTINGS
     local WobbleGroup = buildGroupInContainer(SettingsContainer, "WobbleGroup", "lucide-zap", true)
     WobbleGroup:AddToggle("Logo Goyang (Wobble)", nil, false, function(state)
         isLogoWobbleActive = state
-        Library:Notify({ Title = "Logo Goyang", Content = state ? "Logo Goyang Diaktifkan" : "Logo Goyang Dimatikan", Type = "Success" })
+        -- Perbaikan operator ternary yang menyebabkan error sebelumnya:
+        Library:Notify({ Title = "Logo Goyang", Content = state and "Logo Goyang Diaktifkan" or "Logo Goyang Dimatikan", Type = "Success" })
     end)
 
-    -- REQUIREMENT 8: CUSTOM SCRIPT SAVER (SIMPAN & EKSEKUSI SCRIPT MENTAH/LOADSTRING)
     local CustomScriptGroup = buildGroupInContainer(SettingsContainer, "CustomScriptGroup", "lucide-code", true)
     
     local ScriptInputFrame = Instance.new("Frame")
@@ -1996,7 +1976,6 @@ function Library:CreateWindow(config)
         })
     end)
 
-    -- REQUIREMENT 1: TOMBOL RESIZE DISEMBUNYIKAN SAAT MINIMIZE
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
         if isMinimized then
