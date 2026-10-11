@@ -48,7 +48,7 @@ local Translations = {
         FloatSizeGroup = "Ukuran Tombol Hide/Show",
         ScriptbloxGroup = "Cari Script (Scriptblox)",
         KeyInfoGroup   = "Informasi Key Anda",
-        WobbleGroup    = "Animasi Logo Floating"
+        LogoShakeGroup = "Animasi Logo Goyang"
     },
     English = {
         NotifTitle     = "Notification",
@@ -71,7 +71,7 @@ local Translations = {
         FloatSizeGroup = "Hide/Show Button Size",
         ScriptbloxGroup = "Search Script (Scriptblox)",
         KeyInfoGroup   = "Your Key Information",
-        WobbleGroup    = "Floating Logo Animation"
+        LogoShakeGroup = "Logo Shaking Animation"
     }
 }
 
@@ -114,10 +114,9 @@ local currentTextColor = Color3.fromRGB(255, 255, 255)
 local isRgbTextActive = false
 
 local isRgbThemeActive = false
-local currentThemeColor = Color3.fromRGB(12, 12, 16)
+local currentThemeColor = Color3.fromRGB(114, 137, 218) -- Rayfield Accent Default
 local mainWindowRef
-local mainGradientRef
-local isLogoWobbleActive = false
+local mainStrokeRef
 
 local function getIconId(icon)
     if not icon or type(icon) ~= "string" or icon == "" then return nil end
@@ -173,38 +172,39 @@ local function updateGlobalTextColor(color)
     isRgbTextActive = false
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-            if obj.Name ~= "StatusColor" then
+            if obj.Name ~= "StatusColor" and obj.Name ~= "GroupTitleLbl" then
                 obj.TextColor3 = color
             end
         end
     end
 end
 
+-- Fluent/Rayfield Style Accent Theme Engine (Fixes ugly solid color backgrounds)
 local function updateGlobalThemeColor(color)
     currentThemeColor = color
     isRgbThemeActive = false
     
-    if mainWindowRef then
-        if mainGradientRef then mainGradientRef.Enabled = false end
+    if mainStrokeRef then
+        mainStrokeRef.Color = color
     end
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("UIStroke") then
-            if obj.Parent and obj.Parent.Name ~= "NotifCard" and obj.Parent.Name ~= "KeyFrame" then
+            if obj.Parent and obj.Parent.Name ~= "Main" and obj.Parent.Name ~= "NotifCard" then
                 obj.Color = color
-                obj.Transparency = 0.5
+                obj.Transparency = 0.7
             end
-        elseif obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "BackgroundImg" then
-                if obj.BackgroundTransparency < 1 then
-                    if obj.Name == "Main" then
-                        obj.BackgroundColor3 = color
-                    end
-                end
+        elseif obj:IsA("Frame") and obj.Name == "SliderFill" then
+            obj.BackgroundColor3 = color
+        elseif obj:IsA("Frame") and obj.Name == "ToggleBox" then
+            if obj:GetAttribute("IsActive") == true then
+                obj.BackgroundColor3 = color
             end
         end
     end
 end
+
+local isLogoShaking = false
 
 RunService.RenderStepped:Connect(function()
     local hue = tick() % 5 / 5
@@ -220,16 +220,14 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    if isRgbThemeActive and mainWindowRef then
-        if mainGradientRef then mainGradientRef.Enabled = false end
-        mainWindowRef.BackgroundColor3 = rgbColor
-        
+    if isRgbThemeActive then
+        currentThemeColor = rgbColor
+        if mainStrokeRef then mainStrokeRef.Color = rgbColor end
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
-            if obj:IsA("UIStroke") then
-                if obj.Parent and obj.Parent.Name ~= "NotifCard" and obj.Parent.Name ~= "KeyFrame" then
-                    obj.Color = rgbColor
-                    obj.Transparency = 0.4
-                end
+            if obj:IsA("UIStroke") and obj.Parent and obj.Parent.Name ~= "Main" then
+                obj.Color = rgbColor
+            elseif obj:IsA("Frame") and obj.Name == "SliderFill" then
+                obj.BackgroundColor3 = rgbColor
             end
         end
     end
@@ -266,7 +264,7 @@ function Library:Notify(options)
     local Card = Instance.new("Frame")
     Card.Name = "NotifCard"
     Card.Size = UDim2.new(1, 0, 0, 52)
-    Card.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
+    Card.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
     Card.BackgroundTransparency = 1
     Card.BorderSizePixel = 0
     Card.ClipsDescendants = true
@@ -403,7 +401,7 @@ local function makeResizable(frame, handle, minWidth, minHeight)
 end
 
 -- ==========================================
--- PEMBUATAN ELEMEN ANTI KEPOTONG + ICON FIX
+-- PEMBUATAN ELEMEN (DENGAN SLIDER UPGRADE)
 -- ==========================================
 local function createButton(parent, text, icon, callback)
     if type(icon) == "function" then
@@ -421,14 +419,14 @@ local function createButton(parent, text, icon, callback)
 
     local Btn = Instance.new("TextButton")
     Btn.Size = UDim2.new(1, 0, 0, 32)
-    Btn.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    Btn.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
     Btn.Text = ""
     Btn.Parent = parent
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
     local BtnStroke = Instance.new("UIStroke", Btn)
     BtnStroke.Color = currentThemeColor
-    BtnStroke.Transparency = 0.85
+    BtnStroke.Transparency = 0.8
 
     local xOffset = 10
     if iconId then
@@ -457,10 +455,10 @@ local function createButton(parent, text, icon, callback)
 
     Btn.MouseButton1Click:Connect(function()
         TweenService:Create(Btn, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0.98, 0, 0, 30)}):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {Transparency = 0.3}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {Transparency = 0.2}):Play()
         task.wait(0.12)
         TweenService:Create(Btn, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 32)}):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.25), {Transparency = 0.85}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.25), {Transparency = 0.8}):Play()
         task.spawn(callback)
     end)
     return Btn
@@ -479,13 +477,13 @@ local function createToggle(parent, text, icon, default, callback)
 
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Size = UDim2.new(1, 0, 0, 32)
-    ToggleFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
     ToggleFrame.Parent = parent
 
     Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
     local ToggleStroke = Instance.new("UIStroke", ToggleFrame)
     ToggleStroke.Color = currentThemeColor
-    ToggleStroke.Transparency = 0.85
+    ToggleStroke.Transparency = 0.8
 
     local xOffset = 10
     if iconId then
@@ -500,7 +498,7 @@ local function createToggle(parent, text, icon, default, callback)
 
     if text ~= "" then
         local Label = Instance.new("TextLabel")
-        Label.Size = UDim2.new(1, -(xOffset + 36), 1, 0)
+        Label.Size = UDim2.new(1, -(xOffset + 40), 1, 0)
         Label.Position = UDim2.new(0, xOffset, 0, 0)
         Label.BackgroundTransparency = 1
         Label.Text = text
@@ -513,17 +511,22 @@ local function createToggle(parent, text, icon, default, callback)
     end
 
     local Box = Instance.new("Frame")
-    Box.Size = UDim2.new(0, 18, 0, 18)
-    Box.Position = UDim2.new(1, -26, 0.5, -9)
-    Box.BackgroundColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 40)
+    Box.Name = "ToggleBox"
+    Box.Size = UDim2.new(0, 20, 0, 20)
+    Box.Position = UDim2.new(1, -28, 0.5, -10)
+    Box.BackgroundColor3 = state and currentThemeColor or Color3.fromRGB(35, 35, 45)
+    Box:SetAttribute("IsActive", state)
     Box.Parent = ToggleFrame
 
-    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 5)
+    local BoxStroke = Instance.new("UIStroke", Box)
+    BoxStroke.Color = Color3.fromRGB(255, 255, 255)
+    BoxStroke.Transparency = 0.7
 
     local InnerDot = Instance.new("Frame")
     InnerDot.Size = UDim2.new(0, 8, 0, 8)
     InnerDot.Position = UDim2.new(0.5, -4, 0.5, -4)
-    InnerDot.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    InnerDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     InnerDot.BackgroundTransparency = state and 0 or 1
     InnerDot.Parent = Box
     Instance.new("UICorner", InnerDot).CornerRadius = UDim.new(1, 0)
@@ -536,8 +539,9 @@ local function createToggle(parent, text, icon, default, callback)
 
     ClickBtn.MouseButton1Click:Connect(function()
         state = not state
+        Box:SetAttribute("IsActive", state)
         TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            BackgroundColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 40)
+            BackgroundColor3 = state and currentThemeColor or Color3.fromRGB(35, 35, 45)
         }):Play()
         TweenService:Create(InnerDot, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
             BackgroundTransparency = state and 0 or 1
@@ -547,7 +551,7 @@ local function createToggle(parent, text, icon, default, callback)
     return ToggleFrame
 end
 
--- UPGRADED SLIDER (Lebih Bagus & Smooth dengan Knob / Circle)
+-- UPGRADED SLIDER (Modern Fluent Style)
 local function createSlider(parent, text, icon, min, max, default, callback)
     if type(icon) == "number" then
         callback = default
@@ -564,14 +568,14 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     local iconId = getIconId(icon)
 
     local SliderFrame = Instance.new("Frame")
-    SliderFrame.Size = UDim2.new(1, 0, 0, 44)
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    SliderFrame.Size = UDim2.new(1, 0, 0, 46)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
     SliderFrame.Parent = parent
 
     Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
     local SliderStroke = Instance.new("UIStroke", SliderFrame)
     SliderStroke.Color = currentThemeColor
-    SliderStroke.Transparency = 0.85
+    SliderStroke.Transparency = 0.8
 
     local xOffset = 10
     if iconId then
@@ -586,8 +590,8 @@ local function createSlider(parent, text, icon, min, max, default, callback)
 
     if text ~= "" then
         local Label = Instance.new("TextLabel")
-        Label.Size = UDim2.new(1, -(xOffset + 45), 0, 18)
-        Label.Position = UDim2.new(0, xOffset, 0, 4)
+        Label.Size = UDim2.new(1, -(xOffset + 50), 0, 18)
+        Label.Position = UDim2.new(0, xOffset, 0, 5)
         Label.BackgroundTransparency = 1
         Label.Text = text
         Label.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
@@ -598,27 +602,34 @@ local function createSlider(parent, text, icon, min, max, default, callback)
         Label.Parent = SliderFrame
     end
 
+    local ValueBadge = Instance.new("Frame")
+    ValueBadge.Size = UDim2.new(0, 40, 0, 18)
+    ValueBadge.Position = UDim2.new(1, -46, 0, 5)
+    ValueBadge.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+    ValueBadge.Parent = SliderFrame
+    Instance.new("UICorner", ValueBadge).CornerRadius = UDim.new(0, 4)
+
     local ValueLabel = Instance.new("TextLabel")
-    ValueLabel.Size = UDim2.new(0, 35, 0, 18)
-    ValueLabel.Position = UDim2.new(1, -40, 0, 4)
+    ValueLabel.Size = UDim2.new(1, 0, 1, 0)
     ValueLabel.BackgroundTransparency = 1
     ValueLabel.Text = tostring(default)
-    ValueLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    ValueLabel.TextSize = 11
+    ValueLabel.TextColor3 = Color3.fromRGB(240, 240, 250)
+    ValueLabel.TextSize = 10
     ValueLabel.Font = Enum.Font.GothamBold
-    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    ValueLabel.Parent = SliderFrame
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Center
+    ValueLabel.Parent = ValueBadge
 
     local SliderBar = Instance.new("Frame")
-    SliderBar.Size = UDim2.new(1, -20, 0, 6)
-    SliderBar.Position = UDim2.new(0, 10, 0, 28)
-    SliderBar.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+    SliderBar.Size = UDim2.new(1, -20, 0, 8)
+    SliderBar.Position = UDim2.new(0, 10, 0, 30)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
     SliderBar.Parent = SliderFrame
     Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
 
     local Fill = Instance.new("Frame")
+    Fill.Name = "SliderFill"
     Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-    Fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Fill.BackgroundColor3 = currentThemeColor
     Fill.Parent = SliderBar
     Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
 
@@ -633,8 +644,8 @@ local function createSlider(parent, text, icon, min, max, default, callback)
 
     local function updateValue(input)
         local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
-        local value = math.floor(min + (max - min) * pos)
-        TweenService:Create(Fill, TweenInfo.new(0.08, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        local value = math.floor(min + (max - min) * pos + 0.5)
+        TweenService:Create(Fill, TweenInfo.new(0.06, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
             Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
         }):Play()
         ValueLabel.Text = tostring(value)
@@ -668,7 +679,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     local Card = Instance.new("Frame")
     Card.Size = UDim2.new(0, 240, 0, 70)
     Card.Position = UDim2.new(0.5, -120, 0.5, -35)
-    Card.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+    Card.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
     Card.BorderSizePixel = 0
     Card.Parent = ScreenGui
 
@@ -773,7 +784,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             task.spawn(function()
                 for i = 1, #targetFlashText do
                     BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(0.6)
+                    task.wait(0.15)
                 end
             end)
 
@@ -798,9 +809,9 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                 Size = UDim2.new(0, targetWidth, 0, 4)
             }):Play()
 
-            task.delay(6.0, function()
-                local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
-                TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+            task.delay(1.5, function()
+                local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.4), {BackgroundTransparency = 1})
+                TweenService:Create(BigText, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
                 fadeTween:Play()
                 fadeTween.Completed:Connect(function()
                     Flash:Destroy()
@@ -816,7 +827,6 @@ function Library:CreateWindow(config)
     local titleText = config.Name or "Dark Hub"
     local authorText = config.Author or "GoodManzz"
     local mainLogo = getIconId(config.Logo or "Logo")
-    local bgImageId = getIconId(config.BackgroundImage)
 
     local text1 = config.Text1 or ("by:" .. authorText)
     local text2 = config.Text2 or "Injeksi Game"
@@ -891,8 +901,8 @@ function Library:CreateWindow(config)
 
             Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
             local KeyStroke = Instance.new("UIStroke", KeyFrame)
-            KeyStroke.Color = Color3.fromRGB(255, 255, 255)
-            KeyStroke.Transparency = 0.85
+            KeyStroke.Color = currentThemeColor
+            KeyStroke.Transparency = 0.5
 
             makeDraggable(KeyFrame)
 
@@ -971,7 +981,7 @@ function Library:CreateWindow(config)
                     KeyStatusLbl.Text = "Link Key Berhasil Disalin!"
                     KeyStatusLbl.TextColor3 = Color3.fromRGB(52, 152, 219)
                 else
-                    KeyStatusLbl.Text = "Gagal Salin Link (Gunakan PC/Delta Browser)"
+                    KeyStatusLbl.Text = "Gagal Salin Link"
                     KeyStatusLbl.TextColor3 = Color3.fromRGB(231, 76, 60)
                 end
             end)
@@ -996,7 +1006,7 @@ function Library:CreateWindow(config)
 
                     saveKeyLocally(matchedKeyData.Key, durSec, durText)
 
-                    KeyStatusLbl.Text = "Key Benar & Disimpan! (" .. durText .. ")"
+                    KeyStatusLbl.Text = "Key Benar & Disimpan!"
                     KeyStatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
                     
                     Library:Notify({
@@ -1026,60 +1036,67 @@ function Library:CreateWindow(config)
     Main.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
-    Main.Visible = false -- Disembunyikan dulu sampai loading selesai
+    Main.Visible = false -- Sembunyikan UI saat loading/flashbang
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
 
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-    -- Custom Background Image dari Config / Delta Workspace
-    if bgImageId then
-        local BgImg = Instance.new("ImageLabel")
-        BgImg.Name = "BackgroundImg"
-        BgImg.Size = UDim2.new(1, 0, 1, 0)
-        BgImg.BackgroundTransparency = 1
-        BgImg.Image = bgImageId
-        BgImg.ImageTransparency = 0.4
-        BgImg.ScaleType = Enum.ScaleType.Slice
-        BgImg.ZIndex = 0
-        BgImg.Parent = Main
-    end
-
-    local MainGradient = Instance.new("UIGradient")
-    MainGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 24)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 8, 10)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
-    })
-    MainGradient.Rotation = 135
-    MainGradient.Parent = Main
-    mainGradientRef = MainGradient
-
     local MainStroke = Instance.new("UIStroke")
     MainStroke.Color = currentThemeColor
-    MainStroke.Thickness = 1
-    MainStroke.Transparency = 0.85
+    MainStroke.Thickness = 1.2
+    MainStroke.Transparency = 0.3
     MainStroke.Parent = Main
+    mainStrokeRef = MainStroke
+
+    -- CUSTOM BACKGROUND IMAGE (DARI WORKSPACE DELTA / ASSET)
+    local CustomBgImg = Instance.new("ImageLabel")
+    CustomBgImg.Name = "CustomBackground"
+    CustomBgImg.Size = UDim2.new(1, 0, 1, 0)
+    CustomBgImg.BackgroundTransparency = 1
+    CustomBgImg.ImageTransparency = 0.5 -- agak ditransparankan sesuai permintaan
+    CustomBgImg.ZIndex = 0
+    CustomBgImg.Parent = Main
+
+    function Window:SetBackground(pathOrId)
+        pcall(function()
+            if pathOrId and pathOrId ~= "" then
+                if string.find(pathOrId, "rbxassetid://") or tonumber(pathOrId) then
+                    CustomBgImg.Image = getIconId(pathOrId)
+                elseif getcustomasset and isfile and isfile(pathOrId) then
+                    CustomBgImg.Image = getcustomasset(pathOrId)
+                else
+                    CustomBgImg.Image = pathOrId
+                end
+                CustomBgImg.ImageTransparency = 0.45
+            else
+                CustomBgImg.Image = ""
+            end
+        end)
+    end
 
     local Header = Instance.new("Frame")
     Header.Size = UDim2.new(1, 0, 0, 36)
     Header.BackgroundTransparency = 1
+    Header.ZIndex = 2
     Header.Parent = Main
 
     makeDraggable(Main, Header)
 
+    -- HEADER ICON DIPERBESAR (24x24 px)
     if mainLogo then
         local HeaderIcon = Instance.new("ImageLabel")
-        HeaderIcon.Size = UDim2.new(0, 22, 0, 22) -- Ukuran icon header diperbesar
-        HeaderIcon.Position = UDim2.new(0, 10, 0, 7)
+        HeaderIcon.Size = UDim2.new(0, 24, 0, 24)
+        HeaderIcon.Position = UDim2.new(0, 8, 0, 6)
         HeaderIcon.BackgroundTransparency = 1
         HeaderIcon.Image = mainLogo
+        HeaderIcon.ZIndex = 2
         HeaderIcon.Parent = Header
     end
 
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, mainLogo and -125 or -115, 1, 0)
+    Title.Size = UDim2.new(1, mainLogo and -130 or -115, 1, 0)
     Title.Position = UDim2.new(0, mainLogo and 38 or 12, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = titleText
@@ -1088,41 +1105,46 @@ function Library:CreateWindow(config)
     Title.Font = Enum.Font.GothamBold
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.TextTruncate = Enum.TextTruncate.AtEnd
+    Title.ZIndex = 2
     Title.Parent = Header
 
     local MinBtn = Instance.new("ImageButton")
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
     MinBtn.Position = UDim2.new(1, -100, 0, 7)
-    MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
     MinBtn.Image = Library.Icons["lucide-chevron-up"]
+    MinBtn.ZIndex = 2
     MinBtn.Parent = Header
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
 
     local SettingsBtn = Instance.new("ImageButton")
     SettingsBtn.Size = UDim2.new(0, 22, 0, 22)
     SettingsBtn.Position = UDim2.new(1, -75, 0, 7)
-    SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
     SettingsBtn.Image = Library.Icons["Settings"]
+    SettingsBtn.ZIndex = 2
     SettingsBtn.Parent = Header
     Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 6)
 
     local HideBtn = Instance.new("ImageButton")
     HideBtn.Size = UDim2.new(0, 22, 0, 22)
     HideBtn.Position = UDim2.new(1, -50, 0, 7)
-    HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
     HideBtn.Image = mainLogo or Library.Icons["Logo"]
+    HideBtn.ZIndex = 2
     HideBtn.Parent = Header
     Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
 
     local CloseBtn = Instance.new("ImageButton")
     CloseBtn.Size = UDim2.new(0, 22, 0, 22)
     CloseBtn.Position = UDim2.new(1, -25, 0, 7)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
     CloseBtn.Image = Library.Icons["lucide-x"]
+    CloseBtn.ZIndex = 2
     CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
-    -- CONTAINER UTAMA (SCROLL 1 / HALAMAN UTAMA)
+    -- CONTAINER UTAMA
     local Container = Instance.new("ScrollingFrame")
     Container.Name = "MainContainer"
     Container.Size = UDim2.new(1, -12, 1, -44)
@@ -1134,6 +1156,7 @@ function Library:CreateWindow(config)
     Container.ScrollingEnabled = true
     Container.Active = true
     Container.ClipsDescendants = true
+    Container.ZIndex = 2
     Container.Parent = Main
 
     local Layout = Instance.new("UIListLayout")
@@ -1157,6 +1180,7 @@ function Library:CreateWindow(config)
     SettingsContainer.Active = true
     SettingsContainer.ClipsDescendants = true
     SettingsContainer.Visible = false
+    SettingsContainer.ZIndex = 2
     SettingsContainer.Parent = Main
 
     local SettingsLayout = Instance.new("UIListLayout")
@@ -1179,24 +1203,26 @@ function Library:CreateWindow(config)
         SettingsContainer.Visible = showingSettings
 
         TweenService:Create(SettingsBtn, TweenInfo.new(0.2), {
-            ImageColor3 = showingSettings and Color3.fromRGB(52, 152, 219) or Color3.fromRGB(255, 255, 255)
+            ImageColor3 = showingSettings and currentThemeColor or Color3.fromRGB(255, 255, 255)
         }):Play()
     end)
 
+    -- NESTED SCROLL GROUPS (DITUTUP/COLLAPSED SAAT PERTAMA KALI MUNCUL)
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
         local iconId = getIconId(icon)
-        local isCollapsed = defaultCollapsed or false
+        local isCollapsed = (defaultCollapsed == nil) and true or defaultCollapsed -- default tertutup saat pertama kali muncul
 
         local GroupFrame = Instance.new("Frame")
         GroupFrame.Name = "GroupFrame"
         GroupFrame.Size = UDim2.new(1, 0, 0, 32)
-        GroupFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+        GroupFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
         GroupFrame.BorderSizePixel = 0
         GroupFrame.ClipsDescendants = true
+        GroupFrame.ZIndex = 2
         GroupFrame.Parent = parentContainer
 
         Instance.new("UICorner", GroupFrame).CornerRadius = UDim.new(0, 8)
@@ -1209,6 +1235,7 @@ function Library:CreateWindow(config)
         GroupHeader.Size = UDim2.new(1, 0, 0, 32)
         GroupHeader.BackgroundTransparency = 1
         GroupHeader.Text = ""
+        GroupHeader.ZIndex = 2
         GroupHeader.Parent = GroupFrame
 
         local xOffset = 10
@@ -1218,6 +1245,7 @@ function Library:CreateWindow(config)
             GIcon.Position = UDim2.new(0, 10, 0.5, -8)
             GIcon.BackgroundTransparency = 1
             GIcon.Image = iconId
+            GIcon.ZIndex = 2
             GIcon.Parent = GroupHeader
             xOffset = 32
         end
@@ -1232,6 +1260,7 @@ function Library:CreateWindow(config)
         TitleLbl.Font = currentFont
         TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
         TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
+        TitleLbl.ZIndex = 2
         TitleLbl.Parent = GroupHeader
         
         if groupNameKey then
@@ -1246,6 +1275,7 @@ function Library:CreateWindow(config)
         ArrowLbl.TextColor3 = Color3.fromRGB(160, 160, 170)
         ArrowLbl.TextSize = 11
         ArrowLbl.Font = Enum.Font.GothamBold
+        ArrowLbl.ZIndex = 2
         ArrowLbl.Parent = GroupHeader
 
         local ContentHolder = Instance.new("ScrollingFrame")
@@ -1259,6 +1289,7 @@ function Library:CreateWindow(config)
         ContentHolder.ScrollBarThickness = 3
         ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 160)
         ContentHolder.ClipsDescendants = true
+        ContentHolder.ZIndex = 2
         ContentHolder.Parent = GroupFrame
 
         ContentHolder.MouseEnter:Connect(function()
@@ -1321,13 +1352,14 @@ function Library:CreateWindow(config)
         function Group:AddLabel(text)
             local LblFrame = Instance.new("Frame")
             LblFrame.Size = UDim2.new(1, 0, 0, 28)
-            LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+            LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+            LblFrame.ZIndex = 2
             LblFrame.Parent = ContentHolder
 
             Instance.new("UICorner", LblFrame).CornerRadius = UDim.new(0, 6)
             local Stroke = Instance.new("UIStroke", LblFrame)
             Stroke.Color = currentThemeColor
-            Stroke.Transparency = 0.85
+            Stroke.Transparency = 0.8
 
             local Lbl = Instance.new("TextLabel")
             Lbl.Size = UDim2.new(1, -12, 1, 0)
@@ -1339,6 +1371,7 @@ function Library:CreateWindow(config)
             Lbl.Font = Enum.Font.GothamBold
             Lbl.TextXAlignment = Enum.TextXAlignment.Left
             Lbl.TextTruncate = Enum.TextTruncate.AtEnd
+            Lbl.ZIndex = 2
             Lbl.Parent = LblFrame
 
             task.defer(updateGroupSize)
@@ -1349,33 +1382,33 @@ function Library:CreateWindow(config)
         return Group
     end
 
-    -- 25 DAFTAR WARNA & TEMA LENGKAP
-    local colorList = {
-        {"Hitam (Black)", Color3.fromRGB(0, 0, 0)},
-        {"Putih (White)", Color3.fromRGB(255, 255, 255)},
-        {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
-        {"Hijau (Green)", Color3.fromRGB(46, 204, 113)},
-        {"Biru (Blue)", Color3.fromRGB(52, 152, 219)},
-        {"Kuning (Yellow)", Color3.fromRGB(241, 196, 15)},
-        {"Ungu (Purple)", Color3.fromRGB(155, 89, 182)},
-        {"Oranye (Orange)", Color3.fromRGB(230, 126, 34)},
-        {"Pink", Color3.fromRGB(255, 105, 180)},
-        {"Cyan", Color3.fromRGB(0, 255, 255)},
-        {"Lime", Color3.fromRGB(0, 255, 0)},
-        {"Magenta", Color3.fromRGB(255, 0, 255)},
-        {"Teal", Color3.fromRGB(0, 128, 128)},
-        {"Navy", Color3.fromRGB(0, 0, 128)},
-        {"Maroon", Color3.fromRGB(128, 0, 0)},
-        {"Olive", Color3.fromRGB(128, 128, 0)},
-        {"Coral", Color3.fromRGB(255, 127, 80)},
-        {"Gold", Color3.fromRGB(255, 215, 0)},
-        {"Indigo", Color3.fromRGB(75, 0, 130)},
-        {"Violet", Color3.fromRGB(238, 130, 238)},
-        {"Turquoise", Color3.fromRGB(64, 224, 208)},
-        {"Salmon", Color3.fromRGB(250, 128, 114)},
-        {"Slate", Color3.fromRGB(112, 128, 144)},
-        {"Crimson", Color3.fromRGB(220, 20, 60)},
-        {"Amber", Color3.fromRGB(255, 191, 0)}
+    -- 25 TEMA & 25 WARNA TEKS
+    local colorPalette25 = {
+        {"Default Purple", Color3.fromRGB(114, 137, 218)},
+        {"Fluent Blue", Color3.fromRGB(0, 122, 255)},
+        {"Emerald Green", Color3.fromRGB(46, 204, 113)},
+        {"Ruby Red", Color3.fromRGB(231, 76, 60)},
+        {"Amber Gold", Color3.fromRGB(241, 196, 15)},
+        {"Cyber Cyan", Color3.fromRGB(0, 255, 255)},
+        {"Neon Pink", Color3.fromRGB(255, 105, 180)},
+        {"Electric Violet", Color3.fromRGB(138, 43, 226)},
+        {"Tangerine Orange", Color3.fromRGB(230, 126, 34)},
+        {"Mint Green", Color3.fromRGB(152, 251, 152)},
+        {"Rose Quartz", Color3.fromRGB(247, 202, 201)},
+        {"Deep Ocean", Color3.fromRGB(30, 144, 255)},
+        {"Sunset Coral", Color3.fromRGB(255, 127, 80)},
+        {"Lavender Dream", Color3.fromRGB(230, 230, 250)},
+        {"Toxic Lime", Color3.fromRGB(50, 205, 50)},
+        {"Royal Gold", Color3.fromRGB(255, 215, 0)},
+        {"Crimson Blood", Color3.fromRGB(220, 20, 60)},
+        {"Ice Blue", Color3.fromRGB(175, 238, 238)},
+        {"Neon Yellow", Color3.fromRGB(255, 255, 0)},
+        {"Dark Teal", Color3.fromRGB(0, 128, 128)},
+        {"Hot Magenta", Color3.fromRGB(255, 0, 255)},
+        {"Steel Grey", Color3.fromRGB(119, 136, 153)},
+        {"Plum Purple", Color3.fromRGB(221, 160, 221)},
+        {"Peach Orange", Color3.fromRGB(255, 218, 185)},
+        {"Vivid Azure", Color3.fromRGB(0, 127, 255)}
     }
 
     local FloatingContainer = Instance.new("Frame")
@@ -1394,19 +1427,6 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
-    local wobbleAngle = 0
-    RunService.RenderStepped:Connect(function()
-        if FloatingContainer.Visible then
-            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-            if isLogoWobbleActive then
-                wobbleAngle = math.sin(tick() * 12) * 15
-                FloatingContainer.Rotation = wobbleAngle
-            else
-                FloatingContainer.Rotation = 0
-            end
-        end
-    end)
-
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
     FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
@@ -1416,6 +1436,18 @@ function Library:CreateWindow(config)
     FloatingLogoBtn.Parent = FloatingContainer
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
+
+    RunService.RenderStepped:Connect(function()
+        if FloatingContainer.Visible then
+            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+            if isLogoShaking then
+                local shakeAngle = math.sin(tick() * 15) * 8
+                FloatingLogoBtn.Rotation = shakeAngle
+            else
+                FloatingLogoBtn.Rotation = 0
+            end
+        end
+    end)
 
     HideBtn.MouseButton1Click:Connect(function()
         Main.Visible = false
@@ -1427,13 +1459,8 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
-    local WobbleGroup = buildGroupInContainer(SettingsContainer, "WobbleGroup", "lucide-zap", false)
-    WobbleGroup:AddToggle("Logo Goyang (Wobble On/Off)", nil, false, function(state)
-        isLogoWobbleActive = state
-        Library:Notify({ Title = "Animasi Logo", Content = "Logo Goyang: " .. tostring(state), Type = "Success" })
-    end)
-
-    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", false)
+    -- GRUP SETTING (SEMUA TERTUTUP OTOMATIS SAAT PERTAMA KALI MUNCUL)
+    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", true)
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
 
@@ -1450,6 +1477,13 @@ function Library:CreateWindow(config)
         end
     end)
 
+    -- FITUR BARU: LOGO GOYANG ON/OFF DI SETTING
+    local LogoShakeGroup = buildGroupInContainer(SettingsContainer, "LogoShakeGroup", "lucide-zap", true)
+    LogoShakeGroup:AddToggle("Logo Goyang (Shake)", nil, false, function(state)
+        isLogoShaking = state
+        Library:Notify({ Title = "Logo", Content = state ? "Logo Goyang Diaktifkan" : "Logo Goyang Dimatikan", Type = "Success", Duration = 2 })
+    end)
+
     local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
 
     local scriptbloxLimit = 15
@@ -1459,7 +1493,8 @@ function Library:CreateWindow(config)
 
     local SearchBoxFrame = Instance.new("Frame")
     SearchBoxFrame.Size = UDim2.new(1, 0, 0, 32)
-    SearchBoxFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    SearchBoxFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+    SearchBoxFrame.ZIndex = 2
     SearchBoxFrame.Parent = ScriptbloxGroup.ContentHolder
     Instance.new("UICorner", SearchBoxFrame).CornerRadius = UDim.new(0, 6)
 
@@ -1473,6 +1508,7 @@ function Library:CreateWindow(config)
     SearchInput.TextSize = 11
     SearchInput.Font = currentFont
     SearchInput.TextXAlignment = Enum.TextXAlignment.Left
+    SearchInput.ZIndex = 2
     SearchInput.Parent = SearchBoxFrame
 
     local SearchBtn = Instance.new("TextButton")
@@ -1483,12 +1519,14 @@ function Library:CreateWindow(config)
     SearchBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     SearchBtn.TextSize = 11
     SearchBtn.Font = Enum.Font.GothamBold
+    SearchBtn.ZIndex = 2
     SearchBtn.Parent = SearchBoxFrame
     Instance.new("UICorner", SearchBtn).CornerRadius = UDim.new(0, 4)
 
     local ResultsHolder = Instance.new("Frame")
     ResultsHolder.Size = UDim2.new(1, 0, 0, 0)
     ResultsHolder.BackgroundTransparency = 1
+    ResultsHolder.ZIndex = 2
     ResultsHolder.Parent = ScriptbloxGroup.ContentHolder
 
     local ResultsLayout = Instance.new("UIListLayout")
@@ -1524,6 +1562,7 @@ function Library:CreateWindow(config)
                         local Card = Instance.new("Frame")
                         Card.Size = UDim2.new(1, 0, 0, 50)
                         Card.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+                        Card.ZIndex = 2
                         Card.Parent = ResultsHolder
                         Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
 
@@ -1537,6 +1576,7 @@ function Library:CreateWindow(config)
                         TitleLbl.Font = Enum.Font.GothamBold
                         TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
                         TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
+                        TitleLbl.ZIndex = 2
                         TitleLbl.Parent = Card
 
                         local ExecBtn = Instance.new("TextButton")
@@ -1547,6 +1587,7 @@ function Library:CreateWindow(config)
                         ExecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
                         ExecBtn.TextSize = 10
                         ExecBtn.Font = Enum.Font.GothamBold
+                        ExecBtn.ZIndex = 2
                         ExecBtn.Parent = Card
                         Instance.new("UICorner", ExecBtn).CornerRadius = UDim.new(0, 4)
 
@@ -1558,6 +1599,7 @@ function Library:CreateWindow(config)
                         CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
                         CopyBtn.TextSize = 10
                         CopyBtn.Font = Enum.Font.GothamBold
+                        CopyBtn.ZIndex = 2
                         CopyBtn.Parent = Card
                         Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 4)
 
@@ -1573,7 +1615,7 @@ function Library:CreateWindow(config)
                                 setclipboard(rawScript)
                                 Library:Notify({ Title = "Scriptblox", Content = "Script disalin ke Clipboard!", Type = "Success" })
                             else
-                                Library:Notify({ Title = "Scriptblox", Content = "Executor tidak mendukung setclipboard", Type = "Error" })
+                                Library:Notify({ Title = "Scriptblox", Content = "Executor tidak mendukung", Type = "Error" })
                             end
                         end)
                     end
@@ -1594,21 +1636,21 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
+    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
-        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
+        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran diubah ke Kecil", Type = "Success" })
     end)
     FloatSizeGroup:AddButton("Sedang (65px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
-        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Sedang", Type = "Success" })
+        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran diubah ke Sedang", Type = "Success" })
     end)
     FloatSizeGroup:AddButton("Besar (85px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 85, 0, 85)
-        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
+        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran diubah ke Besar", Type = "Success" })
     end)
 
-    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
+    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", true)
     local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
     local startTime = tick()
     
@@ -1625,11 +1667,12 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
+    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", true)
     
     local AvatarFrame = Instance.new("Frame")
     AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
-    AvatarFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    AvatarFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+    AvatarFrame.ZIndex = 2
     AvatarFrame.Parent = PlayerGroup.ContentHolder
     Instance.new("UICorner", AvatarFrame).CornerRadius = UDim.new(0, 6)
 
@@ -1637,6 +1680,7 @@ function Library:CreateWindow(config)
     AvatarImg.Size = UDim2.new(0, 48, 0, 48)
     AvatarImg.Position = UDim2.new(0, 6, 0.5, -24)
     AvatarImg.BackgroundTransparency = 1
+    AvatarImg.ZIndex = 2
     AvatarImg.Parent = AvatarFrame
     Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
 
@@ -1656,6 +1700,7 @@ function Library:CreateWindow(config)
     AvatarTextLbl.TextSize = 11
     AvatarTextLbl.Font = Enum.Font.GothamBold
     AvatarTextLbl.TextXAlignment = Enum.TextXAlignment.Left
+    AvatarTextLbl.ZIndex = 2
     AvatarTextLbl.Parent = AvatarFrame
 
     local pGameName = "Mendeteksi..."
@@ -1666,7 +1711,7 @@ function Library:CreateWindow(config)
     PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
     PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
+    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", true)
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
         pcall(function()
@@ -1753,14 +1798,15 @@ function Library:CreateWindow(config)
         end)
     end
 
+    -- 25 PILIHAN WARNA TEKS
     local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
     
-    TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
+    TextColorGroup:AddButton("🌈 RGB Rainbow Text", nil, function()
         isRgbTextActive = true
         Library:Notify({ Title = "Warna Teks", Content = "Mode RGB Rainbow Diaktifkan!", Type = "Success", Duration = 2 })
     end)
 
-    for _, cInfo in ipairs(colorList) do
+    for _, cInfo in ipairs(colorPalette25) do
         local name, col = cInfo[1], cInfo[2]
         TextColorGroup:AddButton(name, nil, function()
             updateGlobalTextColor(col)
@@ -1768,14 +1814,15 @@ function Library:CreateWindow(config)
         end)
     end
 
+    -- 25 PILIHAN TEMA UI (AKSEN FLUENT/RAYFIELD)
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
-    ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
+    ThemeGroup:AddButton("🌈 RGB Theme Accent", nil, function()
         isRgbThemeActive = true
         Library:Notify({ Title = "Tema UI", Content = "Mode Tema RGB Diaktifkan!", Type = "Success", Duration = 2 })
     end)
 
-    for _, cInfo in ipairs(colorList) do
+    for _, cInfo in ipairs(colorPalette25) do
         local name, col = cInfo[1], cInfo[2]
         ThemeGroup:AddButton("Tema " .. name, nil, function()
             updateGlobalThemeColor(col)
@@ -1840,7 +1887,8 @@ function Library:CreateWindow(config)
 
     local CustomInputFrame = Instance.new("Frame")
     CustomInputFrame.Size = UDim2.new(1, 0, 0, 32)
-    CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+    CustomInputFrame.ZIndex = 2
     CustomInputFrame.Parent = MusicGroup.ContentHolder
 
     local CustomTextBox = Instance.new("TextBox")
@@ -1850,6 +1898,7 @@ function Library:CreateWindow(config)
     CustomTextBox.TextColor3 = currentTextColor
     CustomTextBox.TextSize = 11
     CustomTextBox.Font = currentFont
+    CustomTextBox.ZIndex = 2
     CustomTextBox.Parent = CustomInputFrame
     registerTranslation(CustomTextBox, "SongPlaceholder", "PlaceholderText")
 
@@ -1860,6 +1909,7 @@ function Library:CreateWindow(config)
     SaveCustomBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     SaveCustomBtn.TextSize = 11
     SaveCustomBtn.Font = Enum.Font.GothamBold
+    SaveCustomBtn.ZIndex = 2
     SaveCustomBtn.Parent = CustomInputFrame
     Instance.new("UICorner", SaveCustomBtn).CornerRadius = UDim.new(0, 6)
     registerTranslation(SaveCustomBtn, "CustomSong")
@@ -1876,7 +1926,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
+    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", true)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
         updateAllTranslations()
@@ -1888,12 +1938,12 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
-    TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
+    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", true)
+    TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 12, function(val)
         Main.BackgroundTransparency = val / 100
     end)
 
-    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
+    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", true)
     for fontName, enumFont in pairs(Fonts) do
         FontGroup:AddButton(fontName, nil, function()
             currentFont = enumFont
@@ -1910,6 +1960,7 @@ function Library:CreateWindow(config)
     ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
     ResizeGrip.Position = UDim2.new(1, -14, 1, -14)
     ResizeGrip.BackgroundTransparency = 1
+    ResizeGrip.ZIndex = 3
     ResizeGrip.Parent = Main
 
     local GripIcon = Instance.new("TextLabel")
@@ -1919,6 +1970,7 @@ function Library:CreateWindow(config)
     GripIcon.TextColor3 = Color3.fromRGB(150, 150, 160)
     GripIcon.TextSize = 10
     GripIcon.Font = Enum.Font.GothamBold
+    GripIcon.ZIndex = 3
     GripIcon.Parent = ResizeGrip
 
     makeResizable(Main, ResizeGrip, 200, 150)
@@ -1935,9 +1987,12 @@ function Library:CreateWindow(config)
         Window:EnableScroll(state)
     end
 
-    -- Animasi loading dijalankan, UI utama baru dimunculkan SETELAH selesai (Sesuai Point 6)
+    -- MENJALANKAN LOADING/FLASHBANG TERLEBIH DAHULU, UI DISEMBUNYIKAN
     playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
+        -- Setelah animasi loading & flashbang selesai, baru tampilkan UI dan buka
         Main.Visible = true
+        Main.Size = UDim2.new(0, 240, 0, 0)
+        
         TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 240, 0, 270)
         }):Play()
@@ -1956,15 +2011,15 @@ function Library:CreateWindow(config)
             normalHeight = Main.AbsoluteSize.Y
             Container.Visible = false
             SettingsContainer.Visible = false
-            ResizeGrip.Visible = false -- Sembunyikan resize grip saat minimize (Sesuai Point 1)
+            ResizeGrip.Visible = false -- Sembunyikan tombol resize saat minimize
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
             }):Play()
         else
+            ResizeGrip.Visible = true -- Tampilkan kembali tombol resize saat restore
             MinBtn.Image = Library.Icons["lucide-chevron-up"]
-            ResizeGrip.Visible = true -- Tampilkan kembali saat maximize
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
