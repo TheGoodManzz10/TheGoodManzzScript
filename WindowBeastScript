@@ -813,7 +813,7 @@ function Library:CreateWindow(config)
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
     local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", DurationDays = 365, DurationText = "Permanen" } }
-    local keyGetUrl = KeySystemConfig.KeyURL or "https://discord.gg/yourlink" -- DIPERBAIKI (menggunakan 'or' bukan '||')
+    local keyGetUrl = KeySystemConfig.KeyURL or "https://discord.gg/yourlink"
     local saveFileName = "WindowBeastKey.json"
 
     local currentActiveKey = "Tidak ada"
@@ -1340,14 +1340,40 @@ function Library:CreateWindow(config)
         {"Magenta", Color3.fromRGB(255, 0, 255)}
     }
 
+    -- FLOATING CONTAINER (KOTAK SISI MELENGKUNG)
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
     FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
     FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
     FloatingContainer.BackgroundTransparency = 1
+    FloatingContainer.BorderSizePixel = 0
     FloatingContainer.Visible = false
     FloatingContainer.Parent = ScreenGui
 
+    -- UICORNER KOTAK MELENGKUNG UNTUK FLOATING CONTAINER
+    local FloatCorner = Instance.new("UICorner")
+    FloatCorner.CornerRadius = UDim.new(0, 8)
+    FloatCorner.Parent = FloatingContainer
+
+    -- UIGRADIENT PEKAT UNTUK BACKGROUND HITAM FLOATING
+    local FloatGradient = Instance.new("UIGradient")
+    FloatGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(24, 24, 30)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(12, 12, 16)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(4, 4, 6))
+    })
+    FloatGradient.Rotation = 45
+    FloatGradient.Enabled = false
+    FloatGradient.Parent = FloatingContainer
+
+    -- UISTROKE FRAME FLOATING
+    local FloatStroke = Instance.new("UIStroke")
+    FloatStroke.Color = Color3.fromRGB(255, 255, 255)
+    FloatStroke.Transparency = 1
+    FloatStroke.Thickness = 1
+    FloatStroke.Parent = FloatingContainer
+
+    -- NAGA (RING LUAR) - TETAP BERPUTAR 360 DERAJAT
     local SpinOuterIcon = Instance.new("ImageLabel")
     SpinOuterIcon.Name = "SpinOuterIcon"
     SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
@@ -1356,16 +1382,7 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
-    -- ANIMASI GOYANG KIRI KANAN (SWAY)
-    local floatAnimTime = 0
-    local floatingSpinActive = true
-    RunService.RenderStepped:Connect(function(dt)
-        if FloatingContainer.Visible and floatingSpinActive then
-            floatAnimTime = floatAnimTime + dt * 6
-            SpinOuterIcon.Rotation = math.sin(floatAnimTime) * 18 -- Goyang 18 derajat ke kiri & kanan
-        end
-    end)
-
+    -- RUBAH (LOGO DALAM) - DIBUAT GOYANG KIRI KANAN
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
     FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
@@ -1375,6 +1392,24 @@ function Library:CreateWindow(config)
     FloatingLogoBtn.Parent = FloatingContainer
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
+
+    -- LOGIKA ANIMASI DILAKUKAN TERPISAH (NAGA BERPUTAR & RUBAH GOYANG KIRI-KANAN)
+    local floatAnimTime = 0
+    local floatingSpinActive = true
+    RunService.RenderStepped:Connect(function(dt)
+        if FloatingContainer.Visible then
+            -- 1. Naga berputar penuh secara teratur
+            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+
+            -- 2. Rubah khusus berayun / goyang kiri-kanan
+            if floatingSpinActive then
+                floatAnimTime = floatAnimTime + dt * 6
+                FloatingLogoBtn.Rotation = math.sin(floatAnimTime) * 18
+            else
+                FloatingLogoBtn.Rotation = 0
+            end
+        end
+    end)
 
     HideBtn.MouseButton1Click:Connect(function()
         Main.Visible = false
@@ -1561,28 +1596,29 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Tombol Floating", Content = "Ukuran diubah ke Besar", Type = "Success" })
     end)
 
-    -- TOGGLE BACKGROUND HITAM / TRANSPARAN
+    -- TOGGLE BACKGROUND HITAM PEKAT & GRADASI KOTAK MELENGKUNG
     FloatSizeGroup:AddToggle("Background Hitam Floating", nil, false, function(state)
         if state then
-            FloatingContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-            FloatingContainer.BackgroundTransparency = 0.2
-            if not FloatingContainer:FindFirstChildOfClass("UICorner") then
-                Instance.new("UICorner", FloatingContainer).CornerRadius = UDim.new(1, 0)
-            end
-            Library:Notify({ Title = "Floating Button", Content = "Background Hitam Diaktifkan", Type = "Success" })
+            FloatingContainer.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+            FloatingContainer.BackgroundTransparency = 0 -- Pekat/Solid (tidak transparan)
+            FloatGradient.Enabled = true
+            FloatStroke.Transparency = 0.8
+            Library:Notify({ Title = "Floating Button", Content = "Background Hitam Gradasi Diaktifkan", Type = "Success" })
         else
             FloatingContainer.BackgroundTransparency = 1
+            FloatGradient.Enabled = false
+            FloatStroke.Transparency = 1
             Library:Notify({ Title = "Floating Button", Content = "Background Transparan", Type = "Info" })
         end
     end)
 
-    -- TOGGLE ANIMASI GOYANG KIRI KANAN
-    FloatSizeGroup:AddToggle("Animasi Goyang Kiri-Kanan", nil, true, function(state)
+    -- TOGGLE ANIMASI GOYANG RUBAH
+    FloatSizeGroup:AddToggle("Animasi Goyang Rubah", nil, true, function(state)
         floatingSpinActive = state
         if not state then
-            SpinOuterIcon.Rotation = 0
+            FloatingLogoBtn.Rotation = 0
         end
-        Library:Notify({ Title = "Floating Button", Content = "Animasi Goyang: " .. tostring(state), Type = "Info" })
+        Library:Notify({ Title = "Floating Button", Content = "Goyang Rubah: " .. tostring(state), Type = "Info" })
     end)
 
     local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", true)
