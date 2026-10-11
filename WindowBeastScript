@@ -401,9 +401,6 @@ local function makeResizable(frame, handle, minWidth, minHeight)
     end)
 end
 
--- ==========================================
--- PEMBUATAN ELEMEN ANTI KEPOTONG + ICON FIX
--- ==========================================
 local function createButton(parent, text, icon, callback)
     if type(icon) == "function" then
         callback = icon
@@ -816,7 +813,7 @@ function Library:CreateWindow(config)
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
     local validKeys = KeySystemConfig.Keys or { { Key = "GoodManzz2026", DurationDays = 365, DurationText = "Permanen" } }
-    local keyGetUrl = KeySystemConfig.KeyURL || "https://discord.gg/yourlink"
+    local keyGetUrl = KeySystemConfig.KeyURL or "https://discord.gg/yourlink" -- DIPERBAIKI (menggunakan 'or' bukan '||')
     local saveFileName = "WindowBeastKey.json"
 
     local currentActiveKey = "Tidak ada"
@@ -1045,7 +1042,6 @@ function Library:CreateWindow(config)
 
     makeDraggable(Main, Header)
 
-    -- ICON HEADER DIPERBESAR UKURANNYA
     if mainLogo then
         local HeaderIcon = Instance.new("ImageLabel")
         HeaderIcon.Size = UDim2.new(0, 22, 0, 22)
@@ -1099,7 +1095,6 @@ function Library:CreateWindow(config)
     CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
-    -- CONTAINER UTAMA (SCROLL 1 / HALAMAN UTAMA)
     local Container = Instance.new("ScrollingFrame")
     Container.Name = "MainContainer"
     Container.Size = UDim2.new(1, -12, 1, -44)
@@ -1160,16 +1155,12 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
-    -- ==========================================================
-    -- PEMBUATAN GRUP DENGAN DEFAULT TERTUTUP (COLLAPSED)
-    -- ==========================================================
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
         local iconId = getIconId(icon)
-        -- SEMUA GRUP OTOMATIS TERTUTUP (TRUE) KECUALI DITENTUKAN LAIN
         local isCollapsed = (defaultCollapsed == nil) and true or defaultCollapsed
 
         local GroupFrame = Instance.new("Frame")
@@ -1353,7 +1344,7 @@ function Library:CreateWindow(config)
     FloatingContainer.Name = "FloatingContainer"
     FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
     FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
-    FloatingContainer.BackgroundTransparency = 1 -- Default transparan
+    FloatingContainer.BackgroundTransparency = 1
     FloatingContainer.Visible = false
     FloatingContainer.Parent = ScreenGui
 
@@ -1365,10 +1356,13 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
+    -- ANIMASI GOYANG KIRI KANAN (SWAY)
+    local floatAnimTime = 0
     local floatingSpinActive = true
-    RunService.RenderStepped:Connect(function()
+    RunService.RenderStepped:Connect(function(dt)
         if FloatingContainer.Visible and floatingSpinActive then
-            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+            floatAnimTime = floatAnimTime + dt * 6
+            SpinOuterIcon.Rotation = math.sin(floatAnimTime) * 18 -- Goyang 18 derajat ke kiri & kanan
         end
     end)
 
@@ -1392,7 +1386,7 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
-    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", false)
+    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", true)
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
 
@@ -1567,7 +1561,7 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Tombol Floating", Content = "Ukuran diubah ke Besar", Type = "Success" })
     end)
 
-    -- PENGATURAN BACKGROUND HITAM / TRANSPARAN PADA FLOATING BUTTON
+    -- TOGGLE BACKGROUND HITAM / TRANSPARAN
     FloatSizeGroup:AddToggle("Background Hitam Floating", nil, false, function(state)
         if state then
             FloatingContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
@@ -1582,8 +1576,8 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- PENGATURAN ANIMASI GOYANG / PUTAR ICON FLOATING
-    FloatSizeGroup:AddToggle("Animasi Goyang / Putar", nil, true, function(state)
+    -- TOGGLE ANIMASI GOYANG KIRI KANAN
+    FloatSizeGroup:AddToggle("Animasi Goyang Kiri-Kanan", nil, true, function(state)
         floatingSpinActive = state
         if not state then
             SpinOuterIcon.Rotation = 0
