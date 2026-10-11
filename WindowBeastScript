@@ -1,4 +1,4 @@
-local Library = {}
+Local Library = {}
 
 -- Daftar Icon Registri Lengkap
 Library.Icons = {
@@ -23,7 +23,6 @@ Library.Icons = {
     ["lucide-info"]             = "rbxassetid://10723415903",
     ["lucide-key"]              = "rbxassetid://10723346959",
     ["lucide-search"]           = "rbxassetid://10734941499",
-    ["lucide-fingerprint"]      = "rbxassetid://10709782497"
 }
 
 -- SISTEM BAHASA DENGAN TRANSLATION LENGKAP
@@ -189,7 +188,7 @@ local function updateGlobalThemeColor(color)
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "FloatingBGFrame" then
+            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
                 if obj.BackgroundTransparency < 1 then
                     if obj.Name == "Main" then
                         obj.BackgroundColor3 = color
@@ -223,7 +222,7 @@ RunService.RenderStepped:Connect(function()
         
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
-                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "FloatingBGFrame" then
+                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" then
                     if obj.BackgroundTransparency < 1 and obj.Name ~= "Main" then
                         local h, s, v = rgbColor:ToHSV()
                         obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v - 0.2, 0, 1))
@@ -1044,16 +1043,16 @@ function Library:CreateWindow(config)
 
     if mainLogo then
         local HeaderIcon = Instance.new("ImageLabel")
-        HeaderIcon.Size = UDim2.new(0, 22, 0, 22)
-        HeaderIcon.Position = UDim2.new(0, 8, 0.5, -11)
+        HeaderIcon.Size = UDim2.new(0, 18, 0, 18)
+        HeaderIcon.Position = UDim2.new(0, 10, 0, 9)
         HeaderIcon.BackgroundTransparency = 1
         HeaderIcon.Image = mainLogo
         HeaderIcon.Parent = Header
     end
 
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, mainLogo and -128 or -115, 1, 0)
-    Title.Position = UDim2.new(0, mainLogo and 36 or 12, 0, 0)
+    Title.Size = UDim2.new(1, mainLogo and -125 or -115, 1, 0)
+    Title.Position = UDim2.new(0, mainLogo and 34 or 12, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = titleText
     Title.TextColor3 = currentTextColor
@@ -1155,14 +1154,13 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
-    -- FUNGSI BUILD GROUP DENGAN DEFAULT COLLAPSED (TERTUTUP) SECARA OTOMATIS
+    -- SEMUA GRUP DEFAULT TERTUTUP (COLLAPSED = TRUE) KECUALI DITENTUKAN LAIN
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
         local iconId = getIconId(icon)
-        -- DIBUAT DEFAULT SELALU TERTUTUP (true)
         local isCollapsed = (defaultCollapsed == nil) and true or defaultCollapsed
 
         local GroupFrame = Instance.new("Frame")
@@ -1257,7 +1255,10 @@ function Library:CreateWindow(config)
             ContentHolder.Size = UDim2.new(1, -12, 0, displayHeight)
             
             local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
-            GroupFrame.Size = UDim2.new(1, 0, 0, targetHeight)
+            
+            TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 0, targetHeight)
+            }):Play()
         end
 
         ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateGroupSize)
@@ -1265,14 +1266,7 @@ function Library:CreateWindow(config)
         GroupHeader.MouseButton1Click:Connect(function()
             isCollapsed = not isCollapsed
             ArrowLbl.Text = isCollapsed and "▼" or "▲"
-            
-            local contentHeight = ContentLayout.AbsoluteContentSize.Y
-            local displayHeight = math.min(contentHeight, MAX_GROUP_HEIGHT)
-            local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
-            
-            TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-                Size = UDim2.new(1, 0, 0, targetHeight)
-            }):Play()
+            updateGroupSize()
         end)
 
         local Group = {}
@@ -1342,80 +1336,42 @@ function Library:CreateWindow(config)
         {"Magenta", Color3.fromRGB(255, 0, 255)}
     }
 
-    -- FLOATING CONTAINER KONTROL
     local FloatingContainer = Instance.new("Frame")
     FloatingContainer.Name = "FloatingContainer"
     FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
     FloatingContainer.Position = UDim2.new(0, 15, 0.3, 0)
     FloatingContainer.BackgroundTransparency = 1
-    FloatingContainer.BorderSizePixel = 0
     FloatingContainer.Visible = false
     FloatingContainer.Parent = ScreenGui
 
-    -- KOTAK BACKGROUND MELENGKUNG YANG MENCAKUP NAGA & RUBAH DENGAN STROKE PUTIH TIPIS
-    local FloatingBGFrame = Instance.new("Frame")
-    FloatingBGFrame.Name = "FloatingBGFrame"
-    FloatingBGFrame.Size = UDim2.new(1, 16, 1, 16)
-    FloatingBGFrame.Position = UDim2.new(0, -8, 0, -8)
-    FloatingBGFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-    FloatingBGFrame.BackgroundTransparency = 1 -- Transparan secara default
-    FloatingBGFrame.BorderSizePixel = 0
-    FloatingBGFrame.ZIndex = 0
-    FloatingBGFrame.Parent = FloatingContainer
-
-    local FloatCorner = Instance.new("UICorner")
-    FloatCorner.CornerRadius = UDim.new(0, 12)
-    FloatCorner.Parent = FloatingBGFrame
-
-    local FloatGradient = Instance.new("UIGradient")
-    FloatGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 38)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(12, 12, 16)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 8))
-    })
-    FloatGradient.Rotation = 45
-    FloatGradient.Enabled = false
-    FloatGradient.Parent = FloatingBGFrame
-
-    -- LIST PUTIH TIPIS (GLOW EDGE) PADA BACKGROUND
-    local FloatStroke = Instance.new("UIStroke")
-    FloatStroke.Color = Color3.fromRGB(255, 255, 255)
-    FloatStroke.Transparency = 1
-    FloatStroke.Thickness = 1.2
-    FloatStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    FloatStroke.Parent = FloatingBGFrame
-
-    -- NAGA (RING LUAR)
     local SpinOuterIcon = Instance.new("ImageLabel")
     SpinOuterIcon.Name = "SpinOuterIcon"
-    SpinOuterIcon.Size = UDim2.new(1, 14, 1, 14)
-    SpinOuterIcon.Position = UDim2.new(0, -7, 0, -7)
+    SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
+    SpinOuterIcon.Position = UDim2.new(0, -9, 0, -9)
     SpinOuterIcon.BackgroundTransparency = 1
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
-    SpinOuterIcon.ZIndex = 1
     SpinOuterIcon.Parent = FloatingContainer
 
-    -- RUBAH (LOGO DALAM)
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
     FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
-    FloatingLogoBtn.Position = UDim2.new(0, 0, 0, 0)
+    FloatingLogoBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+    FloatingLogoBtn.Position = UDim2.new(0.5, 0, 0.5, 0)
     FloatingLogoBtn.BackgroundTransparency = 1
     FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
-    FloatingLogoBtn.ZIndex = 2
     FloatingLogoBtn.Parent = FloatingContainer
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
 
-    local floatAnimTime = 0
-    local floatingSpinActive = true
+    local isLogoWobbleActive = false
+    local wobbleTimer = 0
+
     RunService.RenderStepped:Connect(function(dt)
         if FloatingContainer.Visible then
             SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-
-            if floatingSpinActive then
-                floatAnimTime = floatAnimTime + dt * 6
-                FloatingLogoBtn.Rotation = math.sin(floatAnimTime) * 18
+            if isLogoWobbleActive then
+                wobbleTimer = wobbleTimer + (dt * 12)
+                FloatingLogoBtn.Rotation = math.sin(wobbleTimer) * 15
             else
                 FloatingLogoBtn.Rotation = 0
             end
@@ -1432,7 +1388,7 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
-    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", true)
+    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key")
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
 
@@ -1449,7 +1405,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
+    local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search")
 
     local scriptbloxLimit = 15
     ScriptbloxGroup:AddSlider("Max Hasil Script", nil, 8, 25, 15, function(val)
@@ -1593,45 +1549,32 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
-    FloatSizeGroup:AddButton("Ukuran Kecil (45px)", nil, function()
-        FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
-        Library:Notify({ Title = "Tombol Floating", Content = "Ukuran diubah ke Kecil", Type = "Success" })
-    end)
-    FloatSizeGroup:AddButton("Ukuran Sedang (65px)", nil, function()
-        FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
-        Library:Notify({ Title = "Tombol Floating", Content = "Ukuran diubah ke Sedang", Type = "Success" })
-    end)
-    FloatSizeGroup:AddButton("Ukuran Besar (85px)", nil, function()
-        FloatingContainer.Size = UDim2.new(0, 85, 0, 85)
-        Library:Notify({ Title = "Tombol Floating", Content = "Ukuran diubah ke Besar", Type = "Success" })
-    end)
-
-    -- TOGGLE BACKGROUND HITAM GRADASI DENGAN LIST PUTIH TIPIS
-    FloatSizeGroup:AddToggle("Background Hitam Floating", nil, false, function(state)
-        if state then
-            FloatingBGFrame.BackgroundTransparency = 0 -- Pekat meliputi seluruh naga
-            FloatGradient.Enabled = true
-            FloatStroke.Transparency = 0.65 -- List/Glow putih tipis di pinggir
-            Library:Notify({ Title = "Floating Button", Content = "Background Gradasi & List Putih Diaktifkan", Type = "Success" })
-        else
-            FloatingBGFrame.BackgroundTransparency = 1
-            FloatGradient.Enabled = false
-            FloatStroke.Transparency = 1
-            Library:Notify({ Title = "Floating Button", Content = "Background Transparan", Type = "Info" })
-        end
-    end)
-
-    -- TOGGLE ANIMASI GOYANG RUBAH
-    FloatSizeGroup:AddToggle("Animasi Goyang Rubah", nil, true, function(state)
-        floatingSpinActive = state
+    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders")
+    
+    -- FITUR BARU: TOGGLE GOYANGAN LOGO ON/OFF
+    FloatSizeGroup:AddToggle("Goyangan Logo (Wobble)", nil, false, function(state)
+        isLogoWobbleAsActive = state
+        isLogoWobbleActive = state
         if not state then
             FloatingLogoBtn.Rotation = 0
         end
-        Library:Notify({ Title = "Floating Button", Content = "Goyang Rubah: " .. tostring(state), Type = "Info" })
+        Library:Notify({ Title = "Floating Logo", Content = "Goyangan Logo: " .. (state and "Aktif" or "Mati"), Type = "Success" })
     end)
 
-    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", true)
+    FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
+        FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
+        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
+    end)
+    FloatSizeGroup:AddButton("Sedang (65px)", nil, function()
+        FloatingContainer.Size = UDim2.new(0, 65, 0, 65)
+        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Sedang", Type = "Success" })
+    end)
+    FloatSizeGroup:AddButton("Besar (85px)", nil, function()
+        FloatingContainer.Size = UDim2.new(0, 85, 0, 85)
+        Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
+    end)
+
+    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock")
     local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
     local startTime = tick()
     
@@ -1648,7 +1591,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", true)
+    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info")
     
     local AvatarFrame = Instance.new("Frame")
     AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
@@ -1689,7 +1632,7 @@ function Library:CreateWindow(config)
     PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
     PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", true)
+    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation")
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
         pcall(function()
@@ -1745,7 +1688,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
+    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code")
 
     local popularScriptsList = {
         {Name = "1. Infinite Yield (Admin Commands)", Url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
@@ -1776,7 +1719,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
+    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette")
     
     TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
         isRgbTextActive = true
@@ -1791,7 +1734,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
+    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket")
 
     ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
         isRgbThemeActive = true
@@ -1806,7 +1749,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
+    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music")
     
     local currentSound = Instance.new("Sound")
     currentSound.Parent = SoundService
@@ -1899,7 +1842,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", true)
+    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages")
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
         updateAllTranslations()
@@ -1911,12 +1854,12 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", true)
+    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders")
     TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
     end)
 
-    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", true)
+    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type")
     for fontName, enumFont in pairs(Fonts) do
         FontGroup:AddButton(fontName, nil, function()
             currentFont = enumFont
