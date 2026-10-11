@@ -34,8 +34,8 @@ local Translations = {
         BGTrans        = "Transparansi BG",
         TextStyle      = "Gaya Text / Font",
         LangSelect     = "Pilih Bahasa / Language",
-        TextColorGroup = "Pilih Warna Teks (25 Pilihan)",
-        ThemeGroup     = "Pilih Tema UI (25 Tema)",
+        TextColorGroup = "Pilih Warna Teks",
+        ThemeGroup     = "Pilih Tema UI (Aksen)",
         MusicGroup     = "Grup Musik",
         PopularScripts = "Script Populer (15 Script)",
         Executing      = "Menjalankan ",
@@ -47,9 +47,7 @@ local Translations = {
         PerfGroup      = "Fitur & Performa",
         FloatSizeGroup = "Ukuran Tombol Hide/Show",
         ScriptbloxGroup = "Cari Script (Scriptblox)",
-        KeyInfoGroup   = "Informasi Key Anda",
-        CustomScriptGroup = "Simpan & Eksekusi Script Custom",
-        WobbleGroup    = "Pengaturan Logo Goyang"
+        KeyInfoGroup   = "Informasi Key Anda"
     },
     English = {
         NotifTitle     = "Notification",
@@ -58,8 +56,8 @@ local Translations = {
         BGTrans        = "BG Transparency",
         TextStyle      = "Text Style / Font",
         LangSelect     = "Language / Bahasa",
-        TextColorGroup = "Text Color (25 Options)",
-        ThemeGroup     = "UI Theme Color (25 Themes)",
+        TextColorGroup = "Text Color",
+        ThemeGroup     = "UI Theme Color (Accent)",
         MusicGroup     = "Music Group",
         PopularScripts = "Popular Scripts (15 Scripts)",
         Executing      = "Executing ",
@@ -71,9 +69,7 @@ local Translations = {
         PerfGroup      = "Features & Performance",
         FloatSizeGroup = "Hide/Show Button Size",
         ScriptbloxGroup = "Search Script (Scriptblox)",
-        KeyInfoGroup   = "Your Key Information",
-        CustomScriptGroup = "Save & Execute Custom Script",
-        WobbleGroup    = "Logo Wobble Settings"
+        KeyInfoGroup   = "Your Key Information"
     }
 }
 
@@ -116,10 +112,9 @@ local currentTextColor = Color3.fromRGB(255, 255, 255)
 local isRgbTextActive = false
 
 local isRgbThemeActive = false
-local currentThemeColor = Color3.fromRGB(52, 152, 219)
+local currentThemeColor = Color3.fromRGB(52, 152, 219) -- Default Fluent Blue Accent
 local mainWindowRef
 local mainGradientRef
-local activeStrokes = {}
 
 local function getIconId(icon)
     if not icon or type(icon) ~= "string" or icon == "" then return nil end
@@ -182,13 +177,16 @@ local function updateGlobalTextColor(color)
     end
 end
 
+-- SISTEMA AKSEN TEMA ALA FLUENT / RAYFIELD (TETAP GELAP & ELEGAN)
+local activeThemeStrokes = {}
 local function updateGlobalThemeColor(color)
     currentThemeColor = color
     isRgbThemeActive = false
     
-    for _, stroke in ipairs(activeStrokes) do
+    for _, stroke in ipairs(activeThemeStrokes) do
         if stroke and stroke.Parent then
             stroke.Color = color
+            stroke.Transparency = 0.4
         end
     end
 end
@@ -208,9 +206,10 @@ RunService.RenderStepped:Connect(function()
     end
 
     if isRgbThemeActive then
-        for _, stroke in ipairs(activeStrokes) do
+        for _, stroke in ipairs(activeThemeStrokes) do
             if stroke and stroke.Parent then
                 stroke.Color = rgbColor
+                stroke.Transparency = 0.2
             end
         end
     end
@@ -247,7 +246,7 @@ function Library:Notify(options)
     local Card = Instance.new("Frame")
     Card.Name = "NotifCard"
     Card.Size = UDim2.new(1, 0, 0, 52)
-    Card.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    Card.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
     Card.BackgroundTransparency = 1
     Card.BorderSizePixel = 0
     Card.ClipsDescendants = true
@@ -257,10 +256,9 @@ function Library:Notify(options)
 
     local CardStroke = Instance.new("UIStroke")
     CardStroke.Color = sideColor
-    CardStroke.Thickness = 2
+    CardStroke.Thickness = 1
     CardStroke.Transparency = 1
     CardStroke.Parent = Card
-    table.insert(activeStrokes, CardStroke)
 
     local SideBar = Instance.new("Frame")
     SideBar.Size = UDim2.new(0, 4, 1, -12)
@@ -347,8 +345,8 @@ local function makeDraggable(frame, handle)
 end
 
 local function makeResizable(frame, handle, minWidth, minHeight)
-    minWidth = minWidth or 200
-    minHeight = minHeight or 150
+    minWidth = minWidth or 180
+    minHeight = minHeight or 140
     local resizing, dragInput, dragStart, startSize
 
     handle.InputBegan:Connect(function(input)
@@ -384,6 +382,9 @@ local function makeResizable(frame, handle, minWidth, minHeight)
     end)
 end
 
+-- ==========================================
+-- PEMBUATAN ELEMEN ANTI KEPOTONG + ICON FIX
+-- ==========================================
 local function createButton(parent, text, icon, callback)
     if type(icon) == "function" then
         callback = icon
@@ -400,16 +401,15 @@ local function createButton(parent, text, icon, callback)
 
     local Btn = Instance.new("TextButton")
     Btn.Size = UDim2.new(1, 0, 0, 32)
-    Btn.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    Btn.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     Btn.Text = ""
     Btn.Parent = parent
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
     local BtnStroke = Instance.new("UIStroke", Btn)
-    BtnStroke.Color = currentThemeColor
-    BtnStroke.Thickness = 2
-    BtnStroke.Transparency = 0.8
-    table.insert(activeStrokes, BtnStroke)
+    BtnStroke.Color = Color3.fromRGB(255, 255, 255)
+    BtnStroke.Transparency = 0.9
+    table.insert(activeThemeStrokes, BtnStroke)
 
     local xOffset = 10
     if iconId then
@@ -438,10 +438,10 @@ local function createButton(parent, text, icon, callback)
 
     Btn.MouseButton1Click:Connect(function()
         TweenService:Create(Btn, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0.98, 0, 0, 30)}):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {Transparency = 0.2}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {Transparency = 0.3}):Play()
         task.wait(0.12)
         TweenService:Create(Btn, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 32)}):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.25), {Transparency = 0.8}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.25), {Transparency = 0.9}):Play()
         task.spawn(callback)
     end)
     return Btn
@@ -460,15 +460,14 @@ local function createToggle(parent, text, icon, default, callback)
 
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Size = UDim2.new(1, 0, 0, 32)
-    ToggleFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     ToggleFrame.Parent = parent
 
     Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
     local ToggleStroke = Instance.new("UIStroke", ToggleFrame)
-    ToggleStroke.Color = currentThemeColor
-    ToggleStroke.Thickness = 2
-    ToggleStroke.Transparency = 0.8
-    table.insert(activeStrokes, ToggleStroke)
+    ToggleStroke.Color = Color3.fromRGB(255, 255, 255)
+    ToggleStroke.Transparency = 0.9
+    table.insert(activeThemeStrokes, ToggleStroke)
 
     local xOffset = 10
     if iconId then
@@ -498,7 +497,7 @@ local function createToggle(parent, text, icon, default, callback)
     local Box = Instance.new("Frame")
     Box.Size = UDim2.new(0, 18, 0, 18)
     Box.Position = UDim2.new(1, -26, 0.5, -9)
-    Box.BackgroundColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 45)
+    Box.BackgroundColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 40)
     Box.Parent = ToggleFrame
 
     Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 4)
@@ -520,7 +519,7 @@ local function createToggle(parent, text, icon, default, callback)
     ClickBtn.MouseButton1Click:Connect(function()
         state = not state
         TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            BackgroundColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 45)
+            BackgroundColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 40)
         }):Play()
         TweenService:Create(InnerDot, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
             BackgroundTransparency = state and 0 or 1
@@ -546,16 +545,15 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     local iconId = getIconId(icon)
 
     local SliderFrame = Instance.new("Frame")
-    SliderFrame.Size = UDim2.new(1, 0, 0, 44)
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    SliderFrame.Size = UDim2.new(1, 0, 0, 42)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     SliderFrame.Parent = parent
 
     Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
     local SliderStroke = Instance.new("UIStroke", SliderFrame)
-    SliderStroke.Color = currentThemeColor
-    SliderStroke.Thickness = 2
-    SliderStroke.Transparency = 0.8
-    table.insert(activeStrokes, SliderStroke)
+    SliderStroke.Color = Color3.fromRGB(255, 255, 255)
+    SliderStroke.Transparency = 0.9
+    table.insert(activeThemeStrokes, SliderStroke)
 
     local xOffset = 10
     if iconId then
@@ -596,7 +594,7 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     local SliderBar = Instance.new("Frame")
     SliderBar.Size = UDim2.new(1, -20, 0, 6)
     SliderBar.Position = UDim2.new(0, 10, 0, 28)
-    SliderBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
     SliderBar.Parent = SliderFrame
     Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
 
@@ -605,13 +603,6 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     Fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Fill.Parent = SliderBar
     Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
-
-    local Thumb = Instance.new("Frame")
-    Thumb.Size = UDim2.new(0, 12, 0, 12)
-    Thumb.Position = UDim2.new(1, -6, 0.5, -6)
-    Thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Thumb.Parent = Fill
-    Instance.new("UICorner", Thumb).CornerRadius = UDim.new(1, 0)
 
     local isDragging = false
 
@@ -652,18 +643,16 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     local Card = Instance.new("Frame")
     Card.Size = UDim2.new(0, 240, 0, 70)
     Card.Position = UDim2.new(0.5, -120, 0.5, -35)
-    Card.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    Card.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
     Card.BorderSizePixel = 0
     Card.Parent = ScreenGui
 
     Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 10)
 
     local Stroke = Instance.new("UIStroke")
-    Stroke.Color = currentThemeColor
-    Stroke.Thickness = 2
-    Stroke.Transparency = 0.8
+    Stroke.Color = Color3.fromRGB(255, 255, 255)
+    Stroke.Transparency = 0.85
     Stroke.Parent = Card
-    table.insert(activeStrokes, Stroke)
 
     local Spinner = Instance.new("Frame")
     Spinner.Size = UDim2.new(0, 38, 0, 38)
@@ -682,7 +671,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     RingGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 80, 80)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 20))
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))
     })
     RingGradient.Parent = RingStroke
 
@@ -749,7 +738,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BigText.Position = UDim2.new(0, 20, 0.5, -60)
             BigText.BackgroundTransparency = 1
             BigText.Text = ""
-            BigText.TextColor3 = Color3.fromRGB(15, 15, 20)
+            BigText.TextColor3 = Color3.fromRGB(15, 15, 15)
             BigText.Font = Enum.Font.PermanentMarker
             BigText.TextSize = 72
             BigText.TextWrapped = true
@@ -870,16 +859,15 @@ function Library:CreateWindow(config)
             KeyFrame.Name = "KeyFrame"
             KeyFrame.Size = UDim2.new(0, 250, 0, 170)
             KeyFrame.Position = UDim2.new(0.5, -125, 0.5, -85)
-            KeyFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+            KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
             KeyFrame.BorderSizePixel = 0
             KeyFrame.Parent = ScreenGui
 
             Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 10)
             local KeyStroke = Instance.new("UIStroke", KeyFrame)
-            KeyStroke.Color = currentThemeColor
-            KeyStroke.Thickness = 2
-            KeyStroke.Transparency = 0.8
-            table.insert(activeStrokes, KeyStroke)
+            KeyStroke.Color = Color3.fromRGB(255, 255, 255)
+            KeyStroke.Transparency = 0.85
+            table.insert(activeThemeStrokes, KeyStroke)
 
             makeDraggable(KeyFrame)
 
@@ -1010,7 +998,7 @@ function Library:CreateWindow(config)
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 240, 0, 0)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
-    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    Main.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
     Main.Parent = ScreenGui
@@ -1021,20 +1009,67 @@ function Library:CreateWindow(config)
 
     local MainGradient = Instance.new("UIGradient")
     MainGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 22, 30)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(12, 12, 16)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 12))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 24)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 8, 10)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
     })
     MainGradient.Rotation = 135
     MainGradient.Parent = Main
     mainGradientRef = MainGradient
 
+    -- CUSTOM BACKGROUND IMAGE (SUPPORT WORKSPACE / ASSET ID)
+    local CustomBg = Instance.new("ImageLabel")
+    CustomBg.Name = "CustomBg"
+    CustomBg.Size = UDim2.new(1, 0, 1, 0)
+    CustomBg.BackgroundTransparency = 1
+    CustomBg.ImageTransparency = 0.35
+    CustomBg.ZIndex = 0
+    CustomBg.Visible = false
+    CustomBg.Parent = Main
+
+    function Window:SetBackground(source)
+        if not source then
+            CustomBg.Visible = false
+            return
+        end
+        
+        local assetId = ""
+        if typeof(source) == "Instance" then
+            if source:IsA("Part") or source:IsA("BasePart") then
+                local decal = source:FindFirstChildWhichIsA("Decal") or source:FindFirstChildWhichIsA("Texture")
+                if decal then assetId = decal.Texture end
+            elseif source:IsA("Decal") or source:IsA("Texture") then
+                assetId = source.Texture
+            end
+        elseif type(source) == "string" then
+            if workspace:FindFirstChild(source) then
+                local part = workspace:FindFirstChild(source)
+                local decal = part:FindFirstChildWhichIsA("Decal") or part:FindFirstChildWhichIsA("Texture")
+                if decal then assetId = decal.Texture end
+            elseif source:find("rbxassetid://") then
+                assetId = source
+            elseif tonumber(source) then
+                assetId = "rbxassetid://" .. source
+            else
+                assetId = source
+            end
+        end
+        
+        if assetId ~= "" then
+            CustomBg.Image = assetId
+            CustomBg.Visible = true
+            Library:Notify({ Title = "Background", Content = "Background UI berhasil diubah!", Type = "Success" })
+        else
+            Library:Notify({ Title = "Background", Content = "Gagal memuat gambar background!", Type = "Error" })
+        end
+    end
+
     local MainStroke = Instance.new("UIStroke")
-    MainStroke.Color = currentThemeColor
-    MainStroke.Thickness = 2
-    MainStroke.Transparency = 0.8
+    MainStroke.Color = Color3.fromRGB(52, 152, 219)
+    MainStroke.Thickness = 1
+    MainStroke.Transparency = 0.4
     MainStroke.Parent = Main
-    table.insert(activeStrokes, MainStroke)
+    table.insert(activeThemeStrokes, MainStroke)
 
     local Header = Instance.new("Frame")
     Header.Size = UDim2.new(1, 0, 0, 36)
@@ -1045,16 +1080,16 @@ function Library:CreateWindow(config)
 
     if mainLogo then
         local HeaderIcon = Instance.new("ImageLabel")
-        HeaderIcon.Size = UDim2.new(0, 24, 0, 24)
-        HeaderIcon.Position = UDim2.new(0, 10, 0, 6)
+        HeaderIcon.Size = UDim2.new(0, 24, 0, 24) -- Diperbesar ukurannya
+        HeaderIcon.Position = UDim2.new(0, 10, 0, 6)   -- Disesuaikan posisinya
         HeaderIcon.BackgroundTransparency = 1
         HeaderIcon.Image = mainLogo
         HeaderIcon.Parent = Header
     end
 
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, mainLogo and -130 or -115, 1, 0)
-    Title.Position = UDim2.new(0, mainLogo and 40 or 12, 0, 0)
+    Title.Size = UDim2.new(1, mainLogo and -135 or -115, 1, 0)
+    Title.Position = UDim2.new(0, mainLogo and 42 or 12, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = titleText
     Title.TextColor3 = currentTextColor
@@ -1067,7 +1102,7 @@ function Library:CreateWindow(config)
     local MinBtn = Instance.new("ImageButton")
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
     MinBtn.Position = UDim2.new(1, -100, 0, 7)
-    MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     MinBtn.Image = Library.Icons["lucide-chevron-up"]
     MinBtn.Parent = Header
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
@@ -1075,7 +1110,7 @@ function Library:CreateWindow(config)
     local SettingsBtn = Instance.new("ImageButton")
     SettingsBtn.Size = UDim2.new(0, 22, 0, 22)
     SettingsBtn.Position = UDim2.new(1, -75, 0, 7)
-    SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     SettingsBtn.Image = Library.Icons["Settings"]
     SettingsBtn.Parent = Header
     Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 6)
@@ -1083,7 +1118,7 @@ function Library:CreateWindow(config)
     local HideBtn = Instance.new("ImageButton")
     HideBtn.Size = UDim2.new(0, 22, 0, 22)
     HideBtn.Position = UDim2.new(1, -50, 0, 7)
-    HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     HideBtn.Image = mainLogo or Library.Icons["Logo"]
     HideBtn.Parent = Header
     Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
@@ -1091,11 +1126,12 @@ function Library:CreateWindow(config)
     local CloseBtn = Instance.new("ImageButton")
     CloseBtn.Size = UDim2.new(0, 22, 0, 22)
     CloseBtn.Position = UDim2.new(1, -25, 0, 7)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     CloseBtn.Image = Library.Icons["lucide-x"]
     CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
+    -- CONTAINER UTAMA (SCROLL 1 / HALAMAN UTAMA)
     local Container = Instance.new("ScrollingFrame")
     Container.Name = "MainContainer"
     Container.Size = UDim2.new(1, -12, 1, -44)
@@ -1156,30 +1192,30 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
+    -- ==========================================================
+    -- FITUR NESTED SCROLLING (SCROLL 2 DI DALAM GRUP)
+    -- ==========================================================
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
-        if defaultCollapsed == nil then defaultCollapsed = true end
-
         local iconId = getIconId(icon)
-        local isCollapsed = defaultCollapsed
+        local isCollapsed = (defaultCollapsed == nil) and true or defaultCollapsed -- Default tertutup saat pertama kali
 
         local GroupFrame = Instance.new("Frame")
         GroupFrame.Name = "GroupFrame"
         GroupFrame.Size = UDim2.new(1, 0, 0, 32)
-        GroupFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+        GroupFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
         GroupFrame.BorderSizePixel = 0
         GroupFrame.ClipsDescendants = true
         GroupFrame.Parent = parentContainer
 
         Instance.new("UICorner", GroupFrame).CornerRadius = UDim.new(0, 8)
         local GroupStroke = Instance.new("UIStroke", GroupFrame)
-        GroupStroke.Color = currentThemeColor
-        GroupStroke.Thickness = 2
-        GroupStroke.Transparency = 0.85
-        table.insert(activeStrokes, GroupStroke)
+        GroupStroke.Color = Color3.fromRGB(255, 255, 255)
+        GroupStroke.Transparency = 0.93
+        table.insert(activeThemeStrokes, GroupStroke)
 
         local GroupHeader = Instance.new("TextButton")
         GroupHeader.Name = "GroupHeader"
@@ -1225,6 +1261,7 @@ function Library:CreateWindow(config)
         ArrowLbl.Font = Enum.Font.GothamBold
         ArrowLbl.Parent = GroupHeader
 
+        -- SCROLL DI DALAM GRUP (NESTED SCROLL)
         local ContentHolder = Instance.new("ScrollingFrame")
         ContentHolder.Name = "ContentHolder"
         ContentHolder.Size = UDim2.new(1, -12, 0, 0)
@@ -1298,15 +1335,14 @@ function Library:CreateWindow(config)
         function Group:AddLabel(text)
             local LblFrame = Instance.new("Frame")
             LblFrame.Size = UDim2.new(1, 0, 0, 28)
-            LblFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+            LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
             LblFrame.Parent = ContentHolder
 
             Instance.new("UICorner", LblFrame).CornerRadius = UDim.new(0, 6)
             local Stroke = Instance.new("UIStroke", LblFrame)
-            Stroke.Color = currentThemeColor
-            Stroke.Thickness = 2
-            Stroke.Transparency = 0.8
-            table.insert(activeStrokes, Stroke)
+            Stroke.Color = Color3.fromRGB(255, 255, 255)
+            Stroke.Transparency = 0.9
+            table.insert(activeThemeStrokes, Stroke)
 
             local Lbl = Instance.new("TextLabel")
             Lbl.Size = UDim2.new(1, -12, 1, 0)
@@ -1329,31 +1365,16 @@ function Library:CreateWindow(config)
     end
 
     local colorList = {
-        {"Hitam Klasik", Color3.fromRGB(20, 20, 25)},
-        {"Putih Bersih", Color3.fromRGB(240, 240, 240)},
-        {"Merah Darah", Color3.fromRGB(231, 76, 60)},
-        {"Hijau Emerald", Color3.fromRGB(46, 204, 113)},
-        {"Biru Azure", Color3.fromRGB(52, 152, 219)},
-        {"Kuning Emas", Color3.fromRGB(241, 196, 15)},
-        {"Ungu Violet", Color3.fromRGB(155, 89, 182)},
-        {"Oranye Sunset", Color3.fromRGB(230, 126, 34)},
-        {"Pink Magenta", Color3.fromRGB(255, 105, 180)},
-        {"Cyan Terang", Color3.fromRGB(0, 255, 255)},
-        {"Lime Neon", Color3.fromRGB(0, 255, 0)},
-        {"Ungu Tua", Color3.fromRGB(75, 0, 130)},
-        {"Cokelat Kayu", Color3.fromRGB(139, 69, 19)},
-        {"Abu-Abu Metalik", Color3.fromRGB(128, 128, 128)},
-        {"Teal Samudra", Color3.fromRGB(0, 128, 128)},
-        {"Biru Dongker", Color3.fromRGB(0, 0, 128)},
-        {"Merah Marun", Color3.fromRGB(128, 0, 0)},
-        {"Hijau Mint", Color3.fromRGB(152, 251, 152)},
-        {"Kuning Lemon", Color3.fromRGB(255, 250, 205)},
-        {"Salmon Pink", Color3.fromRGB(250, 128, 114)},
-        {"Lavender", Color3.fromRGB(230, 230, 250)},
-        {"Coral", Color3.fromRGB(255, 127, 80)},
-        {"Turkuis", Color3.fromRGB(64, 224, 208)},
-        {"Indigo", Color3.fromRGB(75, 0, 130)},
-        {"Rose Gold", Color3.fromRGB(183, 110, 121)}
+        {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
+        {"Hijau (Green)", Color3.fromRGB(46, 204, 113)},
+        {"Biru (Blue)", Color3.fromRGB(52, 152, 219)},
+        {"Kuning (Yellow)", Color3.fromRGB(241, 196, 15)},
+        {"Ungu (Purple)", Color3.fromRGB(155, 89, 182)},
+        {"Oranye (Orange)", Color3.fromRGB(230, 126, 34)},
+        {"Pink", Color3.fromRGB(255, 105, 180)},
+        {"Cyan", Color3.fromRGB(0, 255, 255)},
+        {"Lime", Color3.fromRGB(0, 255, 0)},
+        {"Magenta", Color3.fromRGB(255, 0, 255)}
     }
 
     local FloatingContainer = Instance.new("Frame")
@@ -1372,16 +1393,9 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
-    local isLogoWobbleActive = false
-
     RunService.RenderStepped:Connect(function()
         if FloatingContainer.Visible then
             SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-            if isLogoWobbleActive then
-                FloatingContainer.Rotation = math.sin(tick() * 12) * 12
-            else
-                FloatingContainer.Rotation = 0
-            end
         end
     end)
 
@@ -1405,6 +1419,7 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
+    -- SEMUA GRUP SETTING DIATUR TERTUTUP (TRUE) SECARA DEFAULT
     local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", true)
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
@@ -1422,62 +1437,6 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local WobbleGroup = buildGroupInContainer(SettingsContainer, "WobbleGroup", "lucide-zap", true)
-    WobbleGroup:AddToggle("Logo Goyang (Wobble)", nil, false, function(state)
-        isLogoWobbleActive = state
-        -- Perbaikan operator ternary yang menyebabkan error sebelumnya:
-        Library:Notify({ Title = "Logo Goyang", Content = state and "Logo Goyang Diaktifkan" or "Logo Goyang Dimatikan", Type = "Success" })
-    end)
-
-    local CustomScriptGroup = buildGroupInContainer(SettingsContainer, "CustomScriptGroup", "lucide-code", true)
-    
-    local ScriptInputFrame = Instance.new("Frame")
-    ScriptInputFrame.Size = UDim2.new(1, 0, 0, 50)
-    ScriptInputFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-    ScriptInputFrame.Parent = CustomScriptGroup.ContentHolder
-    Instance.new("UICorner", ScriptInputFrame).CornerRadius = UDim.new(0, 6)
-
-    local CustomScriptBox = Instance.new("TextBox")
-    CustomScriptBox.Size = UDim2.new(1, -12, 1, -26)
-    CustomScriptBox.Position = UDim2.new(0, 6, 0, 4)
-    CustomScriptBox.BackgroundTransparency = 1
-    CustomScriptBox.PlaceholderText = "Masukkan kode lua / loadstring disini..."
-    CustomScriptBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
-    CustomScriptBox.Text = ""
-    CustomScriptBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CustomScriptBox.TextSize = 10
-    CustomScriptBox.Font = currentFont
-    CustomScriptBox.ClearTextOnFocus = false
-    CustomScriptBox.MultiLine = true
-    CustomScriptBox.TextXAlignment = Enum.TextXAlignment.Left
-    CustomScriptBox.TextYAlignment = Enum.TextYAlignment.Top
-    CustomScriptBox.Parent = ScriptInputFrame
-
-    local SaveScriptBtn = Instance.new("TextButton")
-    SaveScriptBtn.Size = UDim2.new(1, -12, 0, 20)
-    SaveScriptBtn.Position = UDim2.new(0, 6, 1, -22)
-    SaveScriptBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-    SaveScriptBtn.Text = "Simpan & Execute Script"
-    SaveScriptBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SaveScriptBtn.TextSize = 10
-    SaveScriptBtn.Font = Enum.Font.GothamBold
-    SaveScriptBtn.Parent = ScriptInputFrame
-    Instance.new("UICorner", SaveScriptBtn).CornerRadius = UDim.new(0, 4)
-
-    SaveScriptBtn.MouseButton1Click:Connect(function()
-        local code = CustomScriptBox.Text
-        if code ~= "" then
-            Library:Notify({ Title = "Custom Script", Content = "Script Disimpan & Dijalankan!", Type = "Success" })
-            task.spawn(function()
-                pcall(function()
-                    loadstring(code)()
-                end)
-            end)
-        else
-            Library:Notify({ Title = "Custom Script", Content = "Kode script masih kosong!", Type = "Error" })
-        end
-    end)
-
     local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
 
     local scriptbloxLimit = 15
@@ -1487,7 +1446,7 @@ function Library:CreateWindow(config)
 
     local SearchBoxFrame = Instance.new("Frame")
     SearchBoxFrame.Size = UDim2.new(1, 0, 0, 32)
-    SearchBoxFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    SearchBoxFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     SearchBoxFrame.Parent = ScriptbloxGroup.ContentHolder
     Instance.new("UICorner", SearchBoxFrame).CornerRadius = UDim.new(0, 6)
 
@@ -1657,7 +1616,7 @@ function Library:CreateWindow(config)
     
     local AvatarFrame = Instance.new("Frame")
     AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
-    AvatarFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    AvatarFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     AvatarFrame.Parent = PlayerGroup.ContentHolder
     Instance.new("UICorner", AvatarFrame).CornerRadius = UDim.new(0, 6)
 
@@ -1807,7 +1766,7 @@ function Library:CreateWindow(config)
         local name, col = cInfo[1], cInfo[2]
         ThemeGroup:AddButton("Tema " .. name, nil, function()
             updateGlobalThemeColor(col)
-            Library:Notify({ Title = "Tema UI", Content = "Tema diubah ke " .. name, Type = "Success", Duration = 2 })
+            Library:Notify({ Title = "Tema UI", Content = "Aksen tema diubah ke " .. name, Type = "Success", Duration = 2 })
         end)
     end
 
@@ -1868,7 +1827,7 @@ function Library:CreateWindow(config)
 
     local CustomInputFrame = Instance.new("Frame")
     CustomInputFrame.Size = UDim2.new(1, 0, 0, 32)
-    CustomInputFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     CustomInputFrame.Parent = MusicGroup.ContentHolder
 
     local CustomTextBox = Instance.new("TextBox")
@@ -1982,7 +1941,7 @@ function Library:CreateWindow(config)
             normalHeight = Main.AbsoluteSize.Y
             Container.Visible = false
             SettingsContainer.Visible = false
-            ResizeGrip.Visible = false
+            ResizeGrip.Visible = false -- TOMBOL RESIZE DISEMBUNYIKAN SAAT MINIMIZE
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
@@ -1990,6 +1949,7 @@ function Library:CreateWindow(config)
             }):Play()
         else
             MinBtn.Image = Library.Icons["lucide-chevron-up"]
+            ResizeGrip.Visible = true -- TOMBOL RESIZE MUNCUL KEMBALI
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
@@ -1997,7 +1957,6 @@ function Library:CreateWindow(config)
             task.delay(0.2, function()
                 Container.Visible = not showingSettings
                 SettingsContainer.Visible = showingSettings
-                ResizeGrip.Visible = true
             end)
         end
     end)
