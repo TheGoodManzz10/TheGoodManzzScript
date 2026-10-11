@@ -112,10 +112,10 @@ local currentTextColor = Color3.fromRGB(255, 255, 255)
 local isRgbTextActive = false
 
 local isRgbThemeActive = false
-local currentAccentColor = Color3.fromRGB(52, 152, 219) -- Accent Fluent Default
+local currentAccentColor = Color3.fromRGB(52, 152, 219)
 local mainWindowRef
 local mainStrokeRef
-local headerGlowRef
+local mainGradientRef
 
 local function getIconId(icon)
     if not icon or type(icon) ~= "string" or icon == "" then return nil end
@@ -166,24 +166,33 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = TargetParent
 
--- SISTEM TEMA FLUENT UI PREMIUM (TIDAK LAGI MERUSAK UI MENJADI MENCOLOK)
+-- TEMA GRADASI FLUENT UI YANG TEBAL DAN ELEGAN
 local function updateGlobalThemeColor(accentColor)
     currentAccentColor = accentColor
-    isRgbThemeActive = false
-    
+
     if mainStrokeRef then
         mainStrokeRef.Color = accentColor
-        mainStrokeRef.Transparency = 0.4
+        mainStrokeRef.Transparency = 0.25
     end
 
-    if headerGlowRef then
-        headerGlowRef.BackgroundColor3 = accentColor
+    if mainGradientRef then
+        local h, s, v = accentColor:ToHSV()
+        local darkTint = Color3.fromHSV(h, math.clamp(s * 0.8, 0, 1), math.clamp(v * 0.25, 0, 1))
+        local deeperDark = Color3.fromRGB(10, 10, 14)
+
+        mainGradientRef.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, darkTint),
+            ColorSequenceKeypoint.new(0.4, deeperDark),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 8))
+        })
     end
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("UIStroke") and obj.Name == "AccentStroke" then
             obj.Color = accentColor
         elseif obj:IsA("Frame") and obj.Name == "AccentLine" then
+            obj.BackgroundColor3 = accentColor
+        elseif obj.Name == "ToggleBox" and obj:GetAttribute("Active") == true then
             obj.BackgroundColor3 = accentColor
         end
     end
@@ -201,8 +210,9 @@ local function updateGlobalTextColor(color)
     end
 end
 
+-- RENDER STEPPED (RGB TEXT & REALTIME RGB THEME WORKING PROPERLY)
 RunService.RenderStepped:Connect(function()
-    local hue = tick() % 5 / 5
+    local hue = (tick() % 4) / 4
     local rgbColor = Color3.fromHSV(hue, 1, 1)
 
     if isRgbTextActive then
@@ -217,7 +227,6 @@ RunService.RenderStepped:Connect(function()
 
     if isRgbThemeActive then
         updateGlobalThemeColor(rgbColor)
-        isRgbThemeActive = true
     end
 end)
 
@@ -252,7 +261,7 @@ function Library:Notify(options)
     local Card = Instance.new("Frame")
     Card.Name = "NotifCard"
     Card.Size = UDim2.new(1, 0, 0, 52)
-    Card.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
+    Card.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
     Card.BackgroundTransparency = 1
     Card.BorderSizePixel = 0
     Card.ClipsDescendants = true
@@ -497,6 +506,8 @@ local function createToggle(parent, text, icon, default, callback)
     end
 
     local Box = Instance.new("Frame")
+    Box.Name = "ToggleBox"
+    Box:SetAttribute("Active", state)
     Box.Size = UDim2.new(0, 18, 0, 18)
     Box.Position = UDim2.new(1, -26, 0.5, -9)
     Box.BackgroundColor3 = state and currentAccentColor or Color3.fromRGB(35, 35, 40)
@@ -520,6 +531,7 @@ local function createToggle(parent, text, icon, default, callback)
 
     ClickBtn.MouseButton1Click:Connect(function()
         state = not state
+        Box:SetAttribute("Active", state)
         TweenService:Create(Box, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
             BackgroundColor3 = state and currentAccentColor or Color3.fromRGB(35, 35, 40)
         }):Play()
@@ -639,8 +651,9 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     return SliderFrame
 end
 
+-- POIN 1: RAYFIELD EXECUTION WITH 12 CHAR MAX, EXACT 1 SEC PER CHAR (TOTAL 15 S)
 local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
-    local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 8)
+    local targetFlashText = string.sub(tostring(flashText or "GOODMANZHUB"), 1, 12)
 
     local Card = Instance.new("Frame")
     Card.Size = UDim2.new(0, 240, 0, 70)
@@ -699,7 +712,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     AuthorLbl.TextXAlignment = Enum.TextXAlignment.Left
     AuthorLbl.Parent = Card
 
-    local duration = 6.0
+    local duration = 3.0
     local elapsed = 0
     local rotation = 0
 
@@ -715,9 +728,9 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
         local dotCount = (math.floor(elapsed * 3) % 4) + 1
         local dots = string.rep(".", dotCount)
 
-        if elapsed < 2.0 then
+        if elapsed < 1.0 then
             AuthorLbl.Text = txt1
-        elseif elapsed < 4.0 then
+        elseif elapsed < 2.0 then
             AuthorLbl.Text = txt2 .. " " .. dots
         else
             AuthorLbl.Text = txt3 .. " " .. dots
@@ -742,17 +755,10 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BigText.Text = ""
             BigText.TextColor3 = Color3.fromRGB(15, 15, 15)
             BigText.Font = Enum.Font.PermanentMarker
-            BigText.TextSize = 72
+            BigText.TextSize = 64
             BigText.TextWrapped = true
             BigText.ZIndex = 1000000
             BigText.Parent = Flash
-
-            task.spawn(function()
-                for i = 1, #targetFlashText do
-                    BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(0.15)
-                end
-            end)
 
             local Underline = Instance.new("Frame")
             Underline.Name = "TextUnderline"
@@ -768,16 +774,23 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             UnderlineCorner.CornerRadius = UDim.new(1, 0)
             UnderlineCorner.Parent = Underline
 
-            task.wait(0.05)
-            local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
+            -- PENGETIKAN 1 KARAKTER/DETIK (MAKS 12 HURUF = 12 DETIK)
+            task.spawn(function()
+                for i = 1, #targetFlashText do
+                    BigText.Text = string.sub(targetFlashText, 1, i)
+                    task.wait(1.0)
+                end
 
-            TweenService:Create(Underline, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, targetWidth, 0, 4)
-            }):Play()
+                task.wait(0.2)
+                local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
+                TweenService:Create(Underline, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, targetWidth, 0, 4)
+                }):Play()
 
-            task.delay(1.5, function()
-                local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundTransparency = 1})
-                TweenService:Create(BigText, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+                -- TAHAN SAMPAI PAS TOTAL 15 DETIK
+                task.wait(1.8)
+                local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundTransparency = 1})
+                TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
                 fadeTween:Play()
                 fadeTween.Completed:Connect(function()
                     Flash:Destroy()
@@ -797,7 +810,7 @@ function Library:CreateWindow(config)
     local text1 = config.Text1 or ("by:" .. authorText)
     local text2 = config.Text2 or "Injeksi Game"
     local text3 = config.Text3 or "Menyiapkan Ui"
-    local flashText = config.FlashText or "GOODMANZ"
+    local flashText = config.FlashText or "GOODMANZHUB"
 
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
@@ -999,7 +1012,7 @@ function Library:CreateWindow(config)
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 240, 0, 0)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
-    Main.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    Main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
     Main.Parent = ScreenGui
@@ -1008,13 +1021,19 @@ function Library:CreateWindow(config)
 
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
+    -- GRADASI TEMA TEBAL SANGAT TERLIHAT
+    local MainGradient = Instance.new("UIGradient")
+    MainGradient.Rotation = 135
+    MainGradient.Parent = Main
+    mainGradientRef = MainGradient
+
     local MainStroke = Instance.new("UIStroke")
     MainStroke.Name = "AccentStroke"
-    MainStroke.Color = currentAccentColor
-    MainStroke.Thickness = 1
-    MainStroke.Transparency = 0.5
+    MainStroke.Thickness = 1.5
     MainStroke.Parent = Main
     mainStrokeRef = MainStroke
+
+    updateGlobalThemeColor(currentAccentColor)
 
     local Header = Instance.new("Frame")
     Header.Size = UDim2.new(1, 0, 0, 36)
@@ -1023,20 +1042,20 @@ function Library:CreateWindow(config)
 
     makeDraggable(Main, Header)
 
-    -- POIN 4: ICON HEADER DIBESARKAN JADI 22x22 (SAMA DENGAN UKURAN TOMBOL SETTING)
+    -- POIN 3: UKURAN ICON RUBAH DIBESARKAN KETAT MENJADI 28x28
     local HeaderIcon
     if mainLogo then
         HeaderIcon = Instance.new("ImageLabel")
-        HeaderIcon.Size = UDim2.new(0, 22, 0, 22)
-        HeaderIcon.Position = UDim2.new(0, 10, 0, 7)
+        HeaderIcon.Size = UDim2.new(0, 28, 0, 28)
+        HeaderIcon.Position = UDim2.new(0, 8, 0, 4)
         HeaderIcon.BackgroundTransparency = 1
         HeaderIcon.Image = mainLogo
         HeaderIcon.Parent = Header
     end
 
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, mainLogo and -135 or -120, 1, 0)
-    Title.Position = UDim2.new(0, mainLogo and 38 or 12, 0, 0)
+    Title.Size = UDim2.new(1, mainLogo and -142 or -120, 1, 0)
+    Title.Position = UDim2.new(0, mainLogo and 42 or 12, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = titleText
     Title.TextColor3 = currentTextColor
@@ -1147,7 +1166,7 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
-    -- POIN 2: SEMUA GRUP/SECTION DEFAULT DIBUAT KETUTUP TOTAL (COLLAPSED = TRUE)
+    -- SEMUA GRUP OTOMATIS TERTUTUP TOTAL (COLLAPSED = TRUE) SAAT PERTAMA EXECUTE
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
@@ -1314,7 +1333,6 @@ function Library:CreateWindow(config)
         return Group
     end
 
-    -- POIN 1: WARNA TEMA MODEL FLUENT UI (ELEGANT ACCENTS)
     local colorList = {
         {"Default Blue", Color3.fromRGB(52, 152, 219)},
         {"Emerald Green", Color3.fromRGB(46, 204, 113)},
@@ -1724,14 +1742,16 @@ function Library:CreateWindow(config)
 
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket")
 
+    -- POIN 2: REAL-TIME RGB ACCENT THEME FIXED
     ThemeGroup:AddButton("🌈 RGB Accent Theme", nil, function()
         isRgbThemeActive = true
-        Library:Notify({ Title = "Tema UI", Content = "Mode RGB Accent Diaktifkan!", Type = "Success", Duration = 2 })
+        Library:Notify({ Title = "Tema UI", Content = "Mode RGB Accent Diaktifkan secara Realtime!", Type = "Success", Duration = 2 })
     end)
 
     for _, cInfo in ipairs(colorList) do
         local name, col = cInfo[1], cInfo[2]
         ThemeGroup:AddButton("Tema " .. name, nil, function()
+            isRgbThemeActive = false
             updateGlobalThemeColor(col)
             Library:Notify({ Title = "Tema UI", Content = "Aksen tema diubah ke " .. name, Type = "Success", Duration = 2 })
         end)
@@ -1875,7 +1895,6 @@ function Library:CreateWindow(config)
     GripIcon.Font = Enum.Font.GothamBold
     GripIcon.Parent = ResizeGrip
 
-    -- POIN 3: FITUR RESIZE OTOMATIS TIDAK BISA DIGUNAKAN SAAT MINIMIZE
     makeResizable(Main, ResizeGrip, 200, 150, function()
         return not isMinimized
     end)
@@ -1905,7 +1924,6 @@ function Library:CreateWindow(config)
         })
     end)
 
-    -- POIN 3: TOMBOL RESIZE HIDDEN SAAT MINIMIZE SEHINGGA TIDAK BISA RESIZE
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
         if isMinimized then
