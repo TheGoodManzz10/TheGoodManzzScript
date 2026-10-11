@@ -1200,7 +1200,7 @@ local function makeResizable(frame, handle, minWidth, minHeight)
 end
 
 -- ==========================================
--- FUNGSI CREATOR UNTUK DENGAN BANTUAN ICON FIX
+-- PEMBUATAN ELEMEN ANTI KEPOTONG + ICON FIX
 -- ==========================================
 local function createButton(parent, text, icon, callback)
     if type(icon) == "function" then
@@ -1231,21 +1231,21 @@ local function createButton(parent, text, icon, callback)
     if iconId then
         local BtnIcon = Instance.new("ImageLabel")
         BtnIcon.Size = UDim2.new(0, 16, 0, 16)
-        BtnIcon.Position = UDim2.new(0, 8, 0.5, -8)
+        BtnIcon.Position = UDim2.new(0, 10, 0.5, -8)
         BtnIcon.BackgroundTransparency = 1
         BtnIcon.Image = iconId
         BtnIcon.Parent = Btn
-        xOffset = 30
+        xOffset = 32
     end
 
     if text ~= "" then
         local BtnLbl = Instance.new("TextLabel")
-        BtnLbl.Size = UDim2.new(1, -(xOffset + 10), 1, 0)
+        BtnLbl.Size = UDim2.new(1, -(xOffset + 12), 1, 0)
         BtnLbl.Position = UDim2.new(0, xOffset, 0, 0)
         BtnLbl.BackgroundTransparency = 1
         BtnLbl.Text = text
         BtnLbl.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
-        BtnLbl.TextSize = 12
+        BtnLbl.TextSize = 11
         BtnLbl.Font = currentFont
         BtnLbl.TextXAlignment = iconId and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center
         BtnLbl.TextTruncate = Enum.TextTruncate.AtEnd
@@ -1288,21 +1288,21 @@ local function createToggle(parent, text, icon, default, callback)
     if iconId then
         local TogIcon = Instance.new("ImageLabel")
         TogIcon.Size = UDim2.new(0, 16, 0, 16)
-        TogIcon.Position = UDim2.new(0, 8, 0.5, -8)
+        TogIcon.Position = UDim2.new(0, 10, 0.5, -8)
         TogIcon.BackgroundTransparency = 1
         TogIcon.Image = iconId
         TogIcon.Parent = ToggleFrame
-        xOffset = 30
+        xOffset = 32
     end
 
     if text ~= "" then
         local Label = Instance.new("TextLabel")
-        Label.Size = UDim2.new(1, -(xOffset + 35), 1, 0)
+        Label.Size = UDim2.new(1, -(xOffset + 36), 1, 0)
         Label.Position = UDim2.new(0, xOffset, 0, 0)
         Label.BackgroundTransparency = 1
         Label.Text = text
         Label.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
-        Label.TextSize = 12
+        Label.TextSize = 11
         Label.Font = currentFont
         Label.TextXAlignment = Enum.TextXAlignment.Left
         Label.TextTruncate = Enum.TextTruncate.AtEnd
@@ -1373,11 +1373,11 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     if iconId then
         local SldIcon = Instance.new("ImageLabel")
         SldIcon.Size = UDim2.new(0, 16, 0, 16)
-        SldIcon.Position = UDim2.new(0, 8, 0, 5)
+        SldIcon.Position = UDim2.new(0, 10, 0, 6)
         SldIcon.BackgroundTransparency = 1
         SldIcon.Image = iconId
         SldIcon.Parent = SliderFrame
-        xOffset = 30
+        xOffset = 32
     end
 
     if text ~= "" then
@@ -1387,7 +1387,7 @@ local function createSlider(parent, text, icon, min, max, default, callback)
         Label.BackgroundTransparency = 1
         Label.Text = text
         Label.TextColor3 = isRgbTextActive and Color3.fromRGB(255,255,255) or currentTextColor
-        Label.TextSize = 12
+        Label.TextSize = 11
         Label.Font = currentFont
         Label.TextXAlignment = Enum.TextXAlignment.Left
         Label.TextTruncate = Enum.TextTruncate.AtEnd
@@ -1400,7 +1400,7 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     ValueLabel.BackgroundTransparency = 1
     ValueLabel.Text = tostring(default)
     ValueLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    ValueLabel.TextSize = 12
+    ValueLabel.TextSize = 11
     ValueLabel.Font = Enum.Font.GothamBold
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
     ValueLabel.Parent = SliderFrame
@@ -1896,10 +1896,11 @@ function Library:CreateWindow(config)
     CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
+    -- CONTAINER UTAMA (SCROLL 1 / HALAMAN UTAMA)
     local Container = Instance.new("ScrollingFrame")
     Container.Name = "MainContainer"
-    Container.Size = UDim2.new(1, -16, 1, -44)
-    Container.Position = UDim2.new(0, 8, 0, 38)
+    Container.Size = UDim2.new(1, -12, 1, -44)
+    Container.Position = UDim2.new(0, 6, 0, 38)
     Container.BackgroundTransparency = 1
     Container.BorderSizePixel = 0
     Container.ScrollBarThickness = 2
@@ -1915,13 +1916,13 @@ function Library:CreateWindow(config)
     Layout.Parent = Container
 
     Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Container.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 8)
+        Container.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 12)
     end)
 
     local SettingsContainer = Instance.new("ScrollingFrame")
     SettingsContainer.Name = "SettingsContainer"
-    SettingsContainer.Size = UDim2.new(1, -16, 1, -44)
-    SettingsContainer.Position = UDim2.new(0, 8, 0, 38)
+    SettingsContainer.Size = UDim2.new(1, -12, 1, -44)
+    SettingsContainer.Position = UDim2.new(0, 6, 0, 38)
     SettingsContainer.BackgroundTransparency = 1
     SettingsContainer.BorderSizePixel = 0
     SettingsContainer.ScrollBarThickness = 2
@@ -1938,7 +1939,7 @@ function Library:CreateWindow(config)
     SettingsLayout.Parent = SettingsContainer
 
     SettingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 8)
+        SettingsContainer.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 12)
     end)
 
     local isMinimized = false
@@ -1956,13 +1957,17 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
+    -- ==========================================================
+    -- FITUR NESTED SCROLLING (SCROLL 2 DI DALAM GRUP)
+    -- ==========================================================
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
         local iconId = getIconId(icon)
-        local isCollapsed = defaultCollapsed or false
+        -- DIBUAT DEFAULT TERLIPAT/CLOSED (true) JIKA TIDAK DITENTUKAN
+        local isCollapsed = (defaultCollapsed == nil) and true or defaultCollapsed
 
         local GroupFrame = Instance.new("Frame")
         GroupFrame.Name = "GroupFrame"
@@ -2034,6 +2039,13 @@ function Library:CreateWindow(config)
         ContentHolder.ClipsDescendants = true
         ContentHolder.Parent = GroupFrame
 
+        ContentHolder.MouseEnter:Connect(function()
+            parentContainer.ScrollingEnabled = false
+        end)
+        ContentHolder.MouseLeave:Connect(function()
+            parentContainer.ScrollingEnabled = true
+        end)
+
         local ContentLayout = Instance.new("UIListLayout")
         ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ContentLayout.Padding = UDim.new(0, 5)
@@ -2043,16 +2055,14 @@ function Library:CreateWindow(config)
 
         local function updateGroupSize()
             local contentHeight = ContentLayout.AbsoluteContentSize.Y
-            ContentHolder.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
+            ContentHolder.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 4)
             
             local displayHeight = math.min(contentHeight, MAX_GROUP_HEIGHT)
             ContentHolder.Size = UDim2.new(1, -12, 0, displayHeight)
             
+            -- HITUNG TINGGI: JIKA COLLAPSED MAKA CUMA 32px (TERTUTUP)
             local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
-            
-            TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-                Size = UDim2.new(1, 0, 0, targetHeight)
-            }):Play()
+            GroupFrame.Size = UDim2.new(1, 0, 0, targetHeight)
         end
 
         ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateGroupSize)
@@ -2060,7 +2070,14 @@ function Library:CreateWindow(config)
         GroupHeader.MouseButton1Click:Connect(function()
             isCollapsed = not isCollapsed
             ArrowLbl.Text = isCollapsed and "▼" or "▲"
-            updateGroupSize()
+            
+            local contentHeight = ContentLayout.AbsoluteContentSize.Y
+            local displayHeight = math.min(contentHeight, MAX_GROUP_HEIGHT)
+            local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
+            
+            TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 0, targetHeight)
+            }):Play()
         end)
 
         local Group = {}
