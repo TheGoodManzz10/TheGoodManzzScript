@@ -23,6 +23,7 @@ Library.Icons = {
     ["lucide-info"]             = "rbxassetid://10723415903",
     ["lucide-key"]              = "rbxassetid://10723346959",
     ["lucide-search"]           = "rbxassetid://10734941499",
+    ["lucide-fingerprint"]      = "rbxassetid://10723375250"
 }
 
 -- SISTEM BAHASA DENGAN TRANSLATION LENGKAP
@@ -35,7 +36,7 @@ local Translations = {
         TextStyle      = "Gaya Text / Font",
         LangSelect     = "Pilih Bahasa / Language",
         TextColorGroup = "Pilih Warna Teks",
-        ThemeGroup     = "Pilih Tema UI (Fluent Style)",
+        ThemeGroup     = "Pilih Tema UI",
         MusicGroup     = "Grup Musik",
         PopularScripts = "Script Populer (15 Script)",
         Executing      = "Menjalankan ",
@@ -45,7 +46,7 @@ local Translations = {
         PlayerInfo     = "Informasi Pemain",
         PlayTimeTitle  = "Waktu Bermain",
         PerfGroup      = "Fitur & Performa",
-        FloatSizeGroup = "Pengaturan Tombol Floating",
+        FloatSizeGroup = "Ukuran Tombol Hide/Show",
         ScriptbloxGroup = "Cari Script (Scriptblox)",
         KeyInfoGroup   = "Informasi Key Anda"
     },
@@ -57,7 +58,7 @@ local Translations = {
         TextStyle      = "Text Style / Font",
         LangSelect     = "Language / Bahasa",
         TextColorGroup = "Text Color",
-        ThemeGroup     = "UI Theme (Fluent Style)",
+        ThemeGroup     = "UI Theme Color",
         MusicGroup     = "Music Group",
         PopularScripts = "Popular Scripts (15 Scripts)",
         Executing      = "Executing ",
@@ -67,7 +68,7 @@ local Translations = {
         PlayerInfo     = "Player Information",
         PlayTimeTitle  = "Play Time Tracker",
         PerfGroup      = "Features & Performance",
-        FloatSizeGroup = "Floating Button Settings",
+        FloatSizeGroup = "Hide/Show Button Size",
         ScriptbloxGroup = "Search Script (Scriptblox)",
         KeyInfoGroup   = "Your Key Information"
     }
@@ -112,9 +113,8 @@ local currentTextColor = Color3.fromRGB(255, 255, 255)
 local isRgbTextActive = false
 
 local isRgbThemeActive = false
-local currentAccentColor = Color3.fromRGB(52, 152, 219)
+local currentThemeColor = Color3.fromRGB(12, 12, 16)
 local mainWindowRef
-local mainStrokeRef
 local mainGradientRef
 
 local function getIconId(icon)
@@ -166,38 +166,6 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = TargetParent
 
--- TEMA GRADASI FLUENT UI YANG TEBAL DAN ELEGAN
-local function updateGlobalThemeColor(accentColor)
-    currentAccentColor = accentColor
-
-    if mainStrokeRef then
-        mainStrokeRef.Color = accentColor
-        mainStrokeRef.Transparency = 0.25
-    end
-
-    if mainGradientRef then
-        local h, s, v = accentColor:ToHSV()
-        local darkTint = Color3.fromHSV(h, math.clamp(s * 0.8, 0, 1), math.clamp(v * 0.25, 0, 1))
-        local deeperDark = Color3.fromRGB(10, 10, 14)
-
-        mainGradientRef.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, darkTint),
-            ColorSequenceKeypoint.new(0.4, deeperDark),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 8))
-        })
-    end
-
-    for _, obj in ipairs(ScreenGui:GetDescendants()) do
-        if obj:IsA("UIStroke") and obj.Name == "AccentStroke" then
-            obj.Color = accentColor
-        elseif obj:IsA("Frame") and obj.Name == "AccentLine" then
-            obj.BackgroundColor3 = accentColor
-        elseif obj.Name == "ToggleBox" and obj:GetAttribute("Active") == true then
-            obj.BackgroundColor3 = accentColor
-        end
-    end
-end
-
 local function updateGlobalTextColor(color)
     currentTextColor = color
     isRgbTextActive = false
@@ -210,9 +178,33 @@ local function updateGlobalTextColor(color)
     end
 end
 
--- RENDER STEPPED (RGB TEXT & REALTIME RGB THEME WORKING PROPERLY)
+local function updateGlobalThemeColor(color)
+    currentThemeColor = color
+    isRgbThemeActive = false
+    
+    if mainWindowRef then
+        if mainGradientRef then mainGradientRef.Enabled = false end
+        mainWindowRef.BackgroundColor3 = color
+    end
+
+    for _, obj in ipairs(ScreenGui:GetDescendants()) do
+        if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
+            if obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "FingerprintScreen" then
+                if obj.BackgroundTransparency < 1 then
+                    if obj.Name == "Main" then
+                        obj.BackgroundColor3 = color
+                    else
+                        local h, s, v = color:ToHSV()
+                        obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v + 0.08, 0, 1))
+                    end
+                end
+            end
+        end
+    end
+end
+
 RunService.RenderStepped:Connect(function()
-    local hue = (tick() % 4) / 4
+    local hue = tick() % 5 / 5
     local rgbColor = Color3.fromHSV(hue, 1, 1)
 
     if isRgbTextActive then
@@ -225,8 +217,20 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    if isRgbThemeActive then
-        updateGlobalThemeColor(rgbColor)
+    if isRgbThemeActive and mainWindowRef then
+        if mainGradientRef then mainGradientRef.Enabled = false end
+        mainWindowRef.BackgroundColor3 = rgbColor
+        
+        for _, obj in ipairs(ScreenGui:GetDescendants()) do
+            if obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("ScrollingFrame") then
+                if obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" and obj.Name ~= "SpinOuterIcon" and obj.Name ~= "FloatingLogoBtn" and obj.Name ~= "ResizeGrip" and obj.Name ~= "KeyFrame" and obj.Name ~= "FingerprintScreen" then
+                    if obj.BackgroundTransparency < 1 and obj.Name ~= "Main" then
+                        local h, s, v = rgbColor:ToHSV()
+                        obj.BackgroundColor3 = Color3.fromHSV(h, s, math.clamp(v - 0.2, 0, 1))
+                    end
+                end
+            end
+        end
     end
 end)
 
@@ -261,7 +265,7 @@ function Library:Notify(options)
     local Card = Instance.new("Frame")
     Card.Name = "NotifCard"
     Card.Size = UDim2.new(1, 0, 0, 52)
-    Card.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+    Card.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
     Card.BackgroundTransparency = 1
     Card.BorderSizePixel = 0
     Card.ClipsDescendants = true
@@ -308,14 +312,14 @@ function Library:Notify(options)
     ContentLbl.TextTransparency = 1
     ContentLbl.Parent = Card
 
-    TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundTransparency = 0.05}):Play()
+    TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = 0.05}):Play()
     TweenService:Create(CardStroke, TweenInfo.new(0.4), {Transparency = 0}):Play()
     TweenService:Create(SideBar, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
     TweenService:Create(TitleLbl, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
     TweenService:Create(ContentLbl, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
 
     task.delay(duration, function()
-        local closeTween = TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {BackgroundTransparency = 1})
+        local closeTween = TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {BackgroundTransparency = 1})
         TweenService:Create(CardStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
         TweenService:Create(SideBar, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
         TweenService:Create(TitleLbl, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
@@ -352,20 +356,20 @@ local function makeDraggable(frame, handle)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
-            TweenService:Create(frame, TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            TweenService:Create(frame, TweenInfo.new(0.12, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                 Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             }):Play()
         end
     end)
 end
 
-local function makeResizable(frame, handle, minWidth, minHeight, canResizeCallback)
+local function makeResizable(frame, handle, minWidth, minHeight)
     minWidth = minWidth or 180
     minHeight = minHeight or 140
     local resizing, dragInput, dragStart, startSize
 
     handle.InputBegan:Connect(function(input)
-        if canResizeCallback and not canResizeCallback() then return end
+        if frame:GetAttribute("IsMinimized") then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             resizing = true
             dragStart = input.Position
@@ -386,7 +390,7 @@ local function makeResizable(frame, handle, minWidth, minHeight, canResizeCallba
     end)
 
     UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and resizing then
+        if input == dragInput and resizing and not frame:GetAttribute("IsMinimized") then
             local delta = input.Position - dragStart
             local newWidth = math.max(minWidth, startSize.X + delta.X)
             local newHeight = math.max(minHeight, startSize.Y + delta.Y)
@@ -398,6 +402,167 @@ local function makeResizable(frame, handle, minWidth, minHeight, canResizeCallba
     end)
 end
 
+-- ==========================================
+-- FUNGSI VERIFIKASI SIDIK JARI (FITUR BARU)
+-- ==========================================
+local function playFingerprintVerification(onVerified)
+    local FpScreen = Instance.new("Frame")
+    FpScreen.Name = "FingerprintScreen"
+    FpScreen.Size = UDim2.new(1, 0, 1, 0)
+    FpScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    FpScreen.ZIndex = 999999
+    FpScreen.Parent = ScreenGui
+
+    -- Efek kode biner putih turun ke bawah
+    task.spawn(function()
+        while FpScreen and FpScreen.Parent do
+            pcall(function()
+                local col = Instance.new("TextLabel")
+                col.Size = UDim2.new(0, 30, 0, 200)
+                col.Position = UDim2.new(math.random(), 0, -0.3, 0)
+                col.BackgroundTransparency = 1
+                col.TextColor3 = Color3.fromRGB(255, 255, 255)
+                col.TextTransparency = math.random(30, 70) / 100
+                col.TextSize = 12
+                col.Font = Enum.Font.Code
+                col.TextXAlignment = Enum.TextXAlignment.Center
+                col.TextYAlignment = Enum.TextYAlignment.Top
+                col.ZIndex = 1000000
+                col.Parent = FpScreen
+
+                local binStr = ""
+                for i = 1, 15 do
+                    binStr = binStr .. (math.random(0, 1) == 1 and "1" or "0") .. "\n"
+                end
+                col.Text = binStr
+
+                local fallDuration = math.random(3, 6)
+                local tw = TweenService:Create(col, TweenInfo.new(fallDuration, Enum.EasingStyle.Linear), {
+                    Position = UDim2.new(col.Position.X.Scale, 0, 1.2, 0)
+                })
+                tw:Play()
+                tw.Completed:Connect(function()
+                    col:Destroy()
+                end)
+            end)
+            task.wait(0.3)
+        end
+    end)
+
+    local CenterBox = Instance.new("Frame")
+    CenterBox.Size = UDim2.new(0, 260, 0, 180)
+    CenterBox.Position = UDim2.new(0.5, -130, 0.5, -90)
+    CenterBox.BackgroundTransparency = 1
+    CenterBox.ZIndex = 1000001
+    CenterBox.Parent = FpScreen
+
+    local TitleLbl = Instance.new("TextLabel")
+    TitleLbl.Size = UDim2.new(1, 0, 0, 30)
+    TitleLbl.Position = UDim2.new(0, 0, 0, 0)
+    TitleLbl.BackgroundTransparency = 1
+    TitleLbl.Text = "SECURITY SYSTEM VERIFICATION"
+    TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLbl.TextSize = 13
+    TitleLbl.Font = Enum.Font.GothamBold
+    TitleLbl.TextXAlignment = Enum.TextXAlignment.Center
+    TitleLbl.ZIndex = 1000002
+    TitleLbl.Parent = CenterBox
+
+    local StatusLbl = Instance.new("TextLabel")
+    StatusLbl.Size = UDim2.new(1, 0, 0, 24)
+    StatusLbl.Position = UDim2.new(0, 0, 0, 30)
+    StatusLbl.BackgroundTransparency = 1
+    StatusLbl.Text = "Ketuk ikon 5 kali untuk melanjutkan"
+    StatusLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
+    StatusLbl.TextSize = 11
+    StatusLbl.Font = Enum.Font.Gotham
+    StatusLbl.TextXAlignment = Enum.TextXAlignment.Center
+    StatusLbl.ZIndex = 1000002
+    StatusLbl.Parent = CenterBox
+
+    -- Icon muncul dari kiri dan bergerak smooth ke tengah
+    local FpBtn = Instance.new("ImageButton")
+    FpBtn.Size = UDim2.new(0, 70, 0, 70)
+    FpBtn.Position = UDim2.new(-0.4, 0, 0.65, -35)
+    FpBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+    FpBtn.BackgroundTransparency = 1
+    FpBtn.Image = Library.Icons["lucide-fingerprint"]
+    FpBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    FpBtn.ZIndex = 1000002
+    FpBtn.Parent = CenterBox
+
+    TweenService:Create(FpBtn, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, 0, 0.65, 0)
+    }):Play()
+
+    local taps = 0
+    local isHolding = false
+    local holdStartTime = 0
+    local holdDuration = 3
+    local verified = false
+
+    FpBtn.MouseButton1Click:Connect(function()
+        if verified then return end
+        if taps < 5 then
+            taps = taps + 1
+            if taps < 5 then
+                StatusLbl.Text = string.format("Ketuk lagi (%d/5)...", taps)
+                TweenService:Create(FpBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 78, 0, 78)}):Play()
+                task.wait(0.1)
+                TweenService:Create(FpBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 70, 0, 70)}):Play()
+            else
+                StatusLbl.Text = "Ketuk 5/5! Sekarang TAHAN selama 3 detik..."
+                StatusLbl.TextColor3 = Color3.fromRGB(241, 196, 15)
+            end
+        end
+    end)
+
+    FpBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if taps >= 5 and not verified then
+                isHolding = true
+                holdStartTime = tick()
+                task.spawn(function()
+                    while isHolding and not verified do
+                        local elapsed = tick() - holdStartTime
+                        StatusLbl.Text = string.format("Menahan... %.1fs / 3.0s", elapsed)
+                        if elapsed >= holdDuration then
+                            verified = true
+                            isHolding = false
+                            StatusLbl.Text = "Verifikasi Berhasil!"
+                            StatusLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
+                            TweenService:Create(FpBtn, TweenInfo.new(0.3), {ImageColor3 = Color3.fromRGB(46, 204, 113)}):Play()
+                            task.wait(0.6)
+                            local fade = TweenService:Create(FpScreen, TweenInfo.new(0.5), {BackgroundTransparency = 1})
+                            fade:Play()
+                            fade.Completed:Connect(function()
+                                FpScreen:Destroy()
+                                if onVerified then onVerified() end
+                            end)
+                            break
+                        end
+                        task.wait(0.05)
+                    end
+                end)
+            end
+        end
+    end)
+
+    FpBtn.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if isHolding and not verified then
+                isHolding = false
+                if taps >= 5 then
+                    StatusLbl.Text = "Tahanan dilepaskan! Tahan terus 3 detik."
+                end
+            end
+        end
+    end)
+end
+
+-- ==========================================
+-- PEMBUATAN ELEMEN ANTI KEPOTONG + ICON FIX
+-- ==========================================
 local function createButton(parent, text, icon, callback)
     if type(icon) == "function" then
         callback = icon
@@ -414,14 +579,14 @@ local function createButton(parent, text, icon, callback)
 
     local Btn = Instance.new("TextButton")
     Btn.Size = UDim2.new(1, 0, 0, 32)
-    Btn.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    Btn.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     Btn.Text = ""
     Btn.Parent = parent
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
     local BtnStroke = Instance.new("UIStroke", Btn)
     BtnStroke.Color = Color3.fromRGB(255, 255, 255)
-    BtnStroke.Transparency = 0.92
+    BtnStroke.Transparency = 0.9
 
     local xOffset = 10
     if iconId then
@@ -449,11 +614,11 @@ local function createButton(parent, text, icon, callback)
     end
 
     Btn.MouseButton1Click:Connect(function()
-        TweenService:Create(Btn, TweenInfo.new(0.12, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0.98, 0, 0, 30)}):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.12), {Transparency = 0.4}):Play()
-        task.wait(0.1)
+        TweenService:Create(Btn, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0.98, 0, 0, 30)}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {Transparency = 0.3}):Play()
+        task.wait(0.12)
         TweenService:Create(Btn, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 32)}):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.2), {Transparency = 0.92}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.25), {Transparency = 0.9}):Play()
         task.spawn(callback)
     end)
     return Btn
@@ -472,13 +637,13 @@ local function createToggle(parent, text, icon, default, callback)
 
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Size = UDim2.new(1, 0, 0, 32)
-    ToggleFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     ToggleFrame.Parent = parent
 
     Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
     local ToggleStroke = Instance.new("UIStroke", ToggleFrame)
     ToggleStroke.Color = Color3.fromRGB(255, 255, 255)
-    ToggleStroke.Transparency = 0.92
+    ToggleStroke.Transparency = 0.9
 
     local xOffset = 10
     if iconId then
@@ -506,11 +671,9 @@ local function createToggle(parent, text, icon, default, callback)
     end
 
     local Box = Instance.new("Frame")
-    Box.Name = "ToggleBox"
-    Box:SetAttribute("Active", state)
     Box.Size = UDim2.new(0, 18, 0, 18)
     Box.Position = UDim2.new(1, -26, 0.5, -9)
-    Box.BackgroundColor3 = state and currentAccentColor or Color3.fromRGB(35, 35, 40)
+    Box.BackgroundColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 40)
     Box.Parent = ToggleFrame
 
     Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 4)
@@ -518,7 +681,7 @@ local function createToggle(parent, text, icon, default, callback)
     local InnerDot = Instance.new("Frame")
     InnerDot.Size = UDim2.new(0, 8, 0, 8)
     InnerDot.Position = UDim2.new(0.5, -4, 0.5, -4)
-    InnerDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    InnerDot.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     InnerDot.BackgroundTransparency = state and 0 or 1
     InnerDot.Parent = Box
     Instance.new("UICorner", InnerDot).CornerRadius = UDim.new(1, 0)
@@ -531,11 +694,10 @@ local function createToggle(parent, text, icon, default, callback)
 
     ClickBtn.MouseButton1Click:Connect(function()
         state = not state
-        Box:SetAttribute("Active", state)
-        TweenService:Create(Box, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            BackgroundColor3 = state and currentAccentColor or Color3.fromRGB(35, 35, 40)
+        TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            BackgroundColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 40)
         }):Play()
-        TweenService:Create(InnerDot, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        TweenService:Create(InnerDot, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
             BackgroundTransparency = state and 0 or 1
         }):Play()
         task.spawn(callback, state)
@@ -560,13 +722,13 @@ local function createSlider(parent, text, icon, min, max, default, callback)
 
     local SliderFrame = Instance.new("Frame")
     SliderFrame.Size = UDim2.new(1, 0, 0, 42)
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     SliderFrame.Parent = parent
 
     Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
     local SliderStroke = Instance.new("UIStroke", SliderFrame)
     SliderStroke.Color = Color3.fromRGB(255, 255, 255)
-    SliderStroke.Transparency = 0.92
+    SliderStroke.Transparency = 0.9
 
     local xOffset = 10
     if iconId then
@@ -612,9 +774,8 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
 
     local Fill = Instance.new("Frame")
-    Fill.Name = "AccentLine"
     Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-    Fill.BackgroundColor3 = currentAccentColor
+    Fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Fill.Parent = SliderBar
     Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
 
@@ -651,9 +812,8 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     return SliderFrame
 end
 
--- POIN 1: RAYFIELD EXECUTION WITH 12 CHAR MAX, EXACT 1 SEC PER CHAR (TOTAL 15 S)
 local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
-    local targetFlashText = string.sub(tostring(flashText or "GOODMANZHUB"), 1, 12)
+    local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 8)
 
     local Card = Instance.new("Frame")
     Card.Size = UDim2.new(0, 240, 0, 70)
@@ -712,7 +872,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     AuthorLbl.TextXAlignment = Enum.TextXAlignment.Left
     AuthorLbl.Parent = Card
 
-    local duration = 3.0
+    local duration = 10.0
     local elapsed = 0
     local rotation = 0
 
@@ -728,9 +888,9 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
         local dotCount = (math.floor(elapsed * 3) % 4) + 1
         local dots = string.rep(".", dotCount)
 
-        if elapsed < 1.0 then
+        if elapsed < 4.0 then
             AuthorLbl.Text = txt1
-        elseif elapsed < 2.0 then
+        elseif elapsed < 7.0 then
             AuthorLbl.Text = txt2 .. " " .. dots
         else
             AuthorLbl.Text = txt3 .. " " .. dots
@@ -755,10 +915,17 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BigText.Text = ""
             BigText.TextColor3 = Color3.fromRGB(15, 15, 15)
             BigText.Font = Enum.Font.PermanentMarker
-            BigText.TextSize = 64
+            BigText.TextSize = 72
             BigText.TextWrapped = true
             BigText.ZIndex = 1000000
             BigText.Parent = Flash
+
+            task.spawn(function()
+                for i = 1, #targetFlashText do
+                    BigText.Text = string.sub(targetFlashText, 1, i)
+                    task.wait(1)
+                end
+            end)
 
             local Underline = Instance.new("Frame")
             Underline.Name = "TextUnderline"
@@ -774,22 +941,15 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             UnderlineCorner.CornerRadius = UDim.new(1, 0)
             UnderlineCorner.Parent = Underline
 
-            -- PENGETIKAN 1 KARAKTER/DETIK (MAKS 12 HURUF = 12 DETIK)
-            task.spawn(function()
-                for i = 1, #targetFlashText do
-                    BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(1.0)
-                end
+            task.wait(0.05)
+            local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
 
-                task.wait(0.2)
-                local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
-                TweenService:Create(Underline, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, targetWidth, 0, 4)
-                }):Play()
+            TweenService:Create(Underline, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, targetWidth, 0, 4)
+            }):Play()
 
-                -- TAHAN SAMPAI PAS TOTAL 15 DETIK
-                task.wait(1.8)
-                local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundTransparency = 1})
+            task.delay(10.0, function()
+                local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
                 TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
                 fadeTween:Play()
                 fadeTween.Completed:Connect(function()
@@ -802,6 +962,13 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
 end
 
 function Library:CreateWindow(config)
+    -- Jalankan Verifikasi Sidik Jari terlebih dahulu sebelum key system / loading
+    local fpVerified = false
+    playFingerprintVerification(function()
+        fpVerified = true
+    end)
+    repeat task.wait() until fpVerified
+
     config = config or {}
     local titleText = config.Name or "Dark Hub"
     local authorText = config.Author or "GoodManzz"
@@ -810,7 +977,7 @@ function Library:CreateWindow(config)
     local text1 = config.Text1 or ("by:" .. authorText)
     local text2 = config.Text2 or "Injeksi Game"
     local text3 = config.Text3 or "Menyiapkan Ui"
-    local flashText = config.FlashText or "GOODMANZHUB"
+    local flashText = config.FlashText or "GOODMANZ"
 
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
@@ -874,7 +1041,7 @@ function Library:CreateWindow(config)
             KeyFrame.Name = "KeyFrame"
             KeyFrame.Size = UDim2.new(0, 250, 0, 170)
             KeyFrame.Position = UDim2.new(0.5, -125, 0.5, -85)
-            KeyFrame.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+            KeyFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
             KeyFrame.BorderSizePixel = 0
             KeyFrame.Parent = ScreenGui
 
@@ -1012,28 +1179,31 @@ function Library:CreateWindow(config)
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 240, 0, 0)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
-    Main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
+    Main:SetAttribute("IsMinimized", false)
 
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-    -- GRADASI TEMA TEBAL SANGAT TERLIHAT
     local MainGradient = Instance.new("UIGradient")
+    MainGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 24)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 8, 10)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+    })
     MainGradient.Rotation = 135
     MainGradient.Parent = Main
     mainGradientRef = MainGradient
 
     local MainStroke = Instance.new("UIStroke")
-    MainStroke.Name = "AccentStroke"
-    MainStroke.Thickness = 1.5
+    MainStroke.Color = Color3.fromRGB(255, 255, 255)
+    MainStroke.Thickness = 1
+    MainStroke.Transparency = 0.85
     MainStroke.Parent = Main
-    mainStrokeRef = MainStroke
-
-    updateGlobalThemeColor(currentAccentColor)
 
     local Header = Instance.new("Frame")
     Header.Size = UDim2.new(1, 0, 0, 36)
@@ -1042,20 +1212,18 @@ function Library:CreateWindow(config)
 
     makeDraggable(Main, Header)
 
-    -- POIN 3: UKURAN ICON RUBAH DIBESARKAN KETAT MENJADI 28x28
-    local HeaderIcon
     if mainLogo then
-        HeaderIcon = Instance.new("ImageLabel")
-        HeaderIcon.Size = UDim2.new(0, 28, 0, 28)
-        HeaderIcon.Position = UDim2.new(0, 8, 0, 4)
+        local HeaderIcon = Instance.new("ImageLabel")
+        HeaderIcon.Size = UDim2.new(0, 22, 0, 22) -- Ukuran diperbesar sama seperti setting icon
+        HeaderIcon.Position = UDim2.new(0, 10, 0, 7)
         HeaderIcon.BackgroundTransparency = 1
         HeaderIcon.Image = mainLogo
         HeaderIcon.Parent = Header
     end
 
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, mainLogo and -142 or -120, 1, 0)
-    Title.Position = UDim2.new(0, mainLogo and 42 or 12, 0, 0)
+    Title.Size = UDim2.new(1, mainLogo and -129 or -115, 1, 0)
+    Title.Position = UDim2.new(0, mainLogo and 38 or 12, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = titleText
     Title.TextColor3 = currentTextColor
@@ -1065,45 +1233,36 @@ function Library:CreateWindow(config)
     Title.TextTruncate = Enum.TextTruncate.AtEnd
     Title.Parent = Header
 
-    local ButtonsHolder = Instance.new("Frame")
-    ButtonsHolder.Size = UDim2.new(0, 98, 1, 0)
-    ButtonsHolder.Position = UDim2.new(1, -102, 0, 0)
-    ButtonsHolder.BackgroundTransparency = 1
-    ButtonsHolder.Parent = Header
-
-    local ButtonsLayout = Instance.new("UIListLayout")
-    ButtonsLayout.FillDirection = Enum.FillDirection.Horizontal
-    ButtonsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-    ButtonsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    ButtonsLayout.Padding = UDim.new(0, 3)
-    ButtonsLayout.Parent = ButtonsHolder
-
     local MinBtn = Instance.new("ImageButton")
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
-    MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+    MinBtn.Position = UDim2.new(1, -100, 0, 7)
+    MinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     MinBtn.Image = Library.Icons["lucide-chevron-up"]
-    MinBtn.Parent = ButtonsHolder
+    MinBtn.Parent = Header
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
 
     local SettingsBtn = Instance.new("ImageButton")
     SettingsBtn.Size = UDim2.new(0, 22, 0, 22)
-    SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+    SettingsBtn.Position = UDim2.new(1, -75, 0, 7)
+    SettingsBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     SettingsBtn.Image = Library.Icons["Settings"]
-    SettingsBtn.Parent = ButtonsHolder
+    SettingsBtn.Parent = Header
     Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 6)
 
     local HideBtn = Instance.new("ImageButton")
     HideBtn.Size = UDim2.new(0, 22, 0, 22)
-    HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+    HideBtn.Position = UDim2.new(1, -50, 0, 7)
+    HideBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     HideBtn.Image = mainLogo or Library.Icons["Logo"]
-    HideBtn.Parent = ButtonsHolder
+    HideBtn.Parent = Header
     Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
 
     local CloseBtn = Instance.new("ImageButton")
     CloseBtn.Size = UDim2.new(0, 22, 0, 22)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+    CloseBtn.Position = UDim2.new(1, -25, 0, 7)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     CloseBtn.Image = Library.Icons["lucide-x"]
-    CloseBtn.Parent = ButtonsHolder
+    CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
     local Container = Instance.new("ScrollingFrame")
@@ -1162,23 +1321,27 @@ function Library:CreateWindow(config)
         SettingsContainer.Visible = showingSettings
 
         TweenService:Create(SettingsBtn, TweenInfo.new(0.2), {
-            ImageColor3 = showingSettings and currentAccentColor or Color3.fromRGB(255, 255, 255)
+            ImageColor3 = showingSettings and Color3.fromRGB(52, 152, 219) or Color3.fromRGB(255, 255, 255)
         }):Play()
     end)
 
-    -- SEMUA GRUP OTOMATIS TERTUTUP TOTAL (COLLAPSED = TRUE) SAAT PERTAMA EXECUTE
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
+        -- Default tertutup (collapsed = true) saat UI muncul
+        if defaultCollapsed == nil then
+            defaultCollapsed = true
+        end
+
         local iconId = getIconId(icon)
-        local isCollapsed = (defaultCollapsed == nil) and true or defaultCollapsed
+        local isCollapsed = defaultCollapsed
 
         local GroupFrame = Instance.new("Frame")
         GroupFrame.Name = "GroupFrame"
         GroupFrame.Size = UDim2.new(1, 0, 0, 32)
-        GroupFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+        GroupFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
         GroupFrame.BorderSizePixel = 0
         GroupFrame.ClipsDescendants = true
         GroupFrame.Parent = parentContainer
@@ -1186,7 +1349,7 @@ function Library:CreateWindow(config)
         Instance.new("UICorner", GroupFrame).CornerRadius = UDim.new(0, 8)
         local GroupStroke = Instance.new("UIStroke", GroupFrame)
         GroupStroke.Color = Color3.fromRGB(255, 255, 255)
-        GroupStroke.Transparency = 0.94
+        GroupStroke.Transparency = 0.93
 
         local GroupHeader = Instance.new("TextButton")
         GroupHeader.Name = "GroupHeader"
@@ -1268,7 +1431,7 @@ function Library:CreateWindow(config)
             
             local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
             
-            TweenService:Create(GroupFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            TweenService:Create(GroupFrame, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
                 Size = UDim2.new(1, 0, 0, targetHeight)
             }):Play()
         end
@@ -1305,13 +1468,13 @@ function Library:CreateWindow(config)
         function Group:AddLabel(text)
             local LblFrame = Instance.new("Frame")
             LblFrame.Size = UDim2.new(1, 0, 0, 28)
-            LblFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+            LblFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
             LblFrame.Parent = ContentHolder
 
             Instance.new("UICorner", LblFrame).CornerRadius = UDim.new(0, 6)
             local Stroke = Instance.new("UIStroke", LblFrame)
             Stroke.Color = Color3.fromRGB(255, 255, 255)
-            Stroke.Transparency = 0.92
+            Stroke.Transparency = 0.9
 
             local Lbl = Instance.new("TextLabel")
             Lbl.Size = UDim2.new(1, -12, 1, 0)
@@ -1334,14 +1497,18 @@ function Library:CreateWindow(config)
     end
 
     local colorList = {
-        {"Default Blue", Color3.fromRGB(52, 152, 219)},
-        {"Emerald Green", Color3.fromRGB(46, 204, 113)},
-        {"Crimson Red", Color3.fromRGB(231, 76, 60)},
-        {"Amethyst Purple", Color3.fromRGB(155, 89, 182)},
-        {"Sunset Orange", Color3.fromRGB(230, 126, 34)},
-        {"Golden Yellow", Color3.fromRGB(241, 196, 15)},
-        {"Neon Pink", Color3.fromRGB(255, 105, 180)},
-        {"Cyan Light", Color3.fromRGB(0, 255, 255)}
+        {"Hitam (Black)", Color3.fromRGB(0, 0, 0)},
+        {"Putih (White)", Color3.fromRGB(255, 255, 255)},
+        {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
+        {"Hijau (Green)", Color3.fromRGB(46, 204, 113)},
+        {"Biru (Blue)", Color3.fromRGB(52, 152, 219)},
+        {"Kuning (Yellow)", Color3.fromRGB(241, 196, 15)},
+        {"Ungu (Purple)", Color3.fromRGB(155, 89, 182)},
+        {"Oranye (Orange)", Color3.fromRGB(230, 126, 34)},
+        {"Pink", Color3.fromRGB(255, 105, 180)},
+        {"Cyan", Color3.fromRGB(0, 255, 255)},
+        {"Lime", Color3.fromRGB(0, 255, 0)},
+        {"Magenta", Color3.fromRGB(255, 0, 255)}
     }
 
     local FloatingContainer = Instance.new("Frame")
@@ -1360,31 +1527,21 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
+    RunService.RenderStepped:Connect(function()
+        if FloatingContainer.Visible then
+            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+        end
+    end)
+
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
     FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
-    FloatingLogoBtn.AnchorPoint = Vector2.new(0.5, 0.5)
-    FloatingLogoBtn.Position = UDim2.new(0.5, 0, 0.5, 0)
+    FloatingLogoBtn.Position = UDim2.new(0, 0, 0, 0)
     FloatingLogoBtn.BackgroundTransparency = 1
     FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
     FloatingLogoBtn.Parent = FloatingContainer
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
-
-    local isLogoWobbleActive = false
-    local wobbleTimer = 0
-
-    RunService.RenderStepped:Connect(function(dt)
-        if FloatingContainer.Visible then
-            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-            if isLogoWobbleActive then
-                wobbleTimer = wobbleTimer + (dt * 12)
-                FloatingLogoBtn.Rotation = math.sin(wobbleTimer) * 15
-            else
-                FloatingLogoBtn.Rotation = 0
-            end
-        end
-    end)
 
     HideBtn.MouseButton1Click:Connect(function()
         Main.Visible = false
@@ -1396,7 +1553,7 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
-    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key")
+    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", true)
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
 
@@ -1413,7 +1570,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search")
+    local ScriptbloxGroup = buildGroupInContainer(SettingsContainer, "ScriptbloxGroup", "lucide-search", true)
 
     local scriptbloxLimit = 15
     ScriptbloxGroup:AddSlider("Max Hasil Script", nil, 8, 25, 15, function(val)
@@ -1422,7 +1579,7 @@ function Library:CreateWindow(config)
 
     local SearchBoxFrame = Instance.new("Frame")
     SearchBoxFrame.Size = UDim2.new(1, 0, 0, 32)
-    SearchBoxFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    SearchBoxFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     SearchBoxFrame.Parent = ScriptbloxGroup.ContentHolder
     Instance.new("UICorner", SearchBoxFrame).CornerRadius = UDim.new(0, 6)
 
@@ -1534,9 +1691,9 @@ function Library:CreateWindow(config)
                         CopyBtn.MouseButton1Click:Connect(function()
                             if setclipboard then
                                 setclipboard(rawScript)
-                                Library:Notify({ Title = "Scriptblox", Content = "Script disalin!", Type = "Success" })
+                                Library:Notify({ Title = "Scriptblox", Content = "Script disalin ke Clipboard!", Type = "Success" })
                             else
-                                Library:Notify({ Title = "Scriptblox", Content = "Gagal menyalin", Type = "Error" })
+                                Library:Notify({ Title = "Scriptblox", Content = "Executor tidak mendukung setclipboard", Type = "Error" })
                             end
                         end)
                     end
@@ -1557,16 +1714,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders")
-    
-    FloatSizeGroup:AddToggle("Goyangan Logo (Wobble)", nil, false, function(state)
-        isLogoWobbleActive = state
-        if not state then
-            FloatingLogoBtn.Rotation = 0
-        end
-        Library:Notify({ Title = "Floating Logo", Content = "Goyangan Logo: " .. (state and "Aktif" or "Mati"), Type = "Success" })
-    end)
-
+    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
@@ -1580,7 +1728,7 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
     end)
 
-    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock")
+    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", true)
     local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
     local startTime = tick()
     
@@ -1597,11 +1745,11 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info")
+    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", true)
     
     local AvatarFrame = Instance.new("Frame")
     AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
-    AvatarFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    AvatarFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     AvatarFrame.Parent = PlayerGroup.ContentHolder
     Instance.new("UICorner", AvatarFrame).CornerRadius = UDim.new(0, 6)
 
@@ -1638,7 +1786,7 @@ function Library:CreateWindow(config)
     PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
     PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation")
+    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", true)
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
         pcall(function()
@@ -1694,7 +1842,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code")
+    local PopularGroup = buildGroupInContainer(SettingsContainer, "PopularScripts", "lucide-code", true)
 
     local popularScriptsList = {
         {Name = "1. Infinite Yield (Admin Commands)", Url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
@@ -1725,7 +1873,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette")
+    local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
     
     TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
         isRgbTextActive = true
@@ -1740,24 +1888,22 @@ function Library:CreateWindow(config)
         end)
     end
 
-    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket")
+    local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
-    -- POIN 2: REAL-TIME RGB ACCENT THEME FIXED
-    ThemeGroup:AddButton("🌈 RGB Accent Theme", nil, function()
+    ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
         isRgbThemeActive = true
-        Library:Notify({ Title = "Tema UI", Content = "Mode RGB Accent Diaktifkan secara Realtime!", Type = "Success", Duration = 2 })
+        Library:Notify({ Title = "Tema UI", Content = "Mode Tema RGB Diaktifkan!", Type = "Success", Duration = 2 })
     end)
 
     for _, cInfo in ipairs(colorList) do
         local name, col = cInfo[1], cInfo[2]
         ThemeGroup:AddButton("Tema " .. name, nil, function()
-            isRgbThemeActive = false
             updateGlobalThemeColor(col)
-            Library:Notify({ Title = "Tema UI", Content = "Aksen tema diubah ke " .. name, Type = "Success", Duration = 2 })
+            Library:Notify({ Title = "Tema UI", Content = "Tema diubah ke " .. name, Type = "Success", Duration = 2 })
         end)
     end
 
-    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music")
+    local MusicGroup = buildGroupInContainer(SettingsContainer, "MusicGroup", "lucide-music", true)
     
     local currentSound = Instance.new("Sound")
     currentSound.Parent = SoundService
@@ -1814,7 +1960,7 @@ function Library:CreateWindow(config)
 
     local CustomInputFrame = Instance.new("Frame")
     CustomInputFrame.Size = UDim2.new(1, 0, 0, 32)
-    CustomInputFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    CustomInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     CustomInputFrame.Parent = MusicGroup.ContentHolder
 
     local CustomTextBox = Instance.new("TextBox")
@@ -1850,7 +1996,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages")
+    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", true)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
         updateAllTranslations()
@@ -1862,12 +2008,12 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders")
+    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", true)
     TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
     end)
 
-    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type")
+    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", true)
     for fontName, enumFont in pairs(Fonts) do
         FontGroup:AddButton(fontName, nil, function()
             currentFont = enumFont
@@ -1895,9 +2041,7 @@ function Library:CreateWindow(config)
     GripIcon.Font = Enum.Font.GothamBold
     GripIcon.Parent = ResizeGrip
 
-    makeResizable(Main, ResizeGrip, 200, 150, function()
-        return not isMinimized
-    end)
+    makeResizable(Main, ResizeGrip, 200, 150)
 
     function Window:EnableScroll(state)
         state = (state == nil) and true or state
@@ -1912,7 +2056,7 @@ function Library:CreateWindow(config)
     end
 
     playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
-        TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 240, 0, 270)
         }):Play()
 
@@ -1926,35 +2070,31 @@ function Library:CreateWindow(config)
 
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
+        Main:SetAttribute("IsMinimized", isMinimized)
         if isMinimized then
             normalHeight = Main.AbsoluteSize.Y
             Container.Visible = false
             SettingsContainer.Visible = false
-            ResizeGrip.Visible = false
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
             
-            TweenService:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, 36)
             }):Play()
         else
             MinBtn.Image = Library.Icons["lucide-chevron-up"]
             
-            local restoreTween = TweenService:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
-            })
-            restoreTween:Play()
-            restoreTween.Completed:Connect(function()
-                if not isMinimized then
-                    ResizeGrip.Visible = true
-                    Container.Visible = not showingSettings
-                    SettingsContainer.Visible = showingSettings
-                end
+            }):Play()
+            task.delay(0.2, function()
+                Container.Visible = not showingSettings
+                SettingsContainer.Visible = showingSettings
             end)
         end
     end)
 
     CloseBtn.MouseButton1Click:Connect(function()
-        local closeTween = TweenService:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+        local closeTween = TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 240, 0, 0)
         })
         closeTween:Play()
