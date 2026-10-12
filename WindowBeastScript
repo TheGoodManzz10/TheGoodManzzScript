@@ -1541,6 +1541,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             Card:Destroy()
 
             local Flash = Instance.new("Frame")
+            local Flash = Instance.new("Frame")
             Flash.Size = UDim2.new(1, 0, 1, 0)
             Flash.Position = UDim2.new(0, 0, 0, 0)
             Flash.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1560,10 +1561,11 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BigText.ZIndex = 1000000
             BigText.Parent = Flash
 
+            -- Munculkan karakter satu per satu setiap 1 detik
             task.spawn(function()
                 for i = 1, #targetFlashText do
                     BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(1)
+                    task.wait(1) -- Jeda 1 detik per huruf
                 end
             end)
 
@@ -1588,6 +1590,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                 Size = UDim2.new(0, targetWidth, 0, 4)
             }):Play()
 
+            -- Tahan animasi flashbang selama 15 detik sebelum memudar (sebelumnya 10.0)
             task.delay(15.0, function()
                 local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
                 TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
@@ -1597,9 +1600,6 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                     if onComplete then onComplete() end
                 end)
             end)
-        end
-    end)
-end
 
 function Library:CreateWindow(config)
     config = config or {}
