@@ -175,7 +175,6 @@ local function updateGlobalTextColor(color)
     end
 end
 
--- SISTEM TEMA SINAR GLOW PERBAIKAN (TETAP MENYALA SAAT MINIMIZE/MAXIMIZE)
 local function updateGlobalThemeColor(color)
     currentThemeColor = color
     isRgbThemeActive = false
@@ -518,7 +517,7 @@ local function createToggle(parent, text, icon, default, callback)
     InnerDot.Position = UDim2.new(0.5, -4, 0.5, -4)
     InnerDot.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     InnerDot.BackgroundTransparency = state and 0 or 1
-    InnerDot.Parent = Box
+    InnerDot.Parent = ToggleFrame
     Instance.new("UICorner", InnerDot).CornerRadius = UDim.new(1, 0)
 
     local ClickBtn = Instance.new("TextButton")
@@ -677,7 +676,6 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     return SliderFrame
 end
 
--- ANIMASI FLASHBANG PENUH TANPA BOCOR UI DENGAN PENGETIKAN 1 DETIK/HURUF
 local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
     local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 12)
 
@@ -853,7 +851,7 @@ function Library:CreateWindow(config)
     local text1 = config.Text1 or ("by:" .. authorText)
     local text2 = config.Text2 or "Injeksi Game"
     local text3 = config.Text3 or "Menyiapkan Ui"
-    flashText = config.FlashText or "GOODMANZ"
+    local flashText = config.FlashText or "GOODMANZ"
 
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
@@ -1051,7 +1049,6 @@ function Library:CreateWindow(config)
         end
     end
 
-    -- Sembunyikan Main UI sepenuhnya saat loading agar tidak ada bug UI terpotong/bocor
     local Main = Instance.new("Frame")
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 240, 0, 0)
@@ -1059,14 +1056,13 @@ function Library:CreateWindow(config)
     Main.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
-    Main.Visible = false -- Sembunyi hingga loading animasi selesai
+    Main.Visible = false
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
 
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-    -- EFEK SINAR TEMA GLOW SANGAT KANAN DENGAN BACKGROUND TRANSPARAN
     local GlowFrame = Instance.new("Frame")
     GlowFrame.Name = "GlowEffect"
     GlowFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -1215,7 +1211,7 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
-    -- FIX BUKA TUTUP GRUP (TIDAK BENTROK)
+    -- PERBAIKAN BUG BUKA TUTUP GRUP (SISTEM KALKULASI UKURAN SEPENUHNYA FIX)
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
@@ -1292,6 +1288,7 @@ function Library:CreateWindow(config)
         ContentHolder.ScrollBarThickness = 3
         ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 160)
         ContentHolder.ClipsDescendants = true
+        ContentHolder.Visible = not isCollapsed
         ContentHolder.Parent = GroupFrame
 
         ContentHolder.MouseEnter:Connect(function()
@@ -1322,11 +1319,16 @@ function Library:CreateWindow(config)
             }):Play()
         end
 
-        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateGroupSize)
+        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            if not isCollapsed then
+                updateGroupSize()
+            end
+        end)
 
         GroupHeader.MouseButton1Click:Connect(function()
             isCollapsed = not isCollapsed
             ArrowLbl.Text = isCollapsed and "▼" or "▲"
+            ContentHolder.Visible = not isCollapsed
             updateGroupSize()
         end)
 
@@ -1418,7 +1420,6 @@ function Library:CreateWindow(config)
     FloatingContainer.Visible = false
     FloatingContainer.Parent = ScreenGui
 
-    -- SPIN NAGA/OUTER ICON (TIDAK GOYANG SAAT ANIMASI GOYANG AKTIF)
     local SpinOuterIcon = Instance.new("ImageLabel")
     SpinOuterIcon.Name = "SpinOuterIcon"
     SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
@@ -1437,7 +1438,6 @@ function Library:CreateWindow(config)
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
 
-    -- LOGIKA ANIMASI SPIN NAGA DAN ANIMASI GOYANG ICON DALAM
     local isWiggleActive = false
     RunService.RenderStepped:Connect(function()
         if FloatingContainer.Visible then
@@ -1623,7 +1623,6 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- FITUR BARU DI PENGATURAN FLOATING BUTTON
     local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
     
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
@@ -1639,7 +1638,6 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
     end)
 
-    -- INPUT CUSTOM LOGO FLOATING BUTTON + TOMBOL TERAPKAN
     local FloatInputFrame = Instance.new("Frame")
     FloatInputFrame.Size = UDim2.new(1, 0, 0, 32)
     FloatInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
@@ -1680,7 +1678,6 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- TOGGLE ANIMASI GOYANG KIRI KANAN (ICON NAGA DI LUAR TIDAK GOYANG)
     FloatSizeGroup:AddToggle("Animasi Goyang Floating Icon", nil, false, function(state)
         isWiggleActive = state
         if state then
@@ -2018,9 +2015,8 @@ function Library:CreateWindow(config)
         Window:EnableScroll(state)
     end
 
-    -- PROSES ANIMASI RAYFIELD LOADING (MAIN UI BARU DITAMPILKAN SETELAH LENGKAP)
     playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
-        Main.Visible = true -- Tampilkan UI Utama secara penuh setelah flashbang selesai
+        Main.Visible = true
         TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 240, 0, 270)
         }):Play()
