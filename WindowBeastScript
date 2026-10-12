@@ -43,7 +43,7 @@ local Translations = {
         PlayerInfo     = "Informasi Pemain",
         PlayTimeTitle  = "Waktu Bermain",
         PerfGroup      = "Fitur & Performa",
-        FloatSizeGroup = "Ukuran Tombol Hide/Show",
+        FloatSizeGroup = "Pengaturan Floating Button",
         ScriptbloxGroup = "Cari Script (Scriptblox)",
         KeyInfoGroup   = "Informasi Key Anda"
     },
@@ -65,7 +65,7 @@ local Translations = {
         PlayerInfo     = "Player Information",
         PlayTimeTitle  = "Play Time Tracker",
         PerfGroup      = "Features & Performance",
-        FloatSizeGroup = "Hide/Show Button Size",
+        FloatSizeGroup = "Floating Button Settings",
         ScriptbloxGroup = "Search Script (Scriptblox)",
         KeyInfoGroup   = "Your Key Information"
     }
@@ -175,7 +175,7 @@ local function updateGlobalTextColor(color)
     end
 end
 
--- SISTEM TEMA SINAR / GLOW ELEGANT
+-- SISTEM TEMA SINAR GLOW PERBAIKAN (TETAP MENYALA SAAT MINIMIZE/MAXIMIZE)
 local function updateGlobalThemeColor(color)
     currentThemeColor = color
     isRgbThemeActive = false
@@ -192,7 +192,7 @@ local function updateGlobalThemeColor(color)
         if obj:IsA("UIStroke") then
             if obj.Parent and obj.Parent.Name ~= "NotifCard" then
                 obj.Color = color
-                obj.Transparency = 0.5
+                obj.Transparency = 0.4
             end
         end
     end
@@ -540,7 +540,6 @@ local function createToggle(parent, text, icon, default, callback)
     return ToggleFrame
 end
 
--- SLIDER MODERN DENGAN GRADIENT & KNOB BULAT ELEGAN
 local function createSlider(parent, text, icon, min, max, default, callback)
     if type(icon) == "number" then
         callback = default
@@ -678,7 +677,7 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     return SliderFrame
 end
 
--- ANIMASI FLASHBANG (1 HURUF PER 1 DETIK + KOTAK BERPUTAR 10 DETIK LALU TURUN JADI GARIS)
+-- ANIMASI FLASHBANG PENUH TANPA BOCOR UI DENGAN PENGETIKAN 1 DETIK/HURUF
 local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
     local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 12)
 
@@ -786,7 +785,6 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BigText.ZIndex = 1000000
             BigText.Parent = Flash
 
-            -- KOTAK BERPUTAR DI BAWAH TEKS (SPINNING BOX)
             local AnimBox = Instance.new("Frame")
             AnimBox.Name = "SpinningBox"
             AnimBox.Size = UDim2.new(0, 28, 0, 28)
@@ -801,16 +799,14 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BoxCorner.CornerRadius = UDim.new(0, 6)
             BoxCorner.Parent = AnimBox
 
-            -- ANIMASI KETIK TEPAT 1 HURUF PER 1 DETIK
             task.spawn(function()
                 local textLength = #targetFlashText
                 for i = 1, textLength do
                     BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(1) -- Tepat 1 detik per huruf
+                    task.wait(1)
                 end
             end)
 
-            -- ANIMASI ROTASI KOTAK SELAMA 10 DETIK
             local boxSpinConn
             local spinStartTime = tick()
             boxSpinConn = RunService.RenderStepped:Connect(function()
@@ -821,7 +817,6 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                     boxSpinConn:Disconnect()
                     AnimBox.Rotation = 0
                     
-                    -- SETELAH 10 DETIK: KOTAK TURUN DAN BERTRANSISI MENJADI GARIS UNDERLINE
                     local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
                     
                     TweenService:Create(AnimBox, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
@@ -833,7 +828,6 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                         CornerRadius = UDim.new(1, 0)
                     }):Play()
 
-                    -- AKHIR FLASHBANG PENUH
                     task.delay(1.2, function()
                         local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
                         TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
@@ -859,7 +853,7 @@ function Library:CreateWindow(config)
     local text1 = config.Text1 or ("by:" .. authorText)
     local text2 = config.Text2 or "Injeksi Game"
     local text3 = config.Text3 or "Menyiapkan Ui"
-    local flashText = config.FlashText or "GOODMANZ"
+    flashText = config.FlashText or "GOODMANZ"
 
     local KeySystemConfig = config.KeySystem or {}
     local isKeySystemEnabled = KeySystemConfig.Enabled or false
@@ -1057,6 +1051,7 @@ function Library:CreateWindow(config)
         end
     end
 
+    -- Sembunyikan Main UI sepenuhnya saat loading agar tidak ada bug UI terpotong/bocor
     local Main = Instance.new("Frame")
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 240, 0, 0)
@@ -1064,13 +1059,14 @@ function Library:CreateWindow(config)
     Main.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
+    Main.Visible = false -- Sembunyi hingga loading animasi selesai
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
 
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-    -- EFEK SINAR GLOW TEMA TETAP ADA BAHKAN SAAT MINIMIZE (POSISI TETAP DI HEADER)
+    -- EFEK SINAR TEMA GLOW SANGAT KANAN DENGAN BACKGROUND TRANSPARAN
     local GlowFrame = Instance.new("Frame")
     GlowFrame.Name = "GlowEffect"
     GlowFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -1219,6 +1215,7 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
+    -- FIX BUKA TUTUP GRUP (TIDAK BENTROK)
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
@@ -1320,7 +1317,9 @@ function Library:CreateWindow(config)
             
             local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
             
-            GroupFrame.Size = UDim2.new(1, 0, 0, targetHeight)
+            TweenService:Create(GroupFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 0, targetHeight)
+            }):Play()
         end
 
         ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateGroupSize)
@@ -1383,7 +1382,6 @@ function Library:CreateWindow(config)
         return Group
     end
 
-    -- DAFTAR 25 WARNA TANPA PENOMORAN
     local colorList25 = {
         {"Putih Murni", Color3.fromRGB(255, 255, 255)},
         {"Neon Cyan", Color3.fromRGB(0, 230, 255)},
@@ -1420,6 +1418,7 @@ function Library:CreateWindow(config)
     FloatingContainer.Visible = false
     FloatingContainer.Parent = ScreenGui
 
+    -- SPIN NAGA/OUTER ICON (TIDAK GOYANG SAAT ANIMASI GOYANG AKTIF)
     local SpinOuterIcon = Instance.new("ImageLabel")
     SpinOuterIcon.Name = "SpinOuterIcon"
     SpinOuterIcon.Size = UDim2.new(1, 18, 1, 18)
@@ -1427,12 +1426,6 @@ function Library:CreateWindow(config)
     SpinOuterIcon.BackgroundTransparency = 1
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
-
-    RunService.RenderStepped:Connect(function()
-        if FloatingContainer.Visible then
-            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-        end
-    end)
 
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
@@ -1443,6 +1436,21 @@ function Library:CreateWindow(config)
     FloatingLogoBtn.Parent = FloatingContainer
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
+
+    -- LOGIKA ANIMASI SPIN NAGA DAN ANIMASI GOYANG ICON DALAM
+    local isWiggleActive = false
+    RunService.RenderStepped:Connect(function()
+        if FloatingContainer.Visible then
+            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+            
+            if isWiggleActive then
+                local wiggleAngle = math.sin(tick() * 8) * 12
+                FloatingLogoBtn.Rotation = wiggleAngle
+            else
+                FloatingLogoBtn.Rotation = 0
+            end
+        end
+    end)
 
     HideBtn.MouseButton1Click:Connect(function()
         Main.Visible = false
@@ -1615,7 +1623,9 @@ function Library:CreateWindow(config)
         end
     end)
 
+    -- FITUR BARU DI PENGATURAN FLOATING BUTTON
     local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
+    
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
@@ -1627,6 +1637,57 @@ function Library:CreateWindow(config)
     FloatSizeGroup:AddButton("Besar (85px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 85, 0, 85)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
+    end)
+
+    -- INPUT CUSTOM LOGO FLOATING BUTTON + TOMBOL TERAPKAN
+    local FloatInputFrame = Instance.new("Frame")
+    FloatInputFrame.Size = UDim2.new(1, 0, 0, 32)
+    FloatInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    FloatInputFrame.Parent = FloatSizeGroup.ContentHolder
+    Instance.new("UICorner", FloatInputFrame).CornerRadius = UDim.new(0, 6)
+
+    local FloatIconBox = Instance.new("TextBox")
+    FloatIconBox.Size = UDim2.new(0.65, -5, 1, 0)
+    FloatIconBox.Position = UDim2.new(0, 6, 0, 0)
+    FloatIconBox.BackgroundTransparency = 1
+    FloatIconBox.PlaceholderText = "Nama/ID Icon Logo..."
+    FloatIconBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
+    FloatIconBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    FloatIconBox.TextSize = 10
+    FloatIconBox.Font = currentFont
+    FloatIconBox.TextXAlignment = Enum.TextXAlignment.Left
+    FloatIconBox.Parent = FloatInputFrame
+
+    local FloatApplyBtn = Instance.new("TextButton")
+    FloatApplyBtn.Size = UDim2.new(0.35, -5, 1, -6)
+    FloatApplyBtn.Position = UDim2.new(0.65, 2, 0, 3)
+    FloatApplyBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+    FloatApplyBtn.Text = "Terapkan"
+    FloatApplyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    FloatApplyBtn.TextSize = 10
+    FloatApplyBtn.Font = Enum.Font.GothamBold
+    FloatApplyBtn.Parent = FloatInputFrame
+    Instance.new("UICorner", FloatApplyBtn).CornerRadius = UDim.new(0, 4)
+
+    FloatApplyBtn.MouseButton1Click:Connect(function()
+        local inputVal = FloatIconBox.Text
+        local newIconId = getIconId(inputVal)
+        if newIconId then
+            FloatingLogoBtn.Image = newIconId
+            Library:Notify({ Title = "Floating Button", Content = "Logo Floating Button Berhasil Diubah!", Type = "Success" })
+        else
+            Library:Notify({ Title = "Floating Button", Content = "Icon / Asset ID tidak ditemukan!", Type = "Error" })
+        end
+    end)
+
+    -- TOGGLE ANIMASI GOYANG KIRI KANAN (ICON NAGA DI LUAR TIDAK GOYANG)
+    FloatSizeGroup:AddToggle("Animasi Goyang Floating Icon", nil, false, function(state)
+        isWiggleActive = state
+        if state then
+            Library:Notify({ Title = "Floating Button", Content = "Animasi goyang diaktifkan!", Type = "Success" })
+        else
+            Library:Notify({ Title = "Floating Button", Content = "Animasi goyang dimatikan", Type = "Info" })
+        end
     end)
 
     local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", true)
@@ -1774,7 +1835,6 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- GRUP WARNA TEKS TANPA NOMOR
     local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
     
     TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
@@ -1790,7 +1850,6 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- GRUP TEMA SINAR TANPA NOMOR
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
     ThemeGroup:AddButton("🌈 RGB Rainbow Glow", nil, function()
@@ -1959,7 +2018,9 @@ function Library:CreateWindow(config)
         Window:EnableScroll(state)
     end
 
+    -- PROSES ANIMASI RAYFIELD LOADING (MAIN UI BARU DITAMPILKAN SETELAH LENGKAP)
     playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
+        Main.Visible = true -- Tampilkan UI Utama secara penuh setelah flashbang selesai
         TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 240, 0, 270)
         }):Play()
