@@ -43,7 +43,7 @@ local Translations = {
         PlayerInfo     = "Informasi Pemain",
         PlayTimeTitle  = "Waktu Bermain",
         PerfGroup      = "Fitur & Performa",
-        FloatSizeGroup = "Ukuran Tombol Hide/Show",
+        FloatSizeGroup = "Pengaturan Floating Button",
         ScriptbloxGroup = "Cari Script (Scriptblox)",
         KeyInfoGroup   = "Informasi Key Anda"
     },
@@ -65,7 +65,7 @@ local Translations = {
         PlayerInfo     = "Player Information",
         PlayTimeTitle  = "Play Time Tracker",
         PerfGroup      = "Features & Performance",
-        FloatSizeGroup = "Hide/Show Button Size",
+        FloatSizeGroup = "Floating Button Settings",
         ScriptbloxGroup = "Search Script (Scriptblox)",
         KeyInfoGroup   = "Your Key Information"
     }
@@ -541,7 +541,7 @@ local function createToggle(parent, text, icon, default, callback)
     return ToggleFrame
 end
 
--- UPGRADED SLIDER (Lebih Modern, Halus, & Interaktif dengan Knob)
+-- UPGRADED SLIDER
 local function createSlider(parent, text, icon, min, max, default, callback)
     if type(icon) == "number" then
         callback = default
@@ -669,14 +669,14 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     return SliderFrame
 end
 
--- ANIMASI FLASHBANG PENUH DENGAN KOTAK BERPUTAR 1 DETIK/HURUF & MORPH KE GARIS
+-- ANIMASI LOADING 12 DETIK (DENGAN GARIS & PROGRESS BAR INSTALASI APK) & FLASHBANG 15 DETIK
 local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
     local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 12)
 
     local Card = Instance.new("Frame")
     Card.Name = "LoadingCard"
-    Card.Size = UDim2.new(0, 240, 0, 70)
-    Card.Position = UDim2.new(0.5, -120, 0.5, -35)
+    Card.Size = UDim2.new(0, 240, 0, 78)
+    Card.Position = UDim2.new(0.5, -120, 0.5, -39)
     Card.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
     Card.BorderSizePixel = 0
     Card.Parent = ScreenGui
@@ -690,7 +690,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
 
     local Spinner = Instance.new("Frame")
     Spinner.Size = UDim2.new(0, 38, 0, 38)
-    Spinner.Position = UDim2.new(0, 15, 0.5, -19)
+    Spinner.Position = UDim2.new(0, 15, 0, 12)
     Spinner.BackgroundTransparency = 1
     Spinner.Parent = Card
 
@@ -711,7 +711,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
 
     local TitleLbl = Instance.new("TextLabel")
     TitleLbl.Size = UDim2.new(1, -70, 0, 20)
-    TitleLbl.Position = UDim2.new(0, 62, 0, 16)
+    TitleLbl.Position = UDim2.new(0, 62, 0, 10)
     TitleLbl.BackgroundTransparency = 1
     TitleLbl.Text = title or "GoodManzz Hub"
     TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -722,7 +722,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
 
     local AuthorLbl = Instance.new("TextLabel")
     AuthorLbl.Size = UDim2.new(1, -70, 0, 16)
-    AuthorLbl.Position = UDim2.new(0, 62, 0, 36)
+    AuthorLbl.Position = UDim2.new(0, 62, 0, 30)
     AuthorLbl.BackgroundTransparency = 1
     AuthorLbl.Text = txt1
     AuthorLbl.TextColor3 = Color3.fromRGB(160, 160, 170)
@@ -731,14 +731,33 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     AuthorLbl.TextXAlignment = Enum.TextXAlignment.Left
     AuthorLbl.Parent = Card
 
+    -- Garis & Progress Bar Animasi Instalasi APK di Bawah Teks
+    local InstallBarBg = Instance.new("Frame")
+    InstallBarBg.Size = UDim2.new(1, -24, 0, 4)
+    InstallBarBg.Position = UDim2.new(0, 12, 1, -12)
+    InstallBarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    InstallBarBg.BorderSizePixel = 0
+    InstallBarBg.Parent = Card
+    Instance.new("UICorner", InstallBarBg).CornerRadius = UDim.new(1, 0)
+
+    local InstallBarFill = Instance.new("Frame")
+    InstallBarFill.Size = UDim2.new(0, 0, 1, 0)
+    InstallBarFill.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+    InstallBarFill.BorderSizePixel = 0
+    InstallBarFill.Parent = InstallBarBg
+    Instance.new("UICorner", InstallBarFill).CornerRadius = UDim.new(1, 0)
+
     local elapsed = 0
     local rotation = 0
+    local totalLoadingTime = 12.0 -- Diupgrade menjadi 12 detik
 
     local conn
     conn = RunService.RenderStepped:Connect(function(dt)
         elapsed = elapsed + dt
-        local progress = math.clamp(elapsed / 5.0, 0, 1)
+        local progress = math.clamp(elapsed / totalLoadingTime, 0, 1)
         
+        InstallBarFill.Size = UDim2.new(progress, 0, 1, 0)
+
         local speed = 120 + (progress ^ 3.5) * 4500 
         rotation = rotation + (speed * dt)
         RingGradient.Rotation = rotation % 360
@@ -746,19 +765,19 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
         local dotCount = (math.floor(elapsed * 3) % 4) + 1
         local dots = string.rep(".", dotCount)
 
-        if elapsed < 2.0 then
+        if elapsed < 3.0 then
             AuthorLbl.Text = txt1
-        elseif elapsed < 4.0 then
+        elseif elapsed < 7.0 then
             AuthorLbl.Text = txt2 .. " " .. dots
-        elseif elapsed < 5.0 then
-            AuthorLbl.Text = txt3 .. " " .. dots
+        elseif elapsed < 12.0 then
+            AuthorLbl.Text = "Menginstal APK (" .. math.floor(progress * 100) .. "%)" .. dots
         end
 
-        if elapsed >= 5.0 and Card and Card.Parent then
+        if elapsed >= totalLoadingTime and Card and Card.Parent then
             conn:Disconnect()
             Card:Destroy()
 
-            -- Flashbang Screen
+            -- Flashbang Screen (Durasi total 15 detik)
             local Flash = Instance.new("Frame")
             Flash.Size = UDim2.new(1, 0, 1, 0)
             Flash.Position = UDim2.new(0, 0, 0, 0)
@@ -779,16 +798,17 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BigText.ZIndex = 1000000
             BigText.Parent = Flash
 
-            -- Animasi Ketik: 1 Huruf per 1 Detik
+            -- Animasi Ketik merata selama 5 detik pertama dari total 15 detik
             task.spawn(function()
                 local textLength = #targetFlashText
+                local charDelay = 5.0 / textLength
                 for i = 1, textLength do
                     BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(1.0) -- Tepat 1 detik per huruf
+                    task.wait(charDelay)
                 end
             end)
 
-            -- Kotak Berputar di Bawah Teks selama 10 Detik, lalu turun menjadi garis
+            -- Kotak Berputar di Bawah Teks selama 14 detik, lalu turun menjadi garis
             local RotatingBox = Instance.new("Frame")
             RotatingBox.Size = UDim2.new(0, 36, 0, 36)
             RotatingBox.Position = UDim2.new(0.5, -18, 0.5, 30)
@@ -804,25 +824,25 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             boxRotConn = RunService.RenderStepped:Connect(function(dt)
                 boxElapsed = boxElapsed + dt
                 RotatingBox.Rotation = RotatingBox.Rotation + (120 * dt)
-                if boxElapsed >= 10.0 then
+                if boxElapsed >= 14.0 then
                     boxRotConn:Disconnect()
                 end
             end)
 
-            -- Setelah 10 detik, kotak turun dan berubah menjadi garis (underline)
-            task.delay(10.0, function()
+            -- Setelah 14 detik, kotak turun dan berubah menjadi garis (underline)
+            task.delay(14.0, function()
                 if boxRotConn then boxRotConn:Disconnect() end
                 local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
                 
-                TweenService:Create(RotatingBox, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                TweenService:Create(RotatingBox, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                     Rotation = 0,
                     Size = UDim2.new(0, targetWidth, 0, 4),
                     Position = UDim2.new(0.5, -targetWidth/2, 0.5, 65)
                 }):Play()
             end)
 
-            -- Sisa penundaan total sebelum UI dimunculkan
-            task.delay(11.5, function()
+            -- Tepat 15 detik flashbang selesai dan UI dimunculkan
+            task.delay(15.0, function()
                 local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
                 TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
                 TweenService:Create(RotatingBox, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
@@ -1049,8 +1069,8 @@ function Library:CreateWindow(config)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
     Main.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true
-    Main.Visible = false -- Disembunyikan saat animasi loading berjalan
+    Main.ClipsDescendants = false -- Diubah agar efek sinar/glow tetap terlihat saat minimize
+    Main.Visible = false
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
@@ -1366,7 +1386,7 @@ function Library:CreateWindow(config)
         return Group
     end
 
-    -- DAFTAR 25 WARNA LENGKAP TANPA ANGKA
+    -- DAFTAR 25 WARNA LENGKAP
     local colorList25 = {
         {"Putih Murni", Color3.fromRGB(255, 255, 255)},
         {"Neon Cyan", Color3.fromRGB(0, 230, 255)},
@@ -1411,9 +1431,17 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
+    local isFloatingWobbleActive = false
+
     RunService.RenderStepped:Connect(function()
         if FloatingContainer.Visible then
             SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+            if isFloatingWobbleActive then
+                -- Icon bergoyang kiri kanan, tetapi bagian luar/naga tidak ikut goyang secara berlebihan
+                FloatingContainer.Rotation = math.sin(tick() * 12) * 8
+            else
+                FloatingContainer.Rotation = 0
+            end
         end
     end)
 
@@ -1598,7 +1626,9 @@ function Library:CreateWindow(config)
         end
     end)
 
+    -- GRUP PENGATURAN FLOATING BUTTON (DITAMBAH FITUR BARU: GANTI ICON & ANIMASI GOYANG)
     local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
+    
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
@@ -1610,6 +1640,50 @@ function Library:CreateWindow(config)
     FloatSizeGroup:AddButton("Besar (85px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 85, 0, 85)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
+    end)
+
+    FloatSizeGroup:AddToggle("Animasi Goyang Kiri Kanan", nil, false, function(state)
+        isFloatingWobbleActive = state
+        Library:Notify({ Title = "Floating Button", Content = "Animasi Goyang: " .. tostring(state), Type = "Info" })
+    end)
+
+    local IconInputFrame = Instance.new("Frame")
+    IconInputFrame.Size = UDim2.new(1, 0, 0, 32)
+    IconInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    IconInputFrame.Parent = FloatSizeGroup.ContentHolder
+    Instance.new("UICorner", IconInputFrame).CornerRadius = UDim.new(0, 6)
+
+    local IconTextBox = Instance.new("TextBox")
+    IconTextBox.Size = UDim2.new(0.65, -5, 1, 0)
+    IconTextBox.Position = UDim2.new(0, 5, 0, 0)
+    IconTextBox.BackgroundTransparency = 1
+    IconTextBox.PlaceholderText = "Nama Icon (cth: Logo, Settings)..."
+    IconTextBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
+    IconTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    IconTextBox.TextSize = 10
+    IconTextBox.Font = currentFont
+    IconTextBox.Parent = IconInputFrame
+
+    local ApplyIconBtn = Instance.new("TextButton")
+    ApplyIconBtn.Size = UDim2.new(0.35, -5, 1, -6)
+    ApplyIconBtn.Position = UDim2.new(0.65, 3, 0, 3)
+    ApplyIconBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+    ApplyIconBtn.Text = "Terapkan"
+    ApplyIconBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ApplyIconBtn.TextSize = 10
+    ApplyIconBtn.Font = Enum.Font.GothamBold
+    ApplyIconBtn.Parent = IconInputFrame
+    Instance.new("UICorner", ApplyIconBtn).CornerRadius = UDim.new(0, 4)
+
+    ApplyIconBtn.MouseButton1Click:Connect(function()
+        local iconName = IconTextBox.Text
+        local resolvedId = getIconId(iconName)
+        if resolvedId then
+            FloatingLogoBtn.Image = resolvedId
+            Library:Notify({ Title = "Floating Button", Content = "Icon berhasil diubah ke " .. iconName, Type = "Success" })
+        else
+            Library:Notify({ Title = "Floating Button", Content = "Nama icon tidak ditemukan di library!", Type = "Error" })
+        end
     end)
 
     local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", true)
@@ -1757,7 +1831,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- GRUP WARNA TEKS (Tanpa Angka)
+    -- GRUP WARNA TEKS
     local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
     
     TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
@@ -1773,7 +1847,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- GRUP TEMA SINAR (Tanpa Angka)
+    -- GRUP TEMA SINAR
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
     ThemeGroup:AddButton("🌈 RGB Rainbow Glow", nil, function()
@@ -1943,7 +2017,7 @@ function Library:CreateWindow(config)
 
     -- PROSES EKSEKUSI ANIMASI
     playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
-        Main.Visible = true -- Munculkan UI setelah animasi loading selesai
+        Main.Visible = true
         TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 240, 0, 270)
         }):Play()
