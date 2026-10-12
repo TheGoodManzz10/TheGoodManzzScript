@@ -80,13 +80,18 @@ local registeredTranslatables = {}
 local function registerTranslation(element, key, prop)
     prop = prop or "Text"
     table.insert(registeredTranslatables, {Element = element, Key = key, Property = prop})
-    element[prop] = L(key)
+    if element and element.Parent then
+        element[prop] = L(key)
+    end
 end
 
 local function updateAllTranslations()
-    for _, item in ipairs(registeredTranslatables) do
+    for i = #registeredTranslatables, 1, -1 do
+        local item = registeredTranslatables[i]
         if item.Element and item.Element.Parent then
             item.Element[item.Property] = L(item.Key)
+        else
+            table.remove(registeredTranslatables, i)
         end
     end
 end
@@ -112,7 +117,6 @@ local isRgbTextActive = false
 local isRgbThemeActive = false
 local currentThemeColor = Color3.fromRGB(0, 170, 255)
 local mainWindowRef
-local mainGradientRef
 local glowGradientRef
 
 local function getIconId(icon)
@@ -200,7 +204,8 @@ local function updateGlobalThemeColor(color)
 end
 
 RunService.RenderStepped:Connect(function()
-    local hue = tick() % 5 / 5
+    if not ScreenGui or not ScreenGui.Parent then return end
+    local hue = (tick() % 5) / 5
     local rgbColor = Color3.fromHSV(hue, 1, 1)
 
     if isRgbTextActive then
@@ -317,13 +322,15 @@ function Library:Notify(options)
     TweenService:Create(ContentLbl, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
 
     task.delay(duration, function()
-        local closeTween = TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {BackgroundTransparency = 1})
-        TweenService:Create(CardStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
-        TweenService:Create(SideBar, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
-        TweenService:Create(TitleLbl, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
-        TweenService:Create(ContentLbl, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
-        closeTween:Play()
-        closeTween.Completed:Connect(function() Card:Destroy() end)
+        if Card and Card.Parent then
+            local closeTween = TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {BackgroundTransparency = 1})
+            TweenService:Create(CardStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
+            TweenService:Create(SideBar, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+            TweenService:Create(TitleLbl, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+            TweenService:Create(ContentLbl, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+            closeTween:Play()
+            closeTween.Completed:Connect(function() Card:Destroy() end)
+        end
     end)
 end
 
@@ -669,7 +676,7 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     return SliderFrame
 end
 
--- ANIMASI LOADING 12 DETIK (DENGAN GARIS & PROGRESS BAR INSTALASI APK) & FLASHBANG 15 DETIK
+-- ANIMASI LOADING 12 DETIK & FLASHBANG 15 DETIK (DENGAN KETIK EXACT 1 HURUF PER 1 DETIK)
 local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
     local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 12)
 
@@ -731,7 +738,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     AuthorLbl.TextXAlignment = Enum.TextXAlignment.Left
     AuthorLbl.Parent = Card
 
-    -- Garis & Progress Bar Animasi Instalasi APK di Bawah Teks
+    -- Garis Progress Bar Animasi Instalasi APK (12 Detik)
     local InstallBarBg = Instance.new("Frame")
     InstallBarBg.Size = UDim2.new(1, -24, 0, 4)
     InstallBarBg.Position = UDim2.new(0, 12, 1, -12)
@@ -749,7 +756,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
 
     local elapsed = 0
     local rotation = 0
-    local totalLoadingTime = 12.0 -- Diupgrade menjadi 12 detik
+    local totalLoadingTime = 12.0
 
     local conn
     conn = RunService.RenderStepped:Connect(function(dt)
@@ -777,7 +784,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             conn:Disconnect()
             Card:Destroy()
 
-            -- Flashbang Screen (Durasi total 15 detik)
+            -- Flashbang Screen (Total Durasi 15 Detik)
             local Flash = Instance.new("Frame")
             Flash.Size = UDim2.new(1, 0, 1, 0)
             Flash.Position = UDim2.new(0, 0, 0, 0)
@@ -798,17 +805,17 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BigText.ZIndex = 1000000
             BigText.Parent = Flash
 
-            -- Animasi Ketik merata selama 5 detik pertama dari total 15 detik
+            -- PERBAIKAN: Animasi Ketik PRESISI 1 Huruf Per 1 Detik
             task.spawn(function()
                 local textLength = #targetFlashText
-                local charDelay = 5.0 / textLength
                 for i = 1, textLength do
+                    if not Flash or not Flash.Parent then break end
                     BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(charDelay)
+                    task.wait(1.0) -- Tepat 1 detik per 1 huruf
                 end
             end)
 
-            -- Kotak Berputar di Bawah Teks selama 14 detik, lalu turun menjadi garis
+            -- Kotak Berputar di Bawah Teks selama 12 detik, lalu morph ke garis
             local RotatingBox = Instance.new("Frame")
             RotatingBox.Size = UDim2.new(0, 36, 0, 36)
             RotatingBox.Position = UDim2.new(0.5, -18, 0.5, 30)
@@ -824,13 +831,13 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             boxRotConn = RunService.RenderStepped:Connect(function(dt)
                 boxElapsed = boxElapsed + dt
                 RotatingBox.Rotation = RotatingBox.Rotation + (120 * dt)
-                if boxElapsed >= 14.0 then
+                if boxElapsed >= 12.0 then
                     boxRotConn:Disconnect()
                 end
             end)
 
-            -- Setelah 14 detik, kotak turun dan berubah menjadi garis (underline)
-            task.delay(14.0, function()
+            -- Setelah 12 detik, kotak turun dan berubah menjadi garis underline
+            task.delay(12.0, function()
                 if boxRotConn then boxRotConn:Disconnect() end
                 local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
                 
@@ -841,7 +848,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                 }):Play()
             end)
 
-            -- Tepat 15 detik flashbang selesai dan UI dimunculkan
+            -- Tepat 15 detik Flashbang selesai total
             task.delay(15.0, function()
                 local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
                 TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
@@ -1069,7 +1076,7 @@ function Library:CreateWindow(config)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
     Main.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = false -- Diubah agar efek sinar/glow tetap terlihat saat minimize
+    Main.ClipsDescendants = false -- Bolehkan pancaran sinar keluar dari batas frame saat minimize
     Main.Visible = false
     Main.Parent = ScreenGui
 
@@ -1077,14 +1084,16 @@ function Library:CreateWindow(config)
 
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-    -- EFEK SINAR GLOW TEMA DI SUDUT/LATAR
+    -- PERBAIKAN BUG SINAR MINIMIZE: Frame khusus untuk pancaran Glow Sinar
     local GlowFrame = Instance.new("Frame")
     GlowFrame.Name = "GlowEffect"
-    GlowFrame.Size = UDim2.new(1, 0, 1, 0)
+    GlowFrame.Size = UDim2.new(1, 20, 1, 20)
+    GlowFrame.Position = UDim2.new(0, -10, 0, -10)
     GlowFrame.BackgroundTransparency = 0.55
     GlowFrame.BorderSizePixel = 0
+    GlowFrame.ZIndex = 0
     GlowFrame.Parent = Main
-    Instance.new("UICorner", GlowFrame).CornerRadius = UDim.new(0, 10)
+    Instance.new("UICorner", GlowFrame).CornerRadius = UDim.new(0, 12)
 
     local GlowGradient = Instance.new("UIGradient")
     GlowGradient.Color = ColorSequence.new({
@@ -1103,8 +1112,10 @@ function Library:CreateWindow(config)
     MainStroke.Parent = Main
 
     local Header = Instance.new("Frame")
+    Header.Name = "Header"
     Header.Size = UDim2.new(1, 0, 0, 36)
     Header.BackgroundTransparency = 1
+    Header.ZIndex = 2
     Header.Parent = Main
 
     makeDraggable(Main, Header)
@@ -1162,10 +1173,19 @@ function Library:CreateWindow(config)
     CloseBtn.Parent = Header
     Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
+    -- Sub-Frame untuk Isi Konten agar saat minimize konten terpotong rapi tanpa merusak sinar
+    local ContentWrapper = Instance.new("Frame")
+    ContentWrapper.Name = "ContentWrapper"
+    ContentWrapper.Size = UDim2.new(1, 0, 1, -38)
+    ContentWrapper.Position = UDim2.new(0, 0, 0, 38)
+    ContentWrapper.BackgroundTransparency = 1
+    ContentWrapper.ClipsDescendants = true
+    ContentWrapper.Parent = Main
+
     local Container = Instance.new("ScrollingFrame")
     Container.Name = "MainContainer"
-    Container.Size = UDim2.new(1, -12, 1, -44)
-    Container.Position = UDim2.new(0, 6, 0, 38)
+    Container.Size = UDim2.new(1, -12, 1, 0)
+    Container.Position = UDim2.new(0, 6, 0, 0)
     Container.BackgroundTransparency = 1
     Container.BorderSizePixel = 0
     Container.ScrollBarThickness = 2
@@ -1173,7 +1193,7 @@ function Library:CreateWindow(config)
     Container.ScrollingEnabled = true
     Container.Active = true
     Container.ClipsDescendants = true
-    Container.Parent = Main
+    Container.Parent = ContentWrapper
 
     local Layout = Instance.new("UIListLayout")
     Layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1186,8 +1206,8 @@ function Library:CreateWindow(config)
 
     local SettingsContainer = Instance.new("ScrollingFrame")
     SettingsContainer.Name = "SettingsContainer"
-    SettingsContainer.Size = UDim2.new(1, -12, 1, -44)
-    SettingsContainer.Position = UDim2.new(0, 6, 0, 38)
+    SettingsContainer.Size = UDim2.new(1, -12, 1, 0)
+    SettingsContainer.Position = UDim2.new(0, 6, 0, 0)
     SettingsContainer.BackgroundTransparency = 1
     SettingsContainer.BorderSizePixel = 0
     SettingsContainer.ScrollBarThickness = 2
@@ -1196,7 +1216,7 @@ function Library:CreateWindow(config)
     SettingsContainer.Active = true
     SettingsContainer.ClipsDescendants = true
     SettingsContainer.Visible = false
-    SettingsContainer.Parent = Main
+    SettingsContainer.Parent = ContentWrapper
 
     local SettingsLayout = Instance.new("UIListLayout")
     SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1431,20 +1451,6 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
-    local isFloatingWobbleActive = false
-
-    RunService.RenderStepped:Connect(function()
-        if FloatingContainer.Visible then
-            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-            if isFloatingWobbleActive then
-                -- Icon bergoyang kiri kanan, tetapi bagian luar/naga tidak ikut goyang secara berlebihan
-                FloatingContainer.Rotation = math.sin(tick() * 12) * 8
-            else
-                FloatingContainer.Rotation = 0
-            end
-        end
-    end)
-
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
     FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
@@ -1452,6 +1458,20 @@ function Library:CreateWindow(config)
     FloatingLogoBtn.BackgroundTransparency = 1
     FloatingLogoBtn.Image = mainLogo or Library.Icons["Logo"]
     FloatingLogoBtn.Parent = FloatingContainer
+
+    local isFloatingWobbleActive = false
+
+    -- PERBAIKAN BUG GOYANG: Goyang HANYA pada FloatingLogoBtn (Icon), SpinOuterIcon (Naga) TIDAK ikut goyang
+    RunService.RenderStepped:Connect(function()
+        if FloatingContainer and FloatingContainer.Visible then
+            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+            if isFloatingWobbleActive then
+                FloatingLogoBtn.Rotation = math.sin(tick() * 12) * 12
+            else
+                FloatingLogoBtn.Rotation = 0
+            end
+        end
+    end)
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
 
@@ -1626,7 +1646,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- GRUP PENGATURAN FLOATING BUTTON (DITAMBAH FITUR BARU: GANTI ICON & ANIMASI GOYANG)
+    -- GRUP PENGATURAN FLOATING BUTTON
     local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
     
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
@@ -1644,6 +1664,7 @@ function Library:CreateWindow(config)
 
     FloatSizeGroup:AddToggle("Animasi Goyang Kiri Kanan", nil, false, function(state)
         isFloatingWobbleActive = state
+        if not state then FloatingLogoBtn.Rotation = 0 end
         Library:Notify({ Title = "Floating Button", Content = "Animasi Goyang: " .. tostring(state), Type = "Info" })
     end)
 
@@ -1990,6 +2011,7 @@ function Library:CreateWindow(config)
     ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
     ResizeGrip.Position = UDim2.new(1, -14, 1, -14)
     ResizeGrip.BackgroundTransparency = 1
+    ResizeGrip.ZIndex = 3
     ResizeGrip.Parent = Main
 
     local GripIcon = Instance.new("TextLabel")
@@ -2033,9 +2055,8 @@ function Library:CreateWindow(config)
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
         if isMinimized then
-            normalHeight = Main.AbsoluteSize.Y
-            Container.Visible = false
-            SettingsContainer.Visible = false
+            normalHeight = math.max(Main.AbsoluteSize.Y, 150)
+            ContentWrapper.Visible = false
             ResizeGrip.Visible = false
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
             
@@ -2046,12 +2067,14 @@ function Library:CreateWindow(config)
             MinBtn.Image = Library.Icons["lucide-chevron-up"]
             ResizeGrip.Visible = true
             
-            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            local restoreTween = TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
-            }):Play()
-            task.delay(0.2, function()
-                Container.Visible = not showingSettings
-                SettingsContainer.Visible = showingSettings
+            })
+            restoreTween:Play()
+            restoreTween.Completed:Connect(function()
+                if not isMinimized then
+                    ContentWrapper.Visible = true
+                end
             end)
         end
     end)
