@@ -43,7 +43,7 @@ local Translations = {
         PlayerInfo     = "Informasi Pemain",
         PlayTimeTitle  = "Waktu Bermain",
         PerfGroup      = "Fitur & Performa",
-        FloatSizeGroup = "Pengaturan Floating Button",
+        FloatSizeGroup = "Ukuran Tombol Hide/Show",
         ScriptbloxGroup = "Cari Script (Scriptblox)",
         KeyInfoGroup   = "Informasi Key Anda"
     },
@@ -65,7 +65,7 @@ local Translations = {
         PlayerInfo     = "Player Information",
         PlayTimeTitle  = "Play Time Tracker",
         PerfGroup      = "Features & Performance",
-        FloatSizeGroup = "Floating Button Settings",
+        FloatSizeGroup = "Hide/Show Button Size",
         ScriptbloxGroup = "Search Script (Scriptblox)",
         KeyInfoGroup   = "Your Key Information"
     }
@@ -112,6 +112,7 @@ local isRgbTextActive = false
 local isRgbThemeActive = false
 local currentThemeColor = Color3.fromRGB(0, 170, 255)
 local mainWindowRef
+local mainGradientRef
 local glowGradientRef
 
 local function getIconId(icon)
@@ -175,6 +176,7 @@ local function updateGlobalTextColor(color)
     end
 end
 
+-- SISTEM TEMA SINAR / GLOW ELEGANT
 local function updateGlobalThemeColor(color)
     currentThemeColor = color
     isRgbThemeActive = false
@@ -182,7 +184,7 @@ local function updateGlobalThemeColor(color)
     if glowGradientRef then
         glowGradientRef.Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, color),
-            ColorSequenceKeypoint.new(0.5, color),
+            ColorSequenceKeypoint.new(0.4, color),
             ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 12))
         })
     end
@@ -191,7 +193,7 @@ local function updateGlobalThemeColor(color)
         if obj:IsA("UIStroke") then
             if obj.Parent and obj.Parent.Name ~= "NotifCard" then
                 obj.Color = color
-                obj.Transparency = 0.4
+                obj.Transparency = 0.5
             end
         end
     end
@@ -215,7 +217,7 @@ RunService.RenderStepped:Connect(function()
         if glowGradientRef then
             glowGradientRef.Color = ColorSequence.new({
                 ColorSequenceKeypoint.new(0, rgbColor),
-                ColorSequenceKeypoint.new(0.5, rgbColor),
+                ColorSequenceKeypoint.new(0.4, rgbColor),
                 ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 12))
             })
         end
@@ -517,7 +519,7 @@ local function createToggle(parent, text, icon, default, callback)
     InnerDot.Position = UDim2.new(0.5, -4, 0.5, -4)
     InnerDot.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     InnerDot.BackgroundTransparency = state and 0 or 1
-    InnerDot.Parent = ToggleFrame
+    InnerDot.Parent = Box
     Instance.new("UICorner", InnerDot).CornerRadius = UDim.new(1, 0)
 
     local ClickBtn = Instance.new("TextButton")
@@ -539,6 +541,7 @@ local function createToggle(parent, text, icon, default, callback)
     return ToggleFrame
 end
 
+-- UPGRADE SLIDER (Desain lebih modern dengan knob interaktif & transisi halus)
 local function createSlider(parent, text, icon, min, max, default, callback)
     if type(icon) == "number" then
         callback = default
@@ -555,7 +558,7 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     local iconId = getIconId(icon)
 
     local SliderFrame = Instance.new("Frame")
-    SliderFrame.Size = UDim2.new(1, 0, 0, 44)
+    SliderFrame.Size = UDim2.new(1, 0, 0, 42)
     SliderFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     SliderFrame.Parent = parent
 
@@ -603,52 +606,32 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     local SliderBar = Instance.new("Frame")
     SliderBar.Size = UDim2.new(1, -20, 0, 6)
     SliderBar.Position = UDim2.new(0, 10, 0, 28)
-    SliderBar.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
     SliderBar.Parent = SliderFrame
     Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
 
     local Fill = Instance.new("Frame")
-    local alpha = (default - min) / (max - min)
-    Fill.Size = UDim2.new(alpha, 0, 1, 0)
+    Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
     Fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Fill.BorderSizePixel = 0
     Fill.Parent = SliderBar
     Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
 
-    local FillGradient = Instance.new("UIGradient")
-    FillGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(52, 152, 219)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
-    })
-    FillGradient.Parent = Fill
-
+    -- Upgrade knob (titik slider)
     local Knob = Instance.new("Frame")
     Knob.Size = UDim2.new(0, 12, 0, 12)
-    Knob.AnchorPoint = Vector2.new(0.5, 0.5)
-    Knob.Position = UDim2.new(alpha, 0, 0.5, 0)
+    Knob.Position = UDim2.new(1, -6, 0.5, -6)
     Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Knob.Parent = SliderBar
+    Knob.Parent = Fill
     Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
-
-    local KnobStroke = Instance.new("UIStroke", Knob)
-    KnobStroke.Color = Color3.fromRGB(52, 152, 219)
-    KnobStroke.Thickness = 2
 
     local isDragging = false
 
     local function updateValue(input)
         local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
         local value = math.floor(min + (max - min) * pos)
-        local currentAlpha = (value - min) / (max - min)
-
         TweenService:Create(Fill, TweenInfo.new(0.08, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Size = UDim2.new(currentAlpha, 0, 1, 0)
+            Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
         }):Play()
-
-        TweenService:Create(Knob, TweenInfo.new(0.08, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Position = UDim2.new(currentAlpha, 0, 0.5, 0)
-        }):Play()
-
         ValueLabel.Text = tostring(value)
         task.spawn(callback, value)
     end
@@ -656,7 +639,6 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     SliderBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             isDragging = true
-            TweenService:Create(Knob, TweenInfo.new(0.15), {Size = UDim2.new(0, 16, 0, 16)}):Play()
             updateValue(input)
         end
     end)
@@ -670,12 +652,12 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             isDragging = false
-            TweenService:Create(Knob, TweenInfo.new(0.15), {Size = UDim2.new(0, 12, 0, 12)}):Play()
         end
     end)
     return SliderFrame
 end
 
+-- ANIMASI FLASHBANG PENUH DENGAN KOTAK BERPUTAR SELAMA 10 DETIK DAN 1 HURUF PER 1 DETIK
 local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
     local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 12)
 
@@ -773,7 +755,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
 
             local BigText = Instance.new("TextLabel")
             BigText.Size = UDim2.new(1, -40, 0, 120)
-            BigText.Position = UDim2.new(0, 20, 0.5, -80)
+            BigText.Position = UDim2.new(0, 20, 0.5, -60)
             BigText.BackgroundTransparency = 1
             BigText.Text = ""
             BigText.TextColor3 = Color3.fromRGB(15, 15, 15)
@@ -783,60 +765,54 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
             BigText.ZIndex = 1000000
             BigText.Parent = Flash
 
-            local AnimBox = Instance.new("Frame")
-            AnimBox.Name = "SpinningBox"
-            AnimBox.Size = UDim2.new(0, 28, 0, 28)
-            AnimBox.Position = UDim2.new(0.5, 0, 0.5, 30)
-            AnimBox.AnchorPoint = Vector2.new(0.5, 0.5)
-            AnimBox.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-            AnimBox.BorderSizePixel = 0
-            AnimBox.ZIndex = 1000001
-            AnimBox.Parent = Flash
-
-            local BoxCorner = Instance.new("UICorner")
-            BoxCorner.CornerRadius = UDim.new(0, 6)
-            BoxCorner.Parent = AnimBox
-
+            -- Animasi ketik 1 huruf per 1 detik sesuai permintaan
             task.spawn(function()
                 local textLength = #targetFlashText
+                local delayPerChar = 1.0 
                 for i = 1, textLength do
                     BigText.Text = string.sub(targetFlashText, 1, i)
-                    task.wait(1)
+                    task.wait(delayPerChar)
                 end
             end)
 
-            local boxSpinConn
-            local spinStartTime = tick()
-            boxSpinConn = RunService.RenderStepped:Connect(function()
-                local timePassed = tick() - spinStartTime
-                AnimBox.Rotation = (timePassed * 240) % 360
+            -- Kotak berputar di bawah teks selama 10 detik, lalu turun dan menjadi garis
+            local SpinBox = Instance.new("Frame")
+            SpinBox.Size = UDim2.new(0, 36, 0, 36)
+            SpinBox.Position = UDim2.new(0.5, -18, 1, 10)
+            SpinBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            SpinBox.BorderSizePixel = 0
+            SpinBox.ZIndex = 1000001
+            SpinBox.Parent = BigText
 
-                if timePassed >= 10.0 then
-                    boxSpinConn:Disconnect()
-                    AnimBox.Rotation = 0
-                    
-                    local targetWidth = math.max(BigText.TextBounds.X + 20, 180)
-                    
-                    TweenService:Create(AnimBox, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(0.5, 0, 0.5, 50),
-                        Size = UDim2.new(0, targetWidth, 0, 4)
-                    }):Play()
+            local SpinBoxCorner = Instance.new("UICorner")
+            SpinBoxCorner.CornerRadius = UDim.new(0, 6)
+            SpinBoxCorner.Parent = SpinBox
 
-                    TweenService:Create(BoxCorner, TweenInfo.new(0.6), {
-                        CornerRadius = UDim.new(1, 0)
-                    }):Play()
+            local spinConn
+            local boxRot = 0
+            spinConn = RunService.RenderStepped:Connect(function(dt)
+                boxRot = boxRot + (120 * dt)
+                SpinBox.Rotation = boxRot % 360
+            end)
 
-                    task.delay(1.2, function()
-                        local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
-                        TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-                        TweenService:Create(AnimBox, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-                        fadeTween:Play()
-                        fadeTween.Completed:Connect(function()
-                            Flash:Destroy()
-                            if onComplete then onComplete() end
-                        end)
-                    end)
-                end
+            task.delay(10.0, function()
+                if spinConn then spinConn:Disconnect() end
+                TweenService:Create(SpinBox, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Rotation = 0,
+                    Position = UDim2.new(0.5, -90, 1, 16),
+                    Size = UDim2.new(0, 180, 0, 4)
+                }):Play()
+                TweenService:Create(SpinBoxCorner, TweenInfo.new(0.6), {CornerRadius = UDim.new(1, 0)}):Play()
+            end)
+
+            task.delay(15.0, function()
+                local fadeTween = TweenService:Create(Flash, TweenInfo.new(0.5), {BackgroundTransparency = 1})
+                TweenService:Create(BigText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+                fadeTween:Play()
+                fadeTween.Completed:Connect(function()
+                    Flash:Destroy()
+                    if onComplete then onComplete() end
+                end)
             end)
         end
     end)
@@ -1055,27 +1031,26 @@ function Library:CreateWindow(config)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
     Main.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true
-    Main.Visible = false
+    Main.ClipsDescendants = false -- Diubah agar efek sinar tetap terlihat saat minimize
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
 
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
+    -- EFEK SINAR GLOW TEMA DI SUDUT/LATAR
     local GlowFrame = Instance.new("Frame")
     GlowFrame.Name = "GlowEffect"
     GlowFrame.Size = UDim2.new(1, 0, 1, 0)
     GlowFrame.BackgroundTransparency = 0.55
     GlowFrame.BorderSizePixel = 0
-    GlowFrame.ZIndex = 0
     GlowFrame.Parent = Main
     Instance.new("UICorner", GlowFrame).CornerRadius = UDim.new(0, 10)
 
     local GlowGradient = Instance.new("UIGradient")
     GlowGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, currentThemeColor),
-        ColorSequenceKeypoint.new(0.5, currentThemeColor),
+        ColorSequenceKeypoint.new(0.4, currentThemeColor),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 12))
     })
     GlowGradient.Rotation = 45
@@ -1091,7 +1066,6 @@ function Library:CreateWindow(config)
     local Header = Instance.new("Frame")
     Header.Size = UDim2.new(1, 0, 0, 36)
     Header.BackgroundTransparency = 1
-    Header.ZIndex = 2
     Header.Parent = Main
 
     makeDraggable(Main, Header)
@@ -1160,7 +1134,6 @@ function Library:CreateWindow(config)
     Container.ScrollingEnabled = true
     Container.Active = true
     Container.ClipsDescendants = true
-    Container.ZIndex = 2
     Container.Parent = Main
 
     local Layout = Instance.new("UIListLayout")
@@ -1184,7 +1157,6 @@ function Library:CreateWindow(config)
     SettingsContainer.Active = true
     SettingsContainer.ClipsDescendants = true
     SettingsContainer.Visible = false
-    SettingsContainer.ZIndex = 2
     SettingsContainer.Parent = Main
 
     local SettingsLayout = Instance.new("UIListLayout")
@@ -1211,7 +1183,6 @@ function Library:CreateWindow(config)
         }):Play()
     end)
 
-    -- PERBAIKAN BUG BUKA TUTUP GRUP (SISTEM KALKULASI UKURAN SEPENUHNYA FIX)
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
         if type(icon) == "boolean" then
             defaultCollapsed = icon
@@ -1288,7 +1259,6 @@ function Library:CreateWindow(config)
         ContentHolder.ScrollBarThickness = 3
         ContentHolder.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 160)
         ContentHolder.ClipsDescendants = true
-        ContentHolder.Visible = not isCollapsed
         ContentHolder.Parent = GroupFrame
 
         ContentHolder.MouseEnter:Connect(function()
@@ -1314,21 +1284,14 @@ function Library:CreateWindow(config)
             
             local targetHeight = isCollapsed and 32 or (34 + displayHeight + 6)
             
-            TweenService:Create(GroupFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Size = UDim2.new(1, 0, 0, targetHeight)
-            }):Play()
+            GroupFrame.Size = UDim2.new(1, 0, 0, targetHeight)
         end
 
-        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            if not isCollapsed then
-                updateGroupSize()
-            end
-        end)
+        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateGroupSize)
 
         GroupHeader.MouseButton1Click:Connect(function()
             isCollapsed = not isCollapsed
             ArrowLbl.Text = isCollapsed and "▼" or "▲"
-            ContentHolder.Visible = not isCollapsed
             updateGroupSize()
         end)
 
@@ -1384,32 +1347,33 @@ function Library:CreateWindow(config)
         return Group
     end
 
+    -- DAFTAR 25 WARNA TANPA ANGKA DI NAMA
     local colorList25 = {
         {"Putih Murni", Color3.fromRGB(255, 255, 255)},
         {"Neon Cyan", Color3.fromRGB(0, 230, 255)},
-        {"Biru Sky", Color3.fromRGB(52, 152, 219)},
+        {"Biru Langit (Sky)", Color3.fromRGB(52, 152, 219)},
         {"Biru Royal", Color3.fromRGB(30, 100, 230)},
-        {"Emerald", Color3.fromRGB(46, 204, 113)},
-        {"Lime Neon", Color3.fromRGB(50, 255, 100)},
-        {"Crimson", Color3.fromRGB(231, 76, 60)},
-        {"Ruby Red", Color3.fromRGB(210, 20, 60)},
-        {"Gold", Color3.fromRGB(241, 196, 15)},
-        {"Amber Orange", Color3.fromRGB(230, 126, 34)},
-        {"Amethyst", Color3.fromRGB(155, 89, 182)},
+        {"Hijau Zamrud (Emerald)", Color3.fromRGB(46, 204, 113)},
+        {"Hijau Neon (Lime)", Color3.fromRGB(50, 255, 100)},
+        {"Merah Crimson", Color3.fromRGB(231, 76, 60)},
+        {"Merah Delima (Ruby)", Color3.fromRGB(210, 20, 60)},
+        {"Kuning Mas (Gold)", Color3.fromRGB(241, 196, 15)},
+        {"Oranye Amber", Color3.fromRGB(230, 126, 34)},
+        {"Ungu Amethyst", Color3.fromRGB(155, 89, 182)},
         {"Cyberpunk Violet", Color3.fromRGB(180, 50, 255)},
         {"Hot Pink", Color3.fromRGB(255, 105, 180)},
         {"Magenta Neon", Color3.fromRGB(255, 0, 200)},
-        {"Mint Aqua", Color3.fromRGB(80, 240, 200)},
-        {"Teal Blue", Color3.fromRGB(0, 150, 170)},
-        {"Soft Lavender", Color3.fromRGB(200, 160, 255)},
+        {"Aqua / Mint", Color3.fromRGB(80, 240, 200)},
+        {"Biru Teal", Color3.fromRGB(0, 150, 170)},
+        {"Lavender Soft", Color3.fromRGB(200, 160, 255)},
         {"Peach Sunset", Color3.fromRGB(255, 160, 120)},
         {"Coral", Color3.fromRGB(255, 127, 80)},
-        {"Olive Green", Color3.fromRGB(128, 128, 0)},
-        {"Lemon Yellow", Color3.fromRGB(255, 247, 0)},
-        {"Bronze", Color3.fromRGB(205, 127, 50)},
-        {"Silver", Color3.fromRGB(192, 192, 192)},
-        {"Steel Grey", Color3.fromRGB(130, 140, 150)},
-        {"Dark Black", Color3.fromRGB(15, 15, 15)}
+        {"Hijau Olive", Color3.fromRGB(128, 128, 0)},
+        {"Kuning Lemon", Color3.fromRGB(255, 247, 0)},
+        {"Cokelat Bronze", Color3.fromRGB(205, 127, 50)},
+        {"Perak (Silver)", Color3.fromRGB(192, 192, 192)},
+        {"Abu Steel", Color3.fromRGB(130, 140, 150)},
+        {"Hitam Gelap", Color3.fromRGB(15, 15, 15)}
     }
 
     local FloatingContainer = Instance.new("Frame")
@@ -1428,6 +1392,12 @@ function Library:CreateWindow(config)
     SpinOuterIcon.Image = Library.Icons["SpinOuter"]
     SpinOuterIcon.Parent = FloatingContainer
 
+    RunService.RenderStepped:Connect(function()
+        if FloatingContainer.Visible then
+            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
+        end
+    end)
+
     local FloatingLogoBtn = Instance.new("ImageButton")
     FloatingLogoBtn.Name = "FloatingLogoBtn"
     FloatingLogoBtn.Size = UDim2.new(1, 0, 1, 0)
@@ -1437,20 +1407,6 @@ function Library:CreateWindow(config)
     FloatingLogoBtn.Parent = FloatingContainer
 
     makeDraggable(FloatingContainer, FloatingLogoBtn)
-
-    local isWiggleActive = false
-    RunService.RenderStepped:Connect(function()
-        if FloatingContainer.Visible then
-            SpinOuterIcon.Rotation = (SpinOuterIcon.Rotation + 2) % 360
-            
-            if isWiggleActive then
-                local wiggleAngle = math.sin(tick() * 8) * 12
-                FloatingLogoBtn.Rotation = wiggleAngle
-            else
-                FloatingLogoBtn.Rotation = 0
-            end
-        end
-    end)
 
     HideBtn.MouseButton1Click:Connect(function()
         Main.Visible = false
@@ -1624,7 +1580,6 @@ function Library:CreateWindow(config)
     end)
 
     local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
-    
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
@@ -1636,55 +1591,6 @@ function Library:CreateWindow(config)
     FloatSizeGroup:AddButton("Besar (85px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 85, 0, 85)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
-    end)
-
-    local FloatInputFrame = Instance.new("Frame")
-    FloatInputFrame.Size = UDim2.new(1, 0, 0, 32)
-    FloatInputFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    FloatInputFrame.Parent = FloatSizeGroup.ContentHolder
-    Instance.new("UICorner", FloatInputFrame).CornerRadius = UDim.new(0, 6)
-
-    local FloatIconBox = Instance.new("TextBox")
-    FloatIconBox.Size = UDim2.new(0.65, -5, 1, 0)
-    FloatIconBox.Position = UDim2.new(0, 6, 0, 0)
-    FloatIconBox.BackgroundTransparency = 1
-    FloatIconBox.PlaceholderText = "Nama/ID Icon Logo..."
-    FloatIconBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
-    FloatIconBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    FloatIconBox.TextSize = 10
-    FloatIconBox.Font = currentFont
-    FloatIconBox.TextXAlignment = Enum.TextXAlignment.Left
-    FloatIconBox.Parent = FloatInputFrame
-
-    local FloatApplyBtn = Instance.new("TextButton")
-    FloatApplyBtn.Size = UDim2.new(0.35, -5, 1, -6)
-    FloatApplyBtn.Position = UDim2.new(0.65, 2, 0, 3)
-    FloatApplyBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
-    FloatApplyBtn.Text = "Terapkan"
-    FloatApplyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    FloatApplyBtn.TextSize = 10
-    FloatApplyBtn.Font = Enum.Font.GothamBold
-    FloatApplyBtn.Parent = FloatInputFrame
-    Instance.new("UICorner", FloatApplyBtn).CornerRadius = UDim.new(0, 4)
-
-    FloatApplyBtn.MouseButton1Click:Connect(function()
-        local inputVal = FloatIconBox.Text
-        local newIconId = getIconId(inputVal)
-        if newIconId then
-            FloatingLogoBtn.Image = newIconId
-            Library:Notify({ Title = "Floating Button", Content = "Logo Floating Button Berhasil Diubah!", Type = "Success" })
-        else
-            Library:Notify({ Title = "Floating Button", Content = "Icon / Asset ID tidak ditemukan!", Type = "Error" })
-        end
-    end)
-
-    FloatSizeGroup:AddToggle("Animasi Goyang Floating Icon", nil, false, function(state)
-        isWiggleActive = state
-        if state then
-            Library:Notify({ Title = "Floating Button", Content = "Animasi goyang diaktifkan!", Type = "Success" })
-        else
-            Library:Notify({ Title = "Floating Button", Content = "Animasi goyang dimatikan", Type = "Info" })
-        end
     end)
 
     local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", true)
@@ -1832,6 +1738,7 @@ function Library:CreateWindow(config)
         end)
     end
 
+    -- GRUP WARNA TEKS (Tanpa Angka)
     local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
     
     TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
@@ -1847,6 +1754,7 @@ function Library:CreateWindow(config)
         end)
     end
 
+    -- GRUP TEMA SINAR (Tanpa Angka)
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
     ThemeGroup:AddButton("🌈 RGB Rainbow Glow", nil, function()
@@ -1989,7 +1897,6 @@ function Library:CreateWindow(config)
     ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
     ResizeGrip.Position = UDim2.new(1, -14, 1, -14)
     ResizeGrip.BackgroundTransparency = 1
-    ResizeGrip.ZIndex = 3
     ResizeGrip.Parent = Main
 
     local GripIcon = Instance.new("TextLabel")
@@ -2015,8 +1922,8 @@ function Library:CreateWindow(config)
         Window:EnableScroll(state)
     end
 
+    -- PROSES EKSEKUSI ANIMASI
     playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
-        Main.Visible = true
         TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 240, 0, 270)
         }):Play()
