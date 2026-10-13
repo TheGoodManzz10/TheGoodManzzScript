@@ -992,8 +992,8 @@ local function updateGlobalThemeColor(color)
         local mainStroke = mainWindowRef:FindFirstChildOfClass("UIStroke")
         if mainStroke then
             mainStroke.Color = color
-            mainStroke.Thickness = 3
-            mainStroke.Transparency = 0.1
+            mainStroke.Thickness = 2
+            mainStroke.Transparency = 0.10
         end
     end
 
@@ -1849,16 +1849,17 @@ function Library:CreateWindow(config)
     MainGradient.Parent = Main
     mainGradientRef = MainGradient
 
-    -- Efek Sinar Matahari (Di Atas Background, Di Bawah Teks & Tombol)
+    -- Efek Sinar Matahari (Ambient Sunlight Glow)
     local SunGlow = Instance.new("ImageLabel")
     SunGlow.Name = "SunGlow"
-    SunGlow.Size = UDim2.new(1.4, 0, 1.4, 0)
-    SunGlow.Position = UDim2.new(-0.2, 0, -0.4, 0)
+    SunGlow.Size = UDim2.new(1, 0, 1, 0)
+    SunGlow.Position = UDim2.new(0, 0, 0, 0)
     SunGlow.BackgroundTransparency = 1
-    SunGlow.Image = "rbxassetid://6015808269"
+    SunGlow.Image = "rbxassetid://5148671694" -- Asset cahaya sudut melengkung/radial yang lebih pekat
     SunGlow.ImageColor3 = currentThemeColor
-    SunGlow.ImageTransparency = 0.5 -- Mengatur kejelasannya (makin kecil makin terang)
-    SunGlow.ZIndex = 0 -- Kembali ke 0 supaya tidak menutupi teks/tombol
+    SunGlow.ImageTransparency = 0.25 -- Dibuat lebih terang/jelas (makin kecil makin terang)
+    SunGlow.ScaleType = Enum.ScaleType.Slice
+    SunGlow.ZIndex = 1 -- Naikkan ke 1 agar berada di atas gradien hitam background
     SunGlow.Parent = Main
 
     local mainSunGlowRef = SunGlow
