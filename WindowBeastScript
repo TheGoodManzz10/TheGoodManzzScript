@@ -984,7 +984,7 @@ local function updateGlobalThemeColor(color)
     
     -- Update Warna Sinar Matahari
     if mainSunGlowRef then
-        mainSunGlowRef.ImageColor3 = color
+        mainSunGlowRef.BackgroundColor3 = color
     end
 
     -- Update UIStroke / Border sebagai Aksen Utama
@@ -993,7 +993,7 @@ local function updateGlobalThemeColor(color)
         if mainStroke then
             mainStroke.Color = color
             mainStroke.Thickness = 2
-            mainStroke.Transparency = 0.10
+            mainStroke.Transparency = 0
         end
     end
 
@@ -1849,18 +1849,24 @@ function Library:CreateWindow(config)
     MainGradient.Parent = Main
     mainGradientRef = MainGradient
 
-    -- Efek Sinar Matahari (Ambient Sunlight Glow)
-    local SunGlow = Instance.new("ImageLabel")
+    -- Efek Sinar Matahari / Pojok Cahaya (Menggunakan Frame Gradient)
+    local SunGlow = Instance.new("Frame")
     SunGlow.Name = "SunGlow"
     SunGlow.Size = UDim2.new(1, 0, 1, 0)
     SunGlow.Position = UDim2.new(0, 0, 0, 0)
-    SunGlow.BackgroundTransparency = 1
-    SunGlow.Image = "rbxassetid://5148671694" -- Asset cahaya sudut melengkung/radial yang lebih pekat
-    SunGlow.ImageColor3 = currentThemeColor
-    SunGlow.ImageTransparency = 0.25 -- Dibuat lebih terang/jelas (makin kecil makin terang)
-    SunGlow.ScaleType = Enum.ScaleType.Slice
-    SunGlow.ZIndex = 1 -- Naikkan ke 1 agar berada di atas gradien hitam background
+    SunGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SunGlow.BackgroundTransparency = 0.5
+    SunGlow.ZIndex = 1
     SunGlow.Parent = Main
+
+    local GlowGradient = Instance.new("UIGradient")
+    GlowGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.2),   -- Terang di sudut kiri atas
+        NumberSequenceKeypoint.new(0.5, 0.7), -- Memudar di tengah
+        NumberSequenceKeypoint.new(1, 1)      -- Hilang di pojok kanan bawah
+    })
+    GlowGradient.Rotation = 45
+    GlowGradient.Parent = SunGlow
 
     local mainSunGlowRef = SunGlow
 
