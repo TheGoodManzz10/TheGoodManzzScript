@@ -1042,7 +1042,7 @@ RunService.RenderStepped:Connect(function()
             if val then
                 val.Color = rgbColor
                 val.Thickness = 2
-                val.Transparency = 0.2
+                val.Transparency = 0
             end
         end
 
@@ -1853,21 +1853,21 @@ function Library:CreateWindow(config)
     MainGradient.Parent = Main
     mainGradientRef = MainGradient
 
-    -- Efek Sinar Matahari / Pojok Cahaya (Menggunakan Frame Gradient)
+    -- Efek Sinar Matahari / Pojok Cahaya (Mengikuti Warna Tema Sejak Awal)
     local SunGlow = Instance.new("Frame")
     SunGlow.Name = "SunGlow"
     SunGlow.Size = UDim2.new(1, 0, 1, 0)
     SunGlow.Position = UDim2.new(0, 0, 0, 0)
-    SunGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    SunGlow.BackgroundTransparency = 0.5
+    SunGlow.BackgroundColor3 = currentThemeColor -- Gunakan warna tema, bukan putih polos!
+    SunGlow.BackgroundTransparency = 0.35
     SunGlow.ZIndex = 1
     SunGlow.Parent = Main
 
     local GlowGradient = Instance.new("UIGradient")
     GlowGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.2),   -- Terang di sudut kiri atas
-        NumberSequenceKeypoint.new(0.5, 0.7), -- Memudar di tengah
-        NumberSequenceKeypoint.new(1, 1)      -- Hilang di pojok kanan bawah
+        NumberSequenceKeypoint.new(0, 0.1),   -- Terang berwarna di sudut kiri atas
+        NumberSequenceKeypoint.new(0.4, 0.6), -- Memudar lembut
+        NumberSequenceKeypoint.new(1, 1)      -- Hilang total di pojok kanan bawah
     })
     GlowGradient.Rotation = 45
     GlowGradient.Parent = SunGlow
