@@ -18,7 +18,7 @@ Library.Icons = {
     ["lucide-album"] = "rbxassetid://10709752906",
     ["lucide-alert-circle"] = "rbxassetid://10709752996",
     ["lucide-alert-octagon"] = "rbxassetid://10709753064",
-    ["lucide-alertisRgbThemeActive-triangle"] = "rbxassetid://10709753149",
+    ["lucide-alert-triangle"] = "rbxassetid://10709753149",
     ["lucide-align-center"] = "rbxassetid://10709753570",
     ["lucide-align-center-horizontal"] = "rbxassetid://10709753272",
     ["lucide-align-center-vertical"] = "rbxassetid://10709753421",
@@ -1021,13 +1021,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-local NotifHolder = Instance.new("Frame")
-NotifHolder.Name = "NotifHolder"
-NotifHolder.Size = UDim2.new(0, 230, 1, -20)
-NotifHolder.Position = UDim2.new(1, -240, 0, 10)
-NotifHolder.BackgroundTransparency = 1
-NotifHolder.Parent = ScreenGui
-
 local NotifLayout = Instance.new("UIListLayout")
 NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
 NotifLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
@@ -1401,62 +1394,47 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     SliderBar.Parent = SliderFrame
     Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
 
-    -- 1. Tambahkan Knob di dalam SliderBar (setelah pembuatan Fill)
-local Fill = Instance.new("Frame")
-Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-Fill.Parent = SliderBar
-Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+    local Fill = Instance.new("Frame")
+    Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    Fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Fill.Parent = SliderBar
+    Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
 
--- Buat Tombol Knob di ujung bar
-local Knob = Instance.new("Frame")
-Knob.Size = UDim2.new(0, 12, 0, 12)
-Knob.AnchorPoint = Vector2.new(0.5, 0.5)
-Knob.Position = UDim2.new((default - min) / (max - min), 0, 0.5, 0)
-Knob.Parent = SliderBar
-Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
+    local isDragging = false
 
--- Fungsi penentuan warna
-local function getSliderColor(percentage)
-    if percentage <= 0.33 then
-        return Color3.fromRGB(0, 128, 0)   -- Hijau Tua (Rendah)
-    elseif percentage <= 0.66 then
-        return Color3.fromRGB(0, 120, 255)  -- Biru (Sedang)
-    else
-        return Color3.fromRGB(0, 50, 150)   -- Biru Tua (Full / Tinggi)
+    local function updateValue(input)
+        local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+        local value = math.floor(min + (max - min) * pos)
+        TweenService:Create(Fill, TweenInfo.new(0.08, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+        }):Play()
+        ValueLabel.Text = tostring(value)
+        task.spawn(callback, value)
     end
-end
 
--- Set warna awal Fill & Knob
-local initialPercent = (default - min) / (max - min)
-local initialCol = getSliderColor(initialPercent)
-Fill.BackgroundColor3 = initialCol
-Knob.BackgroundColor3 = initialCol
+    SliderBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = true
+            updateValue(input)
+        end
+    end)
 
--- 2. Perbarui fungsi updateValue agar posisi dan warna Knob ikut bergerak mulus
-local isDragging = false
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateValue(input)
+        end
+    end)
 
-local function updateValue(input)
-    local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
-    local value = math.floor(min + (max - min) * pos)
-    local targetColor = getSliderColor(pos)
-
-    -- Animasikan Fill, Ukuran/Posisi, dan Warna (Fill & Knob) secara bersamaan
-    TweenService:Create(Fill, TweenInfo.new(0.08, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = UDim2.new(pos, 0, 1, 0),
-        BackgroundColor3 = targetColor
-    }):Play()
-
-    TweenService:Create(Knob, TweenInfo.new(0.08, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Position = UDim2.new(pos, 0, 0.5, 0),
-        BackgroundColor3 = targetColor
-    }):Play()
-
-    ValueLabel.Text = tostring(value)
-    task.spawn(callback, value)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = false
+        end
+    end)
+    return SliderFrame
 end
 
 local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
-    local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 8)
+    local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 12)
 
     local Card = Instance.new("Frame")
     Card.Size = UDim2.new(0, 240, 0, 70)
@@ -1515,7 +1493,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     AuthorLbl.TextXAlignment = Enum.TextXAlignment.Left
     AuthorLbl.Parent = Card
 
-    local duration = 10.0
+    local duration = 15.0
     local elapsed = 0
     local rotation = 0
 
@@ -1565,7 +1543,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
 
             task.spawn(function()
                 for i = 1, #targetFlashText do
-                    BigText.Text = string.sub(targetFlashText, 1, 12)
+                    BigText.Text = string.sub(targetFlashText, 1, i)
                     task.wait(1)
                 end
             end)
@@ -2198,7 +2176,7 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
-    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", true)
+    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", false)
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
 
@@ -2359,7 +2337,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
+    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
@@ -2373,7 +2351,7 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
     end)
 
-    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", true)
+    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
     local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
     local startTime = tick()
     
@@ -2390,7 +2368,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", true)
+    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
     
     local AvatarFrame = Instance.new("Frame")
     AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
@@ -2431,7 +2409,7 @@ function Library:CreateWindow(config)
     PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
     PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", true)
+    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
         pcall(function()
@@ -2641,7 +2619,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", true)
+    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
         updateAllTranslations()
@@ -2653,12 +2631,12 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", true)
+    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
     TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
     end)
 
-    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", true)
+    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
     for fontName, enumFont in pairs(Fonts) do
         FontGroup:AddButton(fontName, nil, function()
             currentFont = enumFont
