@@ -1857,7 +1857,7 @@ SunGlow.BackgroundTransparency = 1
 SunGlow.Image = "rbxassetid://6015808269"
 SunGlow.ImageColor3 = currentThemeColor
 SunGlow.ImageTransparency = 0.6
-SunGlow.ZIndex = 0
+SunGlow.ZIndex = 2
 SunGlow.Parent = Main
 
 local mainSunGlowRef = SunGlow
