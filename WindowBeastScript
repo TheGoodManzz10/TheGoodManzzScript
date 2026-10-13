@@ -982,12 +982,13 @@ local function updateGlobalThemeColor(color)
     currentThemeColor = color
     isRgbThemeActive = false
     
-    -- Update Warna Sinar Matahari
+    -- Update Warna Sinar Matahari (Tetap menyala mengikuti tema)
     if mainSunGlowRef then
         mainSunGlowRef.BackgroundColor3 = color
+        mainSunGlowRef.BackgroundTransparency = 0.4 -- Buat agak terang biar tetap kelihatan
     end
 
-    -- Update UIStroke / Border sebagai Aksen Utama
+    -- Update UIStroke / Border Utama (Jendela Main)
     if mainWindowRef then
         local mainStroke = mainWindowRef:FindFirstChildOfClass("UIStroke")
         if mainStroke then
@@ -997,23 +998,23 @@ local function updateGlobalThemeColor(color)
         end
     end
 
-    -- Update Elemen UI Lainnya (Aksen pada Stroke & Button Aktif)
+    -- Update UIStroke Elemen Lainnya
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("UIStroke") and obj.Parent.Name ~= "NotifCard" and obj.Parent.Name ~= "KeyFrame" then
             obj.Color = color
-            obj.Transparency = 0.5
+            obj.Thickness = 2
+            obj.Transparency = 0.4
         elseif obj:IsA("Frame") or obj:IsA("TextButton") then
-            -- Frame & Button tetap gelap, warna tema hanya menjadi pembeda subtle
-            if obj.Name ~= "Main" and obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "KeyFrame" then
+            if obj.Name ~= "Main" and obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "KeyFrame" and obj.Name ~= "SunGlow" then
                 if obj.BackgroundTransparency < 1 then
-                    obj.BackgroundColor3 = Color3.fromRGB(15, 15, 20) -- Tetap Gelap
+                    obj.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
                 end
             end
         end
     end
 end
 
--- RENDERSTEPPED UNTUK MODE RGB (TEKS, AKSEN, DAN SINAR MATAHARI)
+-- RENDERSTEPPED UNTUK MODE RGB
 RunService.RenderStepped:Connect(function()
     local hue = tick() % 5 / 5
     local rgbColor = Color3.fromHSV(hue, 1, 1)
@@ -1029,23 +1030,26 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Mode RGB Tema (Aksen & Sinar Matahari RGB Berputar)
+    -- Mode RGB Tema
     if isRgbThemeActive then
         if mainSunGlowRef then
-            mainSunGlowRef.ImageColor3 = rgbColor
+            mainSunGlowRef.BackgroundColor3 = rgbColor
+            mainSunGlowRef.BackgroundTransparency = 0.4
         end
 
         if mainWindowRef then
-            local mainStroke = mainWindowRef:FindFirstChildOfClass("UIStroke")
-            if mainStroke then
-                mainStroke.Color = rgbColor
-                mainStroke.Transparency = 0.2
+            val = mainWindowRef:FindFirstChildOfClass("UIStroke")
+            if val then
+                val.Color = rgbColor
+                val.Thickness = 2
+                val.Transparency = 0.2
             end
         end
 
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("UIStroke") and obj.Parent.Name ~= "NotifCard" and obj.Parent.Name ~= "KeyFrame" then
                 obj.Color = rgbColor
+                obj.Thickness = 2
             end
         end
     end
@@ -1873,7 +1877,7 @@ function Library:CreateWindow(config)
     local MainStroke = Instance.new("UIStroke")
     MainStroke.Color = Color3.fromRGB(255, 255, 255)
     MainStroke.Thickness = 2
-    MainStroke.Transparency = 0.80
+    MainStroke.Transparency = 0.85
     MainStroke.Parent = Main
 
     local Header = Instance.new("Frame")
