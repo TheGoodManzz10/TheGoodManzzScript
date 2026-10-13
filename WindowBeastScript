@@ -1,26 +1,25 @@
 local Library = {}
 
--- Daftar Icon Registri (Ringkas)
+-- Daftar Icon Registri Bersih (Hanya yang Dipakai)
 Library.Icons = {
     ["Logo"]                    = "rbxassetid://107391174248131",
     ["Settings"]                = "rbxassetid://10734950309",
     ["SpinOuter"]               = "rbxassetid://109694296016043",
-    ["Block"]                   = "rbxassetid://10709782497",
+    ["lucide-alarm-clock"]      = "rbxassetid://10709752630",
+    ["lucide-code"]             = "rbxassetid://10709810463",
+    ["lucide-info"]             = "rbxassetid://10723415903",
+    ["lucide-key"]              = "rbxassetid://10723416652",
+    ["lucide-languages"]        = "rbxassetid://10723417703",
+    ["lucide-music"]            = "rbxassetid://10734905958",
+    ["lucide-navigation"]       = "rbxassetid://10734906744",
+    ["lucide-paint-bucket"]     = "rbxassetid://10734909847",
+    ["lucide-palette"]           = "rbxassetid://10734910430",
+    ["lucide-search"]           = "rbxassetid://10734943674",
+    ["lucide-sliders"]           = "rbxassetid://10734963400",
+    ["lucide-type"]             = "rbxassetid://10734982395",
+    ["lucide-x"]                = "rbxassetid://10747384394",
     ["lucide-chevron-up"]       = "rbxassetid://10709791523",
-    ["lucide-chevron-down"]     = "rbxassetid://10709790948",
-    ["lucide-x"]                  = "rbxassetid://10747384394",
-    ["lucide-key"]                = "rbxassetid://10723416652",
-    ["lucide-search"]             = "rbxassetid://10734943674",
-    ["lucide-sliders"]            = "rbxassetid://10734963400",
-    ["lucide-alarm-clock"]        = "rbxassetid://10709752630",
-    ["lucide-info"]               = "rbxassetid://10723415903",
-    ["lucide-navigation"]         = "rbxassetid://10734906744",
-    ["lucide-code"]               = "rbxassetid://10709810463",
-    ["lucide-palette"]            = "rbxassetid://10734910430",
-    ["lucide-paint-bucket"]       = "rbxassetid://10734909847",
-    ["lucide-music"]              = "rbxassetid://10734905958",
-    ["lucide-languages"]          = "rbxassetid://10723417703",
-    ["lucide-type"]               = "rbxassetid://10747364761"
+    ["lucide-chevron-down"]     = "rbxassetid://10709796864"
 }
 
 -- SISTEM BAHASA DENGAN TRANSLATION LENGKAP
@@ -33,7 +32,7 @@ local Translations = {
         TextStyle      = "Gaya Text / Font",
         LangSelect     = "Pilih Bahasa / Language",
         TextColorGroup = "Pilih Warna Teks",
-        ThemeGroup     = "Pilih Tema UI",
+        ThemeGroup     = "Pilih Tema Aksen UI",
         MusicGroup     = "Grup Musik",
         PopularScripts = "Script Populer (15 Script)",
         Executing      = "Menjalankan ",
@@ -55,7 +54,7 @@ local Translations = {
         TextStyle      = "Text Style / Font",
         LangSelect     = "Language / Bahasa",
         TextColorGroup = "Text Color",
-        ThemeGroup     = "UI Theme Color",
+        ThemeGroup     = "UI Accent Theme Color",
         MusicGroup     = "Music Group",
         PopularScripts = "Popular Scripts (15 Scripts)",
         Executing      = "Executing ",
@@ -110,9 +109,9 @@ local currentTextColor = Color3.fromRGB(255, 255, 255)
 local isRgbTextActive = false
 
 local isRgbThemeActive = false
-local currentThemeColor = Color3.fromRGB(52, 152, 219) -- Warna Aksen Default (Biru)
+local currentThemeColor = Color3.fromRGB(52, 152, 219)
 local mainWindowRef
-local mainGradientRef
+local sunburstRef
 
 local function getIconId(icon)
     if not icon or type(icon) ~= "string" or icon == "" then return nil end
@@ -175,38 +174,25 @@ local function updateGlobalTextColor(color)
     end
 end
 
--- PERBAIKAN TEMA: Hanya Mengubah Glow & Aksen Garis
 local function updateGlobalThemeColor(color)
     currentThemeColor = color
     isRgbThemeActive = false
     
-    if mainWindowRef then
-        mainWindowRef.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-        local glow = mainWindowRef:FindFirstChild("BackgroundGlow")
-        if glow then
-            glow.ImageColor3 = color
-        end
+    if sunburstRef then
+        sunburstRef.ImageColor3 = color
     end
 
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("UIStroke") then
-            if obj.Parent and obj.Parent.Name ~= "NotifCard" then
+            if obj.Parent and obj.Parent.Name ~= "Main" and obj.Parent.Name ~= "KeyFrame" and obj.Parent.Name ~= "NotifCard" then
                 obj.Color = color
-                obj.Transparency = 0.4
-            end
-        elseif obj:IsA("Frame") or obj:IsA("TextButton") then
-            if obj.Name ~= "Main" and obj.Name ~= "NotifHolder" and obj.Name ~= "FloatingContainer" then
-                if obj.BackgroundTransparency < 1 then
-                    obj.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
-                end
             end
         end
     end
 end
 
--- PERBAIKAN RGB: Mengubah Warna Glow & Aksen Garis Secara Dinamis
 RunService.RenderStepped:Connect(function()
-    local hue = (tick() % 5) / 5
+    local hue = tick() % 5 / 5
     local rgbColor = Color3.fromHSV(hue, 1, 1)
 
     if isRgbTextActive then
@@ -219,18 +205,15 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    if isRgbThemeActive and mainWindowRef then
-        mainWindowRef.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-        
-        local glow = mainWindowRef:FindFirstChild("BackgroundGlow")
-        if glow then
-            glow.ImageColor3 = rgbColor
+    if isRgbThemeActive then
+        if sunburstRef then
+            sunburstRef.ImageColor3 = rgbColor
         end
-        
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
-            if obj:IsA("UIStroke") and obj.Parent and obj.Parent.Name ~= "NotifCard" then
-                obj.Color = rgbColor
-                obj.Transparency = 0.3
+            if obj:IsA("UIStroke") then
+                if obj.Parent and obj.Parent.Name ~= "Main" and obj.Parent.Name ~= "KeyFrame" and obj.Parent.Name ~= "NotifCard" then
+                    obj.Color = rgbColor
+                end
             end
         end
     end
@@ -426,7 +409,7 @@ local function createButton(parent, text, icon, callback)
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
     local BtnStroke = Instance.new("UIStroke", Btn)
     BtnStroke.Color = currentThemeColor
-    BtnStroke.Transparency = 0.8
+    BtnStroke.Transparency = 0.5
 
     local xOffset = 10
     if iconId then
@@ -455,10 +438,10 @@ local function createButton(parent, text, icon, callback)
 
     Btn.MouseButton1Click:Connect(function()
         TweenService:Create(Btn, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0.98, 0, 0, 30)}):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {Transparency = 0.3}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {Transparency = 0.1}):Play()
         task.wait(0.12)
         TweenService:Create(Btn, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 32)}):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.25), {Transparency = 0.8}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.25), {Transparency = 0.5}):Play()
         task.spawn(callback)
     end)
     return Btn
@@ -483,7 +466,7 @@ local function createToggle(parent, text, icon, default, callback)
     Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
     local ToggleStroke = Instance.new("UIStroke", ToggleFrame)
     ToggleStroke.Color = currentThemeColor
-    ToggleStroke.Transparency = 0.8
+    ToggleStroke.Transparency = 0.5
 
     local xOffset = 10
     if iconId then
@@ -568,7 +551,7 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
     local SliderStroke = Instance.new("UIStroke", SliderFrame)
     SliderStroke.Color = currentThemeColor
-    SliderStroke.Transparency = 0.8
+    SliderStroke.Transparency = 0.5
 
     local xOffset = 10
     if iconId then
@@ -652,7 +635,7 @@ local function createSlider(parent, text, icon, min, max, default, callback)
     return SliderFrame
 end
 
-local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onComplete)
+local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, hideCallback, onComplete)
     local targetFlashText = string.sub(tostring(flashText or "GOODMANZ"), 1, 8)
 
     local Card = Instance.new("Frame")
@@ -660,6 +643,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
     Card.Position = UDim2.new(0.5, -120, 0.5, -35)
     Card.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
     Card.BorderSizePixel = 0
+    Card.ZIndex = 999999
     Card.Parent = ScreenGui
 
     Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 10)
@@ -794,6 +778,7 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
                 fadeTween:Play()
                 fadeTween.Completed:Connect(function()
                     Flash:Destroy()
+                    if hideCallback then hideCallback() end
                     if onComplete then onComplete() end
                 end)
             end)
@@ -1008,42 +993,48 @@ function Library:CreateWindow(config)
         end
     end
 
-    -- MAIN FRAME BARU DENGAN EFEK GLOW / SINAR MATAHARI BACKGROUND
     local Main = Instance.new("Frame")
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 240, 0, 0)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
     Main.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = false
+    Main.ClipsDescendants = true
+    Main.Visible = false -- Sembunyikan UI saat animasi loading berputar
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
 
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-    -- ELEMEN SINAR / GLOW BACKGROUND
-    local BackgroundGlow = Instance.new("ImageLabel")
-    BackgroundGlow.Name = "BackgroundGlow"
-    BackgroundGlow.Size = UDim2.new(1, 60, 1, 60)
-    BackgroundGlow.Position = UDim2.new(0, -30, 0, -30)
-    BackgroundGlow.BackgroundTransparency = 1
-    BackgroundGlow.Image = "rbxassetid://5028857472"
-    BackgroundGlow.ImageColor3 = currentThemeColor
-    BackgroundGlow.ImageTransparency = 0.5
-    BackgroundGlow.ZIndex = 0
-    BackgroundGlow.Parent = Main
+    -- Efek Sinar Matahari / Sunburst di Background yang dilingkari
+    local Sunburst = Instance.new("ImageLabel")
+    Sunburst.Name = "SunburstBackground"
+    Sunburst.Size = UDim2.new(1.5, 0, 1.5, 0)
+    Sunburst.Position = UDim2.new(-0.25, 0, -0.25, 0)
+    Sunburst.BackgroundTransparency = 1
+    Sunburst.Image = "rbxassetid://108694296016043" -- Gunakan asset rotasi/sunburst
+    Sunburst.ImageColor3 = currentThemeColor
+    Sunburst.ImageTransparency = 0.85
+    Sunburst.ZIndex = 0
+    Sunburst.Parent = Main
+    sunburstRef = Sunburst
+
+    RunService.RenderStepped:Connect(function()
+        if Sunburst and Sunburst.Parent then
+            Sunburst.Rotation = (Sunburst.Rotation + 0.5) % 360
+        end
+    end)
 
     local MainStroke = Instance.new("UIStroke")
-    MainStroke.Color = currentThemeColor
+    MainStroke.Color = Color3.fromRGB(255, 255, 255)
     MainStroke.Thickness = 1
-    MainStroke.Transparency = 0.4
+    MainStroke.Transparency = 0.85
     MainStroke.Parent = Main
 
     local Header = Instance.new("Frame")
     Header.Size = UDim2.new(1, 0, 0, 36)
     Header.BackgroundTransparency = 1
-    Header.ZIndex = 2
     Header.Parent = Main
 
     makeDraggable(Main, Header)
@@ -1112,7 +1103,6 @@ function Library:CreateWindow(config)
     Container.ScrollingEnabled = true
     Container.Active = true
     Container.ClipsDescendants = true
-    Container.ZIndex = 2
     Container.Parent = Main
 
     local Layout = Instance.new("UIListLayout")
@@ -1136,7 +1126,6 @@ function Library:CreateWindow(config)
     SettingsContainer.Active = true
     SettingsContainer.ClipsDescendants = true
     SettingsContainer.Visible = false
-    SettingsContainer.ZIndex = 2
     SettingsContainer.Parent = Main
 
     local SettingsLayout = Instance.new("UIListLayout")
@@ -1159,17 +1148,19 @@ function Library:CreateWindow(config)
         SettingsContainer.Visible = showingSettings
 
         TweenService:Create(SettingsBtn, TweenInfo.new(0.2), {
-            ImageColor3 = showingSettings and Color3.fromRGB(52, 152, 219) or Color3.fromRGB(255, 255, 255)
+            ImageColor3 = showingSettings and currentThemeColor or Color3.fromRGB(255, 255, 255)
         }):Play()
     end)
 
     local function buildGroupInContainer(parentContainer, groupNameKey, icon, defaultCollapsed)
+        -- Default collapsed true agar saat ui pertama kali muncul semua grup tertutup
+        if defaultCollapsed == nil then defaultCollapsed = true end
         if type(icon) == "boolean" then
             defaultCollapsed = icon
             icon = nil
         end
         local iconId = getIconId(icon)
-        local isCollapsed = defaultCollapsed or false
+        local isCollapsed = defaultCollapsed
 
         local GroupFrame = Instance.new("Frame")
         GroupFrame.Name = "GroupFrame"
@@ -1182,7 +1173,7 @@ function Library:CreateWindow(config)
         Instance.new("UICorner", GroupFrame).CornerRadius = UDim.new(0, 8)
         local GroupStroke = Instance.new("UIStroke", GroupFrame)
         GroupStroke.Color = currentThemeColor
-        GroupStroke.Transparency = 0.8
+        GroupStroke.Transparency = 0.6
 
         local GroupHeader = Instance.new("TextButton")
         GroupHeader.Name = "GroupHeader"
@@ -1307,7 +1298,7 @@ function Library:CreateWindow(config)
             Instance.new("UICorner", LblFrame).CornerRadius = UDim.new(0, 6)
             local Stroke = Instance.new("UIStroke", LblFrame)
             Stroke.Color = currentThemeColor
-            Stroke.Transparency = 0.8
+            Stroke.Transparency = 0.5
 
             local Lbl = Instance.new("TextLabel")
             Lbl.Size = UDim2.new(1, -12, 1, 0)
@@ -1329,19 +1320,43 @@ function Library:CreateWindow(config)
         return Group
     end
 
-    local colorList = {
-        {"Hitam (Black)", Color3.fromRGB(30, 30, 35)},
-        {"Putih (White)", Color3.fromRGB(255, 255, 255)},
-        {"Merah (Red)", Color3.fromRGB(231, 76, 60)},
-        {"Hijau (Green)", Color3.fromRGB(46, 204, 113)},
-        {"Biru (Blue)", Color3.fromRGB(52, 152, 219)},
-        {"Kuning (Yellow)", Color3.fromRGB(241, 196, 15)},
-        {"Ungu (Purple)", Color3.fromRGB(155, 89, 182)},
-        {"Oranye (Orange)", Color3.fromRGB(230, 126, 34)},
-        {"Pink", Color3.fromRGB(255, 105, 180)},
-        {"Cyan", Color3.fromRGB(0, 255, 255)},
-        {"Lime", Color3.fromRGB(0, 255, 0)},
-        {"Magenta", Color3.fromRGB(255, 0, 255)}
+    -- 35+ Daftar Pilihan Tema Aksen dan Warna Teks
+    local expandedColorList = {
+        {"Biru Samudera (Ocean Blue)", Color3.fromRGB(52, 152, 219)},
+        {"Hijau Emerald (Emerald Green)", Color3.fromRGB(46, 204, 113)},
+        {"Merah Crimson (Crimson Red)", Color3.fromRGB(231, 76, 60)},
+        {"Kuning Emas (Gold Yellow)", Color3.fromRGB(241, 196, 15)},
+        {"Ungu Lavender (Lavender Purple)", Color3.fromRGB(155, 89, 182)},
+        {"Oranye Sunset (Sunset Orange)", Color3.fromRGB(230, 126, 34)},
+        {"Pink Sakura (Sakura Pink)", Color3.fromRGB(255, 105, 180)},
+        {"Cyan Neon (Cyber Cyan)", Color3.fromRGB(0, 255, 255)},
+        {"Lime Terang (Bright Lime)", Color3.fromRGB(0, 255, 0)},
+        {"Magenta Glamour (Magenta)", Color3.fromRGB(255, 0, 255)},
+        {"Putih Salju (Snow White)", Color3.fromRGB(255, 255, 255)},
+        {"Abu-abu Modern (Slate Gray)", Color3.fromRGB(149, 165, 166)},
+        {"Biru Laut (Teal)", Color3.fromRGB(22, 160, 133)},
+        {"Hijau Mint (Mint)", Color3.fromRGB(26, 188, 156)},
+        {"Biru Royal (Royal Blue)", Color3.fromRGB(41, 128, 185)},
+        {"Ungu Amethyst (Amethyst)", Color3.fromRGB(142, 68, 173)},
+        {"Abu Tua (Midnight)", Color3.fromRGB(52, 73, 94)},
+        {"Kuning Lemon (Lemon)", Color3.fromRGB(243, 156, 18)},
+        {"Labu (Pumpkin)", Color3.fromRGB(211, 84, 0)},
+        {"Merah Delima (Pomegranate)", Color3.fromRGB(192, 57, 43)},
+        {"Perak (Silver)", Color3.fromRGB(189, 195, 199)},
+        {"Biru Langit (Sky Blue)", Color3.fromRGB(135, 206, 250)},
+        {"Coral Pink", Color3.fromRGB(255, 127, 80)},
+        {"Salmon", Color3.fromRGB(250, 128, 114)},
+        {"Chocolate", Color3.fromRGB(210, 105, 30)},
+        {"Turquoise", Color3.fromRGB(64, 224, 208)},
+        {"Plum", Color3.fromRGB(221, 160, 221)},
+        {"Khaki", Color3.fromRGB(240, 230, 140)},
+        {"Orchid", Color3.fromRGB(218, 112, 214)},
+        {"Steel Blue", Color3.fromRGB(70, 130, 180)},
+        {"Olive Green", Color3.fromRGB(128, 128, 0)},
+        {"Hot Pink", Color3.fromRGB(255, 105, 180)},
+        {"Indigo", Color3.fromRGB(75, 0, 130)},
+        {"Dark Orange", Color3.fromRGB(255, 140, 0)},
+        {"Electric Violet", Color3.fromRGB(143, 0, 255)}
     }
 
     local FloatingContainer = Instance.new("Frame")
@@ -1386,7 +1401,7 @@ function Library:CreateWindow(config)
         FloatingContainer.Visible = false
     end)
 
-    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", false)
+    local KeyInfoGroup = buildGroupInContainer(SettingsContainer, "KeyInfoGroup", "lucide-key", true)
     local KeyStatusLblSetting = KeyInfoGroup:AddLabel("Key: " .. currentActiveKey)
     local KeyExpireLblSetting = KeyInfoGroup:AddLabel("Durasi: " .. currentKeyDurationText)
 
@@ -1547,7 +1562,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", false)
+    local FloatSizeGroup = buildGroupInContainer(SettingsContainer, "FloatSizeGroup", "lucide-sliders", true)
     FloatSizeGroup:AddButton("Kecil (45px)", nil, function()
         FloatingContainer.Size = UDim2.new(0, 45, 0, 45)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Kecil", Type = "Success" })
@@ -1561,7 +1576,7 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Ukuran Tombol", Content = "Ukuran tombol diubah ke Besar", Type = "Success" })
     end)
 
-    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", false)
+    local PlayTimeGroup = buildGroupInContainer(SettingsContainer, "PlayTimeTitle", "lucide-alarm-clock", true)
     local PlayTimeLabel = PlayTimeGroup:AddLabel("Waktu Bermain: 0 hari, 00:00:00")
     local startTime = tick()
     
@@ -1578,7 +1593,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", false)
+    local PlayerGroup = buildGroupInContainer(SettingsContainer, "PlayerInfo", "lucide-info", true)
     
     local AvatarFrame = Instance.new("Frame")
     AvatarFrame.Size = UDim2.new(1, 0, 0, 60)
@@ -1619,7 +1634,7 @@ function Library:CreateWindow(config)
     PlayerGroup:AddLabel("Place ID: " .. tostring(game.PlaceId))
     PlayerGroup:AddLabel("Umur Akun: " .. tostring(LocalPlayer.AccountAge) .. " Hari")
 
-    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", false)
+    local PerfGroup = buildGroupInContainer(SettingsContainer, "PerfGroup", "lucide-navigation", true)
     
     PerfGroup:AddToggle("FPS Boost", nil, false, function(state)
         pcall(function()
@@ -1708,12 +1723,12 @@ function Library:CreateWindow(config)
 
     local TextColorGroup = buildGroupInContainer(SettingsContainer, "TextColorGroup", "lucide-palette", true)
     
-    TextColorGroup:AddButton("🌈 RGB Rainbow", nil, function()
+    TextColorGroup:AddButton("🌈 RGB Rainbow Teks", nil, function()
         isRgbTextActive = true
         Library:Notify({ Title = "Warna Teks", Content = "Mode RGB Rainbow Diaktifkan!", Type = "Success", Duration = 2 })
     end)
 
-    for _, cInfo in ipairs(colorList) do
+    for _, cInfo in ipairs(expandedColorList) do
         local name, col = cInfo[1], cInfo[2]
         TextColorGroup:AddButton(name, nil, function()
             updateGlobalTextColor(col)
@@ -1723,16 +1738,16 @@ function Library:CreateWindow(config)
 
     local ThemeGroup = buildGroupInContainer(SettingsContainer, "ThemeGroup", "lucide-paint-bucket", true)
 
-    ThemeGroup:AddButton("🌈 RGB Theme", nil, function()
+    ThemeGroup:AddButton("🌈 RGB Tema Aksen", nil, function()
         isRgbThemeActive = true
-        Library:Notify({ Title = "Tema UI", Content = "Mode Tema RGB Diaktifkan!", Type = "Success", Duration = 2 })
+        Library:Notify({ Title = "Tema UI", Content = "Mode Tema Aksen RGB Diaktifkan!", Type = "Success", Duration = 2 })
     end)
 
-    for _, cInfo in ipairs(colorList) do
+    for _, cInfo in ipairs(expandedColorList) do
         local name, col = cInfo[1], cInfo[2]
-        ThemeGroup:AddButton("Tema " .. name, nil, function()
+        ThemeGroup:AddButton(name, nil, function()
             updateGlobalThemeColor(col)
-            Library:Notify({ Title = "Tema UI", Content = "Tema diubah ke " .. name, Type = "Success", Duration = 2 })
+            Library:Notify({ Title = "Tema UI", Content = "Tema Aksen diubah ke " .. name, Type = "Success", Duration = 2 })
         end)
     end
 
@@ -1829,7 +1844,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", false)
+    local LangGroup = buildGroupInContainer(SettingsContainer, "LangSelect", "lucide-languages", true)
     LangGroup:AddButton("Bahasa Indonesia", nil, function()
         currentLang = "Indonesian"
         updateAllTranslations()
@@ -1841,12 +1856,12 @@ function Library:CreateWindow(config)
         Library:Notify({ Title = "Language", Content = "Language switched to English", Type = "Success" })
     end)
 
-    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", false)
+    local TransGroup = buildGroupInContainer(SettingsContainer, "UITrans", "lucide-sliders", true)
     TransGroup:AddSlider(L("BGTrans"), nil, 1, 100, 1, function(val)
         Main.BackgroundTransparency = val / 100
     end)
 
-    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", false)
+    local FontGroup = buildGroupInContainer(SettingsContainer, "TextStyle", "lucide-type", true)
     for fontName, enumFont in pairs(Fonts) do
         FontGroup:AddButton(fontName, nil, function()
             currentFont = enumFont
@@ -1863,7 +1878,6 @@ function Library:CreateWindow(config)
     ResizeGrip.Size = UDim2.new(0, 14, 0, 14)
     ResizeGrip.Position = UDim2.new(1, -14, 1, -14)
     ResizeGrip.BackgroundTransparency = 1
-    ResizeGrip.ZIndex = 3
     ResizeGrip.Parent = Main
 
     local GripIcon = Instance.new("TextLabel")
@@ -1889,7 +1903,10 @@ function Library:CreateWindow(config)
         Window:EnableScroll(state)
     end
 
+    -- Menjalankan animasi loading dengan menyembunyikan UI terlebih dahulu
     playRayfieldExecution(titleText, text1, text2, text3, flashText, function()
+        Main.Visible = true
+    end, function()
         TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 240, 0, 270)
         }):Play()
@@ -1902,13 +1919,13 @@ function Library:CreateWindow(config)
         })
     end)
 
-    -- MINIMIZE BUTTON DENGAN EFEK GLOW TETAP AKTIF
     MinBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
         if isMinimized then
             normalHeight = Main.AbsoluteSize.Y
             Container.Visible = false
             SettingsContainer.Visible = false
+            ResizeGrip.Visible = false -- Sembunyikan tombol resize saat minimize
             MinBtn.Image = Library.Icons["lucide-chevron-down"]
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
@@ -1916,6 +1933,7 @@ function Library:CreateWindow(config)
             }):Play()
         else
             MinBtn.Image = Library.Icons["lucide-chevron-up"]
+            ResizeGrip.Visible = true -- Tampilkan kembali tombol resize saat maximize
             
             TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, Main.AbsoluteSize.X, 0, normalHeight)
