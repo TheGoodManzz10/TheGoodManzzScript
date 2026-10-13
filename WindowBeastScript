@@ -984,31 +984,31 @@ local function updateGlobalThemeColor(color)
     
     -- Update Warna Sinar Matahari
     if mainSunGlowRef then
-        mainSunGlowRef.BackgroundColor3 = color
-        mainSunGlowRef.BackgroundTransparency = 0.2
+        mainSunGlowRef.ImageColor3 = color
+        mainSunGlowRef.ImageTransparency = 0.25
     end
 
-    -- Update UIStroke Utama (Solid & Tebal)
+    -- Update UIStroke Utama (Solid 100% & Tebal)
     if mainWindowRef then
         local mainStroke = mainWindowRef:FindFirstChildOfClass("UIStroke")
         if mainStroke then
             mainStroke.Color = color
             mainStroke.Thickness = 2
-            mainStroke.Transparency = 0
+            mainStroke.Transparency = 0.1 -- Solid (Tidak Transparan)
         end
     end
 
-    -- Update Elemen UI Lainnya (Garis tepi tebal + Background agak transparan biar sinar tembus)
+    -- Update UIStroke Elemen Lainnya
     for _, obj in ipairs(ScreenGui:GetDescendants()) do
         if obj:IsA("UIStroke") and obj.Parent.Name ~= "NotifCard" and obj.Parent.Name ~= "KeyFrame" then
             obj.Color = color
             obj.Thickness = 2
-            obj.Transparency = 0
+            obj.Transparency = 0 -- Solid (Tidak Transparan)
         elseif obj:IsA("Frame") or obj:IsA("TextButton") then
             if obj.Name ~= "Main" and obj.Name ~= "NotifHolder" and obj.Name ~= "NotifCard" and obj.Name ~= "FloatingContainer" and obj.Name ~= "KeyFrame" and obj.Name ~= "SunGlow" then
                 if obj.BackgroundTransparency < 1 then
-                    obj.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-                    obj.BackgroundTransparency = 0.2 -- Bikin sedikit transparan agar sinar matahari kelihatan
+                    obj.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+                    obj.BackgroundTransparency = 0.15 -- Bikin sedikit tembus pandang agar sinar di belakangnya kelihatan memancar
                 end
             end
         end
@@ -1034,8 +1034,8 @@ RunService.RenderStepped:Connect(function()
     -- Mode RGB Tema
     if isRgbThemeActive then
         if mainSunGlowRef then
-            mainSunGlowRef.BackgroundColor3 = rgbColor
-            mainSunGlowRef.BackgroundTransparency = 0.2
+            mainSunGlowRef.ImageColor3 = rgbColor
+            mainSunGlowRef.ImageTransparency = 0.25
         end
 
         if mainWindowRef then
@@ -1043,7 +1043,7 @@ RunService.RenderStepped:Connect(function()
             if mainStroke then
                 mainStroke.Color = rgbColor
                 mainStroke.Thickness = 2
-                mainStroke.Transparency = 0
+                mainStroke.Transparency = 0.1 -- Solid
             end
         end
 
@@ -1051,7 +1051,7 @@ RunService.RenderStepped:Connect(function()
             if obj:IsA("UIStroke") and obj.Parent.Name ~= "NotifCard" and obj.Parent.Name ~= "KeyFrame" then
                 obj.Color = rgbColor
                 obj.Thickness = 2
-                obj.Transparency = 0
+                obj.Transparency = 0 -- Solid
             end
         end
     end
@@ -1855,24 +1855,17 @@ function Library:CreateWindow(config)
     MainGradient.Parent = Main
     mainGradientRef = MainGradient
 
-    -- Efek Sinar Matahari / Pojok Cahaya (Pendaran Gradien Menyala)
-    local SunGlow = Instance.new("Frame")
+    -- Efek Sinar Matahari (Dibuat Menyala & Di Atas Background Main)
+    local SunGlow = Instance.new("ImageLabel")
     SunGlow.Name = "SunGlow"
-    SunGlow.Size = UDim2.new(1.2, 0, 1.2, 0)
-    SunGlow.Position = UDim2.new(-0.1, 0, -0.1, 0)
-    SunGlow.BackgroundColor3 = currentThemeColor
-    SunGlow.BackgroundTransparency = 0.2 -- Dibuat lebih pekat agar sinarnya tegas
+    SunGlow.Size = UDim2.new(1.3, 0, 1.3, 0)
+    SunGlow.Position = UDim2.new(-0.15, 0, -0.3, 0)
+    SunGlow.BackgroundTransparency = 1
+    SunGlow.Image = "rbxassetid://4996928092" -- Decal pendaran cahaya radial yang kuat
+    SunGlow.ImageColor3 = currentThemeColor
+    SunGlow.ImageTransparency = 0.25 -- Cukup terang
     SunGlow.ZIndex = 1
     SunGlow.Parent = Main
-
-    local GlowGradient = Instance.new("UIGradient")
-    GlowGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),    -- Sangat terang & menyala di sudut kiri atas
-        NumberSequenceKeypoint.new(0.5, 0.7), -- Memudar lembut di tengah
-        NumberSequenceKeypoint.new(1, 1)     -- Hilang di kanan bawah
-    })
-    GlowGradient.Rotation = 45
-    GlowGradient.Parent = SunGlow
 
     local mainSunGlowRef = SunGlow
 
