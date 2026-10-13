@@ -992,7 +992,8 @@ local function updateGlobalThemeColor(color)
         local mainStroke = mainWindowRef:FindFirstChildOfClass("UIStroke")
         if mainStroke then
             mainStroke.Color = color
-            mainStroke.Transparency = 0.3
+            mainStroke.Thickness = 3
+            mainStroke.Transparency = 0.1
         end
     end
 
@@ -1831,7 +1832,7 @@ function Library:CreateWindow(config)
     Main.Position = UDim2.new(0.5, -120, 0.5, -135)
     Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true
+    Main.ClipsDescendants = true -- PENTING: Supaya sinar tidak meluber keluar jendela
     Main.Parent = ScreenGui
 
     mainWindowRef = Main
@@ -1848,24 +1849,24 @@ function Library:CreateWindow(config)
     MainGradient.Parent = Main
     mainGradientRef = MainGradient
 
--- Efek Sinar Matahari (Ambient Sunlight Glow)
-local SunGlow = Instance.new("ImageLabel")
-SunGlow.Name = "SunGlow"
-SunGlow.Size = UDim2.new(1.4, 0, 1.4, 0)
-SunGlow.Position = UDim2.new(-0.2, 0, -0.4, 0)
-SunGlow.BackgroundTransparency = 1
-SunGlow.Image = "rbxassetid://6015808269"
-SunGlow.ImageColor3 = currentThemeColor
-SunGlow.ImageTransparency = 0.6
-SunGlow.ZIndex = 2
-SunGlow.Parent = Main
+    -- Efek Sinar Matahari (Di Atas Background, Di Bawah Teks & Tombol)
+    local SunGlow = Instance.new("ImageLabel")
+    SunGlow.Name = "SunGlow"
+    SunGlow.Size = UDim2.new(1.4, 0, 1.4, 0)
+    SunGlow.Position = UDim2.new(-0.2, 0, -0.4, 0)
+    SunGlow.BackgroundTransparency = 1
+    SunGlow.Image = "rbxassetid://6015808269"
+    SunGlow.ImageColor3 = currentThemeColor
+    SunGlow.ImageTransparency = 0.5 -- Mengatur kejelasannya (makin kecil makin terang)
+    SunGlow.ZIndex = 0 -- Kembali ke 0 supaya tidak menutupi teks/tombol
+    SunGlow.Parent = Main
 
-local mainSunGlowRef = SunGlow
+    local mainSunGlowRef = SunGlow
 
     local MainStroke = Instance.new("UIStroke")
     MainStroke.Color = Color3.fromRGB(255, 255, 255)
-    MainStroke.Thickness = 1
-    MainStroke.Transparency = 0.85
+    MainStroke.Thickness = 2
+    MainStroke.Transparency = 0.80
     MainStroke.Parent = Main
 
     local Header = Instance.new("Frame")
