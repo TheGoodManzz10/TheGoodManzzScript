@@ -965,6 +965,18 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = TargetParent
 
+local function updateGlobalTextColor(color)
+    currentTextColor = color
+    isRgbTextActive = false
+    for _, obj in ipairs(ScreenGui:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            if obj.Name ~= "StatusColor" then
+                obj.TextColor3 = color
+            end
+        end
+    end
+end
+
 -- SISTEM TEMA SINAR / GLOW ELEGANT
 local function updateGlobalThemeColor(color)
     currentThemeColor = color
@@ -1020,6 +1032,13 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
+local NotifHolder = Instance.new("Frame")
+NotifHolder.Name = "NotifHolder"
+NotifHolder.Size = UDim2.new(0, 230, 1, -20)
+NotifHolder.Position = UDim2.new(1, -240, 0, 10)
+NotifHolder.BackgroundTransparency = 1
+NotifHolder.Parent = ScreenGui
 
 local NotifLayout = Instance.new("UIListLayout")
 NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1509,9 +1528,9 @@ local function playRayfieldExecution(title, txt1, txt2, txt3, flashText, onCompl
         local dotCount = (math.floor(elapsed * 3) % 4) + 1
         local dots = string.rep(".", dotCount)
 
-        if elapsed < 4.0 then
+        if elapsed < 7.0 then
             AuthorLbl.Text = txt1
-        elseif elapsed < 7.0 then
+        elseif elapsed < 10.0 then
             AuthorLbl.Text = txt2 .. " " .. dots
         else
             AuthorLbl.Text = txt3 .. " " .. dots
