@@ -1,0 +1,538 @@
+--[================================================================]]--
+--                 ADVANCED LUMEN UI LIBRARY FRAMEWORK                --
+--                 Version: 3.5.0 - Enterprise Edition               --
+--                 Author: Senior Lua Architect                      --
+--[================================================================]]--
+
+local LumenUI = {}
+LumenUI.__index = LumenUI
+
+-- Services & Environment Check (Supports Roblox / Standalone Lua Runtimes)
+local HttpService = (typeof and typeof(game) == "table" and game:GetService("HttpService")) or nil
+local TweenService = (typeof and typeof(game) == "table" and game:GetService("TweenService")) or nil
+local RunService = (typeof and typeof(game) == "table" and game:GetService("RunService")) or nil
+local UserInputService = (typeof and typeof(game) == "table" and game:GetService("UserInputService")) or nil
+local CoreGui = (typeof and typeof(game) == "table" and game:GetService("CoreGui")) or nil
+local Players = (typeof and typeof(game) == "table" and game:GetService("Players")) or nil
+
+--[================================================================]]--
+--                   SECTION 1: THEME MANAGER                        --
+--[================================================================]]--
+
+LumenUI.Themes = {
+    Dark = {
+        Background = { 18, 18, 24 },
+        Container = { 24, 24, 32 },
+        Element = { 32, 32, 44 },
+        ElementHover = { 42, 42, 58 },
+        Accent = { 99, 102, 241 }, -- Indigo Modern
+        AccentHover = { 129, 140, 248 },
+        TextDark = { 156, 163, 175 },
+        TextLight = { 243, 244, 246 },
+        Outline = { 55, 65, 81 },
+        Success = { 34, 197, 94 },
+        Warning = { 234, 179, 8 },
+        Error = { 239, 68, 68 }
+    },
+    Light = {
+        Background = { 240, 242, 245 },
+        Container = { 255, 255, 255 },
+        Element = { 230, 233, 239 },
+        ElementHover = { 210, 215, 225 },
+        Accent = { 79, 70, 229 },
+        AccentHover = { 99, 102, 241 },
+        TextDark = { 107, 114, 128 },
+        TextLight = { 17, 24, 39 },
+        Outline = { 209, 213, 219 },
+        Success = { 22, 163, 74 },
+        Warning = { 202, 138, 4 },
+        Error = { 220, 38, 38 }
+    }
+}
+
+LumenUI.CurrentTheme = LumenUI.Themes.Dark
+
+function LumenUI:SetTheme(themeName)
+    if self.Themes[themeName] then
+        self.CurrentTheme = self.Themes[themeName]
+        self:TriggerEvent("ThemeChanged", self.CurrentTheme)
+        return true
+    end
+    return false
+end
+
+--[================================================================]]--
+--                   SECTION 2: ANIMATION ENGINE                     --
+--[================================================================]]--
+
+local AnimationEngine = {}
+
+function AnimationEngine.Lerp(a, b, t)
+    return a + (b - a) * t
+end
+
+function AnimationEngine.TweenColor(startColor, targetColor, alpha)
+    local r = AnimationEngine.Lerp(startColor[1], targetColor[1], alpha)
+    local g = AnimationEngine.Lerp(startColor[2], targetColor[2], alpha)
+    local b = AnimationEngine.Lerp(startColor[3], targetColor[3], alpha)
+    return { r, g, b }
+end
+
+function AnimationEngine.EaseOutQuint(x)
+    return 1 - math.pow(1 - x, 5)
+end
+
+function AnimationEngine.EaseInOutCubic(x)
+    return x < 0.5 and 4 * x * x * x or 1 - math.pow(-2 * x + 2, 3) / 2
+end
+
+function LumenUI.CreateTween(object, properties, duration, easingStyle, easingDirection)
+    if TweenService and object then
+        local tweenInfo = TweenInfo.new(
+            duration or 0.3,
+            easingStyle or Enum.EasingStyle.Quart,
+            easingDirection or Enum.EasingDirection.Out
+        )
+        local tween = TweenService:Create(object, tweenInfo, properties)
+        tween:Play()
+        return tween
+    end
+    return nil
+end
+
+--[================================================================]]--
+--                   SECTION 3: UTILITY & EVENT SYSTEM               --
+--[================================================================]]--
+
+local Signal = {}
+Signal.__index = Signal
+
+function Signal.new()
+    local self = setmetatable({}, Signal)
+    self._connections = {}
+    return self
+end
+
+function Signal:Connect(listener)
+    table.insert(self._connections, listener)
+    local connection = {
+        Connected = true,
+        Disconnect = function(conn)
+            for i, l in ipairs(self._connections) do
+                if l == listener then
+                    table.remove(self._connections, i)
+                    conn.Connected = false
+                    break
+                end
+            end
+        end
+    }
+    return connection
+end
+
+function Signal:Fire(...)
+    for _, listener in ipairs(self._connections) do
+        task.spawn(listener, ...)
+    end
+end
+
+--[================================================================]]--
+--                   SECTION 4: NOTIFICATION SYSTEM                  --
+--[================================================================]]--
+
+local NotificationManager = {}
+NotificationManager.__index = NotificationManager
+
+function NotificationManager.new(parentUI)
+    local self = setmetatable({}, NotificationManager)
+    self.Parent = parentUI
+    self.ActiveNotifications = {}
+    return self
+end
+
+function NotificationManager:Notify(title, description, duration, notificationType)
+    local notifData = {
+        Title = title or "Notification",
+        Description = description or "",
+        Duration = duration or 4,
+        Type = notificationType or "Info", -- Info, Success, Warning, Error
+        Timestamp = os.time()
+    }
+    
+    table.insert(self.ActiveNotifications, notifData)
+    
+    -- Simulate notification render cleanup
+    task.delay(notifData.Duration, function()
+        for i, n in ipairs(self.ActiveNotifications) do
+            if n == notifData then
+                table.remove(self.ActiveNotifications, i)
+                break
+            end
+        end
+    end)
+    
+    return notifData
+end
+
+--[================================================================]]--
+--                   SECTION 5: KEY SYSTEM & AUTH                    --
+--[================================================================]]--
+
+local KeySystem = {}
+KeySystem.__index = KeySystem
+
+function KeySystem.new(options)
+    local self = setmetatable({}, KeySystem)
+    self.Title = options.Title or "Authentication Required"
+    self.Description = options.Description or "Please enter your license key to proceed."
+    self.KeyLink = options.KeyLink or "https://example.com/get-key"
+    self.ValidKeys = options.ValidKeys or { "LUMEN-FREE-2026", "LUMEN-VIP-DEV" }
+    self.IsAuthenticated = false
+    self.OnAuthenticated = Signal.new()
+    return self
+end
+
+function KeySystem:Validate(keyInput)
+    for _, validKey in ipairs(self.ValidKeys) do
+        if keyInput == validKey then
+            self.IsAuthenticated = true
+            self.OnAuthenticated:Fire(true)
+            return true
+        end
+    end
+    return false
+end
+
+function KeySystem:GetHardwareID()
+    -- Mock HWID generator for licensing binding
+    local rawId = "LUMEN-HWID-" .. math.random(100000, 999999)
+    return rawId
+end
+
+--[================================================================]]--
+--                   SECTION 6: WINDOW & CONTAINER                   --
+--[================================================================]]--
+
+local Window = {}
+Window.__index = Window
+
+function Window.new(title, subTitle, size)
+    local self = setmetatable({}, Window)
+    self.Title = title or "Lumen UI Window"
+    self.SubTitle = subTitle or "Professional Interface"
+    self.Size = size or { 650, 450 }
+    self.Tabs = {}
+    self.ActiveTab = nil
+    self.IsMinimized = false
+    self.Notifications = NotificationManager.new(self)
+    return self
+end
+
+function Window:AddTab(tabName, iconId)
+    local TabModule = require and nil or {} -- Placeholder for Tab module structure
+    local newTab = {
+        Name = tabName,
+        Icon = iconId or "",
+        Sections = {},
+        IsActive = false
+    }
+    
+    table.insert(self.Tabs, newTab)
+    if not self.ActiveTab then
+        self.ActiveTab = newTab
+        newTab.IsActive = true
+    end
+    
+    return newTab
+end
+
+--[================================================================]]--
+--                   SECTION 7: UI ELEMENTS BUILDER                  --
+--[================================================================]]--
+
+local Elements = {}
+
+-- 1. Button Element
+function Elements.CreateButton(section, text, callback)
+    local buttonObj = {
+        Type = "Button",
+        Text = text or "Button",
+        Callback = callback or function() end,
+        Locked = false
+    }
+    
+    function buttonObj:SetText(newText)
+        self.Text = newText
+    end
+    
+    function buttonObj:Fire()
+        if not self.Locked then
+            local success, err = pcall(self.Callback)
+            if not success then
+                warn("[LumenUI Error] Button callback failed: " .. tostring(err))
+            end
+        end
+    end
+    
+    return buttonObj
+end
+
+-- 2. Toggle Element
+function Elements.CreateToggle(section, text, defaultState, callback)
+    local toggleObj = {
+        Type = "Toggle",
+        Text = text or "Toggle",
+        State = defaultState or false,
+        Callback = callback or function(state) end
+    }
+    
+    function toggleObj:SetState(newState)
+        self.State = newState
+        local success, err = pcall(self.Callback, self.State)
+        if not success then
+            warn("[LumenUI Error] Toggle callback failed: " .. tostring(err))
+        end
+    end
+    
+    function toggleObj:Toggle()
+        self:SetState(not self.State)
+    end
+    
+    return toggleObj
+end
+
+-- 3. Slider Element
+function Elements.CreateSlider(section, text, min, max, default, callback)
+    local sliderObj = {
+        Type = "Slider",
+        Text = text or "Slider",
+        Min = min or 0,
+        Max = max or 100,
+        Value = default or min or 0,
+        Callback = callback or function(val) end
+    }
+    
+    function sliderObj:SetValue(val)
+        self.Value = math.clamp(val, self.Min, self.Max)
+        local success, err = pcall(self.Callback, self.Value)
+        if not success then
+            warn("[LumenUI Error] Slider callback failed: " .. tostring(err))
+        end
+    end
+    
+    return sliderObj
+end
+
+-- 4. Dropdown Element
+function Elements.CreateDropdown(section, text, options, defaultOption, callback)
+    local dropdownObj = {
+        Type = "Dropdown",
+        Text = text or "Dropdown",
+        Options = options or {},
+        Selected = defaultOption or options[1] or "",
+        Callback = callback or function(selected) end
+    }
+    
+    function dropdownObj:Select(option)
+        for _, opt in ipairs(self.Options) do
+            if opt == option then
+                self.Selected = option
+                pcall(self.Callback, self.Selected)
+                return true
+            end
+        end
+        return false
+    end
+    
+    return dropdownObj
+end
+
+-- 5. ColorPicker Element
+function Elements.CreateColorPicker(section, text, defaultColor, callback)
+    local colorPickerObj = {
+        Type = "ColorPicker",
+        Text = text or "Color Picker",
+        Color = defaultColor or { 255, 255, 255 },
+        Callback = callback or function(color) end
+    }
+    
+    function colorPickerObj:SetColor(r, g, b)
+        self.Color = { r, g, b }
+        pcall(self.Callback, self.Color)
+    end
+    
+    return colorPickerObj
+end
+
+-- 6. Keybind Element
+function Elements.CreateKeybind(section, text, defaultKey, callback)
+    local keybindObj = {
+        Type = "Keybind",
+        Text = text or "Keybind",
+        Key = defaultKey or "F",
+        Listening = false,
+        Callback = callback or function(key) end
+    }
+    
+    function keybindObj:SetKey(newKey)
+        self.Key = newKey
+        pcall(self.Callback, self.Key)
+    end
+    
+    return keybindObj
+end
+
+-- 7. Textbox Element
+function Elements.CreateTextbox(section, text, placeholder, clearOnFocus, callback)
+    local textboxObj = {
+        Type = "Textbox",
+        Text = text or "Textbox",
+        Placeholder = placeholder or "Type here...",
+        ClearOnFocus = clearOnFocus or false,
+        Value = "",
+        Callback = callback or function(val) end
+    }
+    
+    function textboxObj:SetValue(val)
+        self.Value = val
+        pcall(self.Callback, self.Value)
+    end
+    
+    return textboxObj
+end
+
+-- 8. Label Element
+function Elements.CreateLabel(section, text)
+    local labelObj = {
+        Type = "Label",
+        Text = text or "Label Text"
+    }
+    
+    function labelObj:SetText(newText)
+        self.Text = newText
+    end
+    
+    return labelObj
+end
+
+--[================================================================]]--
+--                   SECTION 8: CONFIGURATION MANAGER                --
+--[================================================================]]--
+
+local ConfigManager = {}
+ConfigManager.__index = ConfigManager
+
+function ConfigManager.new(libraryInstance, configName)
+    local self = setmetatable({}, ConfigManager)
+    self.Library = libraryInstance
+    self.ConfigName = configName or "default_config"
+    self.SavedData = {}
+    return self
+end
+
+function ConfigManager:Save()
+    -- Serialize settings into table format
+    self.SavedData = {
+        Timestamp = os.time(),
+        Theme = LumenUI.CurrentTheme == LumenUI.Themes.Dark and "Dark" or "Light",
+        ElementsState = {}
+    }
+    
+    -- In a real environment, encode via HttpService:JSONEncode(self.SavedData)
+    return true
+end
+
+function ConfigManager:Load(serializedData)
+    -- Deserialize settings
+    if serializedData then
+        self.SavedData = serializedData
+        if self.SavedData.Theme then
+            LumenUI:SetTheme(self.SavedData.Theme)
+        end
+        return true
+    end
+    return false
+end
+
+--[================================================================]]--
+--                   SECTION 9: SYSTEM INITIALIZER                   --
+--[================================================================]]--
+
+function LumenUI:CreateWindow(title, subTitle, size)
+    local newWindow = Window.new(title, subTitle, size)
+    
+    -- Attach helper element methods to window context for easier building
+    function newWindow:CreateSection(tab, sectionName)
+        local newSection = {
+            Name = sectionName or "Section",
+            Elements = {}
+        }
+        
+        function newSection:AddButton(text, callback)
+            local elem = Elements.CreateButton(self, text, callback)
+            table.insert(self.Elements, elem)
+            return elem
+        end
+        
+        function newSection:AddToggle(text, defaultState, callback)
+            local elem = Elements.CreateToggle(self, text, defaultState, callback)
+            table.insert(self.Elements, elem)
+            return elem
+        end
+        
+        function newSection:AddSlider(text, min, max, default, callback)
+            local elem = Elements.CreateSlider(self, text, min, max, default, callback)
+            table.insert(self.Elements, elem)
+            return elem
+        end
+        
+        function newSection:AddDropdown(text, options, defaultOption, callback)
+            local elem = Elements.CreateDropdown(self, text, options, defaultOption, callback)
+            table.insert(self.Elements, elem)
+            return elem
+        end
+        
+        function newSection:AddColorPicker(text, defaultColor, callback)
+            local elem = Elements.CreateColorPicker(self, text, defaultColor, callback)
+            table.insert(self.Elements, elem)
+            return elem
+        end
+        
+        function newSection:AddKeybind(text, defaultKey, callback)
+            local elem = Elements.CreateKeybind(self, text, defaultKey, callback)
+            table.insert(self.Elements, elem)
+            return elem
+        end
+        
+        function newSection:AddTextbox(text, placeholder, clearOnFocus, callback)
+            local elem = Elements.CreateTextbox(self, text, placeholder, clearOnFocus, callback)
+            table.insert(self.Elements, elem)
+            return elem
+        end
+        
+        function newSection:AddLabel(text)
+            local elem = Elements.CreateLabel(self, text)
+            table.insert(self.Elements, elem)
+            return elem
+        end
+        
+        table.insert(tab.Sections, newSection)
+        return newSection
+    end
+    
+    return newWindow
+end
+
+function LumenUI:CreateKeySystem(options)
+    return KeySystem.new(options)
+end
+
+function LumenUI:TriggerEvent(eventName, ...)
+    -- Event dispatch router
+    if eventName == "ThemeChanged" then
+        -- Handle theme updates across active UI elements
+    end
+end
+
+-- Export LumenUI Library Module
+return LumenUI
