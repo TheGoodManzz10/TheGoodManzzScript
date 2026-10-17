@@ -7,7 +7,6 @@ function AetherLib:Init()
     local UserInputService = game:GetService("UserInputService")
     local LocalPlayer = Players.LocalPlayer
 
-    -- Hapus UI lama jika ada
     if CoreGui:FindFirstChild("AetherGenUI") then
         CoreGui.AetherGenUI:Destroy()
     end
@@ -17,9 +16,6 @@ function AetherLib:Init()
     ScreenGui.Parent = CoreGui
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -------------------------------------------------------------------
-    -- 1. FLOATING BUTTON ("AG")
-    -------------------------------------------------------------------
     local FloatButton = Instance.new("TextButton")
     FloatButton.Name = "FloatButton"
     FloatButton.Parent = ScreenGui
@@ -35,7 +31,6 @@ function AetherLib:Init()
     FloatCorner.CornerRadius = UDim.new(1, 0)
     FloatCorner.Parent = FloatButton
 
-    -- Dragging System untuk Floating Button
     local dragging, dragInput, dragStart, startPos
     FloatButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -59,9 +54,6 @@ function AetherLib:Init()
         end
     end)
 
-    -------------------------------------------------------------------
-    -- 2. BAR KANAN LAYAR (Muncul Saat UI OFF)
-    -------------------------------------------------------------------
     local SideBar = Instance.new("Frame")
     SideBar.Name = "SideBarIndicator"
     SideBar.Parent = ScreenGui
@@ -75,13 +67,10 @@ function AetherLib:Init()
     SideCorner.CornerRadius = UDim.new(0, 2)
     SideCorner.Parent = SideBar
 
-    -------------------------------------------------------------------
-    -- 3. MAIN FRAME / COMMAND BAR (Warna ala Infinite Yield)
-    -------------------------------------------------------------------
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Parent = ScreenGui
-    MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 36) -- Warna khas IY
+    MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
     MainFrame.BorderSizePixel = 0
     MainFrame.Position = UDim2.new(1, -315, 0.5, -200)
     MainFrame.Size = UDim2.new(0, 300, 0, 400)
@@ -91,7 +80,6 @@ function AetherLib:Init()
     MainCorner.CornerRadius = UDim.new(0, 8)
     MainCorner.Parent = MainFrame
 
-    -- Fungsi Toggle Tampilan UI & Bar Kanan
     local function ToggleUI(state)
         MainFrame.Visible = state
         SideBar.Visible = not state
@@ -101,7 +89,6 @@ function AetherLib:Init()
         ToggleUI(not MainFrame.Visible)
     end)
 
-    -- TopBar Header
     local TopBar = Instance.new("Frame")
     TopBar.Parent = MainFrame
     TopBar.BackgroundColor3 = Color3.fromRGB(38, 38, 50)
@@ -112,7 +99,6 @@ function AetherLib:Init()
     TopCorner.CornerRadius = UDim.new(0, 8)
     TopCorner.Parent = TopBar
 
-    -- Judul Panjang "Aether Gen 1.5"
     local Title = Instance.new("TextLabel")
     Title.Parent = TopBar
     Title.BackgroundTransparency = 1
@@ -124,7 +110,6 @@ function AetherLib:Init()
     Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Garis Putih di Bawah Judul
     local Underline = Instance.new("Frame")
     Underline.Parent = TopBar
     Underline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -132,7 +117,6 @@ function AetherLib:Init()
     Underline.Position = UDim2.new(0, 12, 0, 33)
     Underline.Size = UDim2.new(0, 120, 0, 2)
 
-    -- Tombol "X" Close Button di Pojok Kanan Atas
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Parent = TopBar
     CloseBtn.BackgroundTransparency = 1
@@ -143,19 +127,10 @@ function AetherLib:Init()
     CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     CloseBtn.TextSize = 15
 
-    CloseBtn.MouseEnter:Connect(function()
-        CloseBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-    end)
-    CloseBtn.MouseLeave:Connect(function()
-        CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    end)
     CloseBtn.MouseButton1Click:Connect(function()
         ToggleUI(false)
     end)
 
-    -------------------------------------------------------------------
-    -- 4. SCROLL CONTAINER UTAMA
-    -------------------------------------------------------------------
     local ScrollContainer = Instance.new("ScrollingFrame")
     ScrollContainer.Parent = MainFrame
     ScrollContainer.BackgroundTransparency = 1
@@ -173,9 +148,6 @@ function AetherLib:Init()
 
     local Elements = {}
 
-    -------------------------------------------------------------------
-    -- FITUR A: TOGGLE
-    -------------------------------------------------------------------
     function Elements:AddToggle(name, callback)
         local ToggleFrame = Instance.new("Frame")
         ToggleFrame.Parent = ScrollContainer
@@ -223,17 +195,12 @@ function AetherLib:Init()
             enabled = not enabled
             local goalBgColor = enabled and Color3.fromRGB(90, 150, 255) or Color3.fromRGB(60, 60, 75)
             local goalKnobPos = enabled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-            
             TweenService:Create(SwitchBg, TweenInfo.new(0.2), {BackgroundColor3 = goalBgColor}):Play()
             TweenService:Create(Knob, TweenInfo.new(0.2), {Position = goalKnobPos}):Play()
-            
             if callback then callback(enabled) end
         end)
     end
 
-    -------------------------------------------------------------------
-    -- FITUR B: SLIDER
-    -------------------------------------------------------------------
     function Elements:AddSlider(name, min, max, default, callback)
         local SliderFrame = Instance.new("Frame")
         SliderFrame.Parent = ScrollContainer
@@ -311,9 +278,6 @@ function AetherLib:Init()
         end)
     end
 
-    -------------------------------------------------------------------
-    -- FITUR C: BUTTON
-    -------------------------------------------------------------------
     function Elements:AddButton(name, callback)
         local BtnFrame = Instance.new("TextButton")
         BtnFrame.Parent = ScrollContainer
@@ -329,13 +293,10 @@ function AetherLib:Init()
         Corner.Parent = BtnFrame
         
         BtnFrame.MouseButton1Click:Connect(function()
-            if callback then callback() end
+            if callback then callback() en
         end)
     end
 
-    -------------------------------------------------------------------
-    -- FITUR D: SELECT GANDA / DROPDOWN (Panel Pilihan Kecil + Scroll)
-    -------------------------------------------------------------------
     function Elements:AddDropdown(name, options, callback)
         local DropdownFrame = Instance.new("Frame")
         DropdownFrame.Parent = ScrollContainer
@@ -357,7 +318,6 @@ function AetherLib:Init()
         DropBtn.TextSize = 12
         DropBtn.TextXAlignment = Enum.TextXAlignment.Left
         
-        -- Panel Popup Pilihan (Bisa di-scroll)
         local OptionList = Instance.new("ScrollingFrame")
         OptionList.Parent = DropdownFrame
         OptionList.BackgroundTransparency = 1
@@ -379,27 +339,37 @@ function AetherLib:Init()
             TweenService:Create(DropdownFrame, TweenInfo.new(0.25), {Size = targetSize}):Play()
         end)
         
-        for _, optionName in ipairs(options) do
-            local ItemBtn = Instance.new("TextButton")
-            ItemBtn.Parent = OptionList
-            ItemBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 70)
-            ItemBtn.Size = UDim2.new(1, 0, 0, 26)
-            ItemBtn.Font = Enum.Font.Gotham
-            ItemBtn.Text = optionName
-            ItemBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            ItemBtn.TextSize = 11
-            
-            local ItemCorner = Instance.new("UICorner")
-            ItemCorner.CornerRadius = UDim.new(0, 4)
-            ItemCorner.Parent = ItemBtn
-            
-            ItemBtn.MouseButton1Click:Connect(function()
-                DropBtn.Text = "  " .. name .. " : " .. optionName
-                open = false
-                TweenService:Create(DropdownFrame, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, 42)}):Play()
-                if callback then callback(optionName) end
-            end)
+        local DropdownObj = {}
+        
+        function DropdownObj:Refresh(newOptions)
+            for _, child in ipairs(OptionList:GetChildren()) do
+                if child:IsA("TextButton") then child:Destroy() end
+            end
+            for _, optionName in ipairs(newOptions) do
+                local ItemBtn = Instance.new("TextButton")
+                ItemBtn.Parent = OptionList
+                ItemBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 70)
+                ItemBtn.Size = UDim2.new(1, 0, 0, 26)
+                ItemBtn.Font = Enum.Font.Gotham
+                ItemBtn.Text = optionName
+                ItemBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                ItemBtn.TextSize = 11
+                
+                local ItemCorner = Instance.new("UICorner")
+                ItemCorner.CornerRadius = UDim.new(0, 4)
+                ItemCorner.Parent = ItemBtn
+                
+                ItemBtn.MouseButton1Click:Connect(function()
+                    DropBtn.Text = "  " .. name .. " : " .. optionName
+                    open = false
+                    TweenService:Create(DropdownFrame, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, 42)}):Play()
+                    if callback then callback(optionName) end
+                end)
+            end
         end
+        
+        DropdownObj:Refresh(options)
+        return DropdownObj
     end
 
     return Elements
