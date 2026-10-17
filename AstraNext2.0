@@ -1,6 +1,6 @@
 --[[
-    AstraNext1.9 UI Library
-    Modern Style with Swipe Toggles & Smooth Animations
+    AstraNext1.9 UI Library - Fixed & Updated
+    Modern Style with Floating Button, Swipe Toggles & Working Drag/Click
 --]]
 
 local TweenService = game:GetService("TweenService")
@@ -34,6 +34,28 @@ function library:CreateWindow(config)
 		ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 	end
 
+	-- Floating Open/Close Button (Tombol Melayang untuk Sembunyikan UI)
+	local FloatingBtn = Instance.new("TextButton")
+	FloatingBtn.Name = "FloatingButton"
+	FloatingBtn.Size = UDim2.new(0, 42, 0, 42)
+	FloatingBtn.Position = UDim2.new(0, 20, 0.4, 0)
+	FloatingBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+	FloatingBtn.Font = Enum.Font.GothamBold
+	FloatingBtn.Text = "AST"
+	FloatingBtn.TextColor3 = Color3.fromRGB(0, 140, 255)
+	FloatingBtn.TextSize = 11
+	FloatingBtn.AutoButtonColor = false
+	FloatingBtn.Parent = ScreenGui
+
+	local FBCorner = Instance.new("UICorner")
+	FBCorner.CornerRadius = UDim.new(0, 8)
+	FBCorner.Parent = FloatingBtn
+
+	local FBStroke = Instance.new("UIStroke")
+	FBStroke.Color = Color3.fromRGB(40, 40, 52)
+	FBStroke.Thickness = 1.2
+	FBStroke.Parent = FloatingBtn
+
 	-- Main Window Frame
 	local MainFrame = Instance.new("Frame")
 	MainFrame.Name = "MainFrame"
@@ -52,10 +74,20 @@ function library:CreateWindow(config)
 	MainStroke.Thickness = 1.2
 	MainStroke.Parent = MainFrame
 
+	-- Toggle UI visibility using Floating Button
+	local uiVisible = true
+	FloatingBtn.MouseButton1Click:Connect(function()
+		uiVisible = not uiVisible
+		MainFrame.Visible = uiVisible
+		Tween(FloatingBtn, 0.2, {BackgroundColor3 = uiVisible and Color3.fromRGB(18, 18, 24) or Color3.fromRGB(0, 140, 255)})
+		FloatingBtn.TextColor3 = uiVisible and Color3.fromRGB(0, 140, 255) or Color3.fromRGB(255, 255, 255)
+	end)
+
 	-- TopBar
 	local TopBar = Instance.new("Frame")
 	TopBar.Size = UDim2.new(1, 0, 0, 45)
 	TopBar.BackgroundTransparency = 1
+	TopBar.Active = true -- PENTING agar bisa di-drag!
 	TopBar.Parent = MainFrame
 
 	local TitleLabel = Instance.new("TextLabel")
@@ -80,10 +112,10 @@ function library:CreateWindow(config)
 	SubTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	SubTitleLabel.Parent = TopBar
 
-	-- System Dragging
+	-- System Dragging Window
 	local dragging, dragInput, dragStart, startPos
 	TopBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
 			startPos = MainFrame.Position
@@ -96,7 +128,7 @@ function library:CreateWindow(config)
 	end)
 
 	TopBar.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
 		end
 	end)
@@ -219,7 +251,7 @@ function library:CreateWindow(config)
 			end)
 		end
 
-		-- Toggle Component (Swipe / Switch Style)
+		-- Toggle Component (Swipe / Switch Style - Fixed Active = true)
 		function TabElements:AddToggle(text, default, callback)
 			callback = callback or function() end
 			local toggled = default or false
@@ -227,6 +259,7 @@ function library:CreateWindow(config)
 			local ToggleFrame = Instance.new("Frame")
 			ToggleFrame.Size = UDim2.new(1, -10, 0, 38)
 			ToggleFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+			ToggleFrame.Active = true -- PENTING agar bisa diklik!
 			ToggleFrame.Parent = TabContent
 
 			local TC = Instance.new("UICorner")
@@ -248,7 +281,6 @@ function library:CreateWindow(config)
 			Label.TextXAlignment = Enum.TextXAlignment.Left
 			Label.Parent = ToggleFrame
 
-			-- Switch Track (Pill Background)
 			local SwitchTrack = Instance.new("Frame")
 			SwitchTrack.Size = UDim2.new(0, 44, 0, 22)
 			SwitchTrack.Position = UDim2.new(1, -54, 0.5, -11)
@@ -259,7 +291,6 @@ function library:CreateWindow(config)
 			STCorner.CornerRadius = UDim.new(1, 0)
 			STCorner.Parent = SwitchTrack
 
-			-- Switch Thumb (Sliding Circle)
 			local SwitchThumb = Instance.new("Frame")
 			SwitchThumb.Size = UDim2.new(0, 16, 0, 16)
 			SwitchThumb.Position = toggled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
@@ -281,14 +312,14 @@ function library:CreateWindow(config)
 			end
 
 			ToggleFrame.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					toggled = not toggled
 					updateToggle()
 				end
 			end)
 		end
 
-		-- Slider Component
+		-- Slider Component (Fixed Active = true)
 		function TabElements:AddSlider(text, min, max, default, callback)
 			callback = callback or function() end
 			local value = default or min
@@ -332,6 +363,7 @@ function library:CreateWindow(config)
 			SliderTrack.Size = UDim2.new(1, -24, 0, 6)
 			SliderTrack.Position = UDim2.new(0, 12, 1, -14)
 			SliderTrack.BackgroundColor3 = Color3.fromRGB(36, 36, 48)
+			SliderTrack.Active = true -- PENTING agar bisa digeser!
 			SliderTrack.Parent = SliderFrame
 
 			local STC = Instance.new("UICorner")
@@ -357,20 +389,20 @@ function library:CreateWindow(config)
 			end
 
 			SliderTrack.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					isSliding = true
 					updateSlider(input)
 				end
 			end)
 
 			UserInputService.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					isSliding = false
 				end
 			end)
 
 			UserInputService.InputChanged:Connect(function(input)
-				if isSliding and input.UserInputType == Enum.UserInputType.MouseMovement then
+				if isSliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 					updateSlider(input)
 				end
 			end)
