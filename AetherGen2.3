@@ -42,16 +42,21 @@ function AetherLib:Init()
             dragging = true
             dragStart = input.Position
             startPos = FloatButton.Position
+
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
             end)
         end
     end)
+
     FloatButton.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
@@ -60,28 +65,38 @@ function AetherLib:Init()
     end)
 
     -------------------------------------------------------------------
-    -- 2. BAR KANAN LAYAR (Muncul Saat UI OFF)
+    -- 2. BAR KANAN LAYAR (VERTIKAL "AetherGen2.3")
     -------------------------------------------------------------------
     local SideBar = Instance.new("Frame")
     SideBar.Name = "SideBarIndicator"
     SideBar.Parent = ScreenGui
-    SideBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    SideBar.Position = UDim2.new(1, -4, 0.5, -200)
-    SideBar.Size = UDim2.new(0, 4, 0, 400)
+    SideBar.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
+    SideBar.Position = UDim2.new(1, -22, 0.5, -130)
+    SideBar.Size = UDim2.new(0, 22, 0, 260)
     SideBar.BorderSizePixel = 0
     SideBar.Visible = true
 
     local SideCorner = Instance.new("UICorner")
-    SideCorner.CornerRadius = UDim.new(0, 2)
+    SideCorner.CornerRadius = UDim.new(0, 6)
     SideCorner.Parent = SideBar
 
+    local SideText = Instance.new("TextLabel")
+    SideText.Parent = SideBar
+    SideText.BackgroundTransparency = 1
+    SideText.Size = UDim2.new(1, 0, 1, 0)
+    SideText.Font = Enum.Font.GothamBold
+    SideText.Text = "A\ne\nt\nh\ne\nr\nG\ne\nn\n2.3"
+    SideText.TextColor3 = Color3.fromRGB(200, 200, 220)
+    SideText.TextSize = 10
+    SideText.LineHeight = 0.95
+
     -------------------------------------------------------------------
-    -- 3. MAIN FRAME / COMMAND BAR (Warna ala Infinite Yield)
+    -- 3. MAIN FRAME / COMMAND BAR
     -------------------------------------------------------------------
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Parent = ScreenGui
-    MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 36) -- Warna khas IY
+    MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
     MainFrame.BorderSizePixel = 0
     MainFrame.Position = UDim2.new(1, -315, 0.5, -200)
     MainFrame.Size = UDim2.new(0, 300, 0, 400)
@@ -112,27 +127,27 @@ function AetherLib:Init()
     TopCorner.CornerRadius = UDim.new(0, 8)
     TopCorner.Parent = TopBar
 
-    -- Judul Panjang "Aether Gen 1.8"
+    -- Judul "AetherGen 2.3"
     local Title = Instance.new("TextLabel")
     Title.Parent = TopBar
     Title.BackgroundTransparency = 1
     Title.Position = UDim2.new(0, 12, 0, 0)
     Title.Size = UDim2.new(1, -50, 0, 32)
     Title.Font = Enum.Font.GothamBold
-    Title.Text = "Aether Gen 1.8"
+    Title.Text = "AetherGen 2.3"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Garis Putih di Bawah Judul
+    -- Garis Putih Panjang di Bawah Judul
     local Underline = Instance.new("Frame")
     Underline.Parent = TopBar
     Underline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Underline.BorderSizePixel = 0
     Underline.Position = UDim2.new(0, 12, 0, 33)
-    Underline.Size = UDim2.new(0, 120, 0, 2)
+    Underline.Size = UDim2.new(0, 276, 0, 2) -- Diperpanjang menyesuaikan lebar frame
 
-    -- Tombol "X" Close Button di Pojok Kanan Atas
+    -- Tombol Close "X"
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Parent = TopBar
     CloseBtn.BackgroundTransparency = 1
@@ -181,11 +196,11 @@ function AetherLib:Init()
         ToggleFrame.Parent = ScrollContainer
         ToggleFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
         ToggleFrame.Size = UDim2.new(1, 0, 0, 42)
-        
+
         local Corner = Instance.new("UICorner")
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = ToggleFrame
-        
+
         local Label = Instance.new("TextLabel")
         Label.Parent = ToggleFrame
         Label.BackgroundTransparency = 1
@@ -196,38 +211,40 @@ function AetherLib:Init()
         Label.TextColor3 = Color3.fromRGB(255, 255, 255)
         Label.TextSize = 12
         Label.TextXAlignment = Enum.TextXAlignment.Left
-        
+
         local SwitchBg = Instance.new("TextButton")
         SwitchBg.Parent = ToggleFrame
         SwitchBg.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
         SwitchBg.Position = UDim2.new(1, -48, 0.5, -10)
         SwitchBg.Size = UDim2.new(0, 38, 0, 20)
         SwitchBg.Text = ""
-        
+
         local SwitchCorner = Instance.new("UICorner")
         SwitchCorner.CornerRadius = UDim.new(1, 0)
         SwitchCorner.Parent = SwitchBg
-        
+
         local Knob = Instance.new("Frame")
         Knob.Parent = SwitchBg
         Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         Knob.Position = UDim2.new(0, 2, 0.5, -8)
         Knob.Size = UDim2.new(0, 16, 0, 16)
-        
+
         local KnobCorner = Instance.new("UICorner")
         KnobCorner.CornerRadius = UDim.new(1, 0)
         KnobCorner.Parent = Knob
-        
+
         local enabled = false
         SwitchBg.MouseButton1Click:Connect(function()
             enabled = not enabled
             local goalBgColor = enabled and Color3.fromRGB(90, 150, 255) or Color3.fromRGB(60, 60, 75)
             local goalKnobPos = enabled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-            
+
             TweenService:Create(SwitchBg, TweenInfo.new(0.2), {BackgroundColor3 = goalBgColor}):Play()
             TweenService:Create(Knob, TweenInfo.new(0.2), {Position = goalKnobPos}):Play()
-            
-            if callback then callback(enabled) end
+
+            if callback then
+                pcall(callback, enabled)
+            end
         end)
     end
 
@@ -235,15 +252,19 @@ function AetherLib:Init()
     -- FITUR B: SLIDER
     -------------------------------------------------------------------
     function Elements:AddSlider(name, min, max, default, callback)
+        min = min or 0
+        max = max or 100
+        default = math.clamp(default or min, min, max)
+
         local SliderFrame = Instance.new("Frame")
         SliderFrame.Parent = ScrollContainer
         SliderFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
         SliderFrame.Size = UDim2.new(1, 0, 0, 52)
-        
+
         local Corner = Instance.new("UICorner")
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = SliderFrame
-        
+
         local Label = Instance.new("TextLabel")
         Label.Parent = SliderFrame
         Label.BackgroundTransparency = 1
@@ -254,60 +275,76 @@ function AetherLib:Init()
         Label.TextColor3 = Color3.fromRGB(255, 255, 255)
         Label.TextSize = 12
         Label.TextXAlignment = Enum.TextXAlignment.Left
-        
+
         local SliderBar = Instance.new("Frame")
         SliderBar.Parent = SliderFrame
         SliderBar.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
         SliderBar.Position = UDim2.new(0, 12, 0, 32)
         SliderBar.Size = UDim2.new(1, -24, 0, 5)
-        
+
         local BarCorner = Instance.new("UICorner")
         BarCorner.CornerRadius = UDim.new(1, 0)
         BarCorner.Parent = SliderBar
-        
+
+        local range = (max - min) == 0 and 1 or (max - min)
+        local initialRatio = (default - min) / range
+
         local Fill = Instance.new("Frame")
         Fill.Parent = SliderBar
         Fill.BackgroundColor3 = Color3.fromRGB(90, 150, 255)
-        Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-        
+        Fill.Size = UDim2.new(initialRatio, 0, 1, 0)
+
         local FillCorner = Instance.new("UICorner")
         FillCorner.CornerRadius = UDim.new(1, 0)
         FillCorner.Parent = Fill
-        
+
         local Knob = Instance.new("Frame")
         Knob.Parent = SliderBar
         Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Knob.Position = UDim2.new((default - min) / (max - min), -8, 0.5, -8)
+        Knob.Position = UDim2.new(initialRatio, -8, 0.5, -8)
         Knob.Size = UDim2.new(0, 16, 0, 16)
-        
+
         local KnobCorner = Instance.new("UICorner")
         KnobCorner.CornerRadius = UDim.new(1, 0)
         KnobCorner.Parent = Knob
-        
+
         local sliding = false
         local function update(input)
             local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
             local val = math.floor(min + ((max - min) * pos))
+
             Fill.Size = UDim2.new(pos, 0, 1, 0)
             Knob.Position = UDim2.new(pos, -8, 0.5, -8)
             Label.Text = name .. " : " .. tostring(val)
-            if callback then callback(val) end
+
+            if callback then
+                pcall(callback, val)
+            end
         end
-        
+
         Knob.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                sliding = true
+            end
         end)
+
         SliderBar.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 sliding = true
                 update(input)
             end
         end)
+
         UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                sliding = false
+            end
         end)
+
         UserInputService.InputChanged:Connect(function(input)
-            if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then update(input) end
+            if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                update(input)
+            end
         end)
     end
 
@@ -323,18 +360,20 @@ function AetherLib:Init()
         BtnFrame.Text = name
         BtnFrame.TextColor3 = Color3.fromRGB(255, 255, 255)
         BtnFrame.TextSize = 12
-        
+
         local Corner = Instance.new("UICorner")
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = BtnFrame
-        
+
         BtnFrame.MouseButton1Click:Connect(function()
-            if callback then callback() end
+            if callback then
+                pcall(callback)
+            end
         end)
     end
 
     -------------------------------------------------------------------
-    -- FITUR D: SELECT GANDA / DROPDOWN (Panel Pilihan Kecil + Scroll + Refresh)
+    -- FITUR D: DROPDOWN
     -------------------------------------------------------------------
     function Elements:AddDropdown(name, options, callback)
         local DropdownFrame = Instance.new("Frame")
@@ -342,22 +381,21 @@ function AetherLib:Init()
         DropdownFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
         DropdownFrame.Size = UDim2.new(1, 0, 0, 42)
         DropdownFrame.ClipsDescendants = true
-        
+
         local Corner = Instance.new("UICorner")
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = DropdownFrame
-        
+
         local DropBtn = Instance.new("TextButton")
         DropBtn.Parent = DropdownFrame
         DropBtn.BackgroundTransparency = 1
         DropBtn.Size = UDim2.new(1, 0, 0, 42)
         DropBtn.Font = Enum.Font.Gotham
-        DropBtn.Text = "  " .. name .. " : Select..."
+        DropBtn.Text = " " .. name .. " : Select..."
         DropBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         DropBtn.TextSize = 12
         DropBtn.TextXAlignment = Enum.TextXAlignment.Left
-        
-        -- Panel Popup Pilihan (Bisa di-scroll)
+
         local OptionList = Instance.new("ScrollingFrame")
         OptionList.Parent = DropdownFrame
         OptionList.BackgroundTransparency = 1
@@ -366,34 +404,31 @@ function AetherLib:Init()
         OptionList.CanvasSize = UDim2.new(0, 0, 0, 0)
         OptionList.AutomaticCanvasSize = Enum.AutomaticSize.Y
         OptionList.ScrollBarThickness = 3
-        
+
         local ListLayout = Instance.new("UIListLayout")
         ListLayout.Parent = OptionList
         ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ListLayout.Padding = UDim.new(0, 4)
-        
+
         local open = false
         DropBtn.MouseButton1Click:Connect(function()
             open = not open
             local targetSize = open and UDim2.new(1, 0, 0, 140) or UDim2.new(1, 0, 0, 42)
             TweenService:Create(DropdownFrame, TweenInfo.new(0.25), {Size = targetSize}):Play()
         end)
-        
+
         local DropdownObj = {}
-        
         function DropdownObj:Refresh(newOptions)
-            -- Hapus tombol pilihan lama
             for _, child in ipairs(OptionList:GetChildren()) do
-                if child:IsA("TextButton") then 
-                    child:Destroy() 
+                if child:IsA("TextButton") then
+                    child:Destroy()
                 end
             end
-            
+
             if not newOptions or #newOptions == 0 then
                 newOptions = {"Tidak ada pilihan"}
             end
-            
-            -- Buat tombol pilihan baru secara dinamis
+
             for _, optionName in ipairs(newOptions) do
                 local ItemBtn = Instance.new("TextButton")
                 ItemBtn.Parent = OptionList
@@ -403,23 +438,169 @@ function AetherLib:Init()
                 ItemBtn.Text = optionName
                 ItemBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
                 ItemBtn.TextSize = 11
-                
+
                 local ItemCorner = Instance.new("UICorner")
                 ItemCorner.CornerRadius = UDim.new(0, 4)
                 ItemCorner.Parent = ItemBtn
-                
+
                 ItemBtn.MouseButton1Click:Connect(function()
-                    DropBtn.Text = "  " .. name .. " : " .. optionName
+                    DropBtn.Text = " " .. name .. " : " .. optionName
                     open = false
                     TweenService:Create(DropdownFrame, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, 42)}):Play()
-                    if callback then callback(optionName) end
+                    if callback then
+                        pcall(callback, optionName)
+                    end
                 end)
             end
         end
-        
-        -- Inisialisasi opsi awal
+
         DropdownObj:Refresh(options)
         return DropdownObj
+    end
+
+    -------------------------------------------------------------------
+    -- FITUR E: INPUT (TEXTBOX / BARU)
+    -------------------------------------------------------------------
+    function Elements:AddInput(name, placeholder, callback)
+        local InputFrame = Instance.new("Frame")
+        InputFrame.Parent = ScrollContainer
+        InputFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
+        InputFrame.Size = UDim2.new(1, 0, 0, 42)
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = InputFrame
+
+        local Label = Instance.new("TextLabel")
+        Label.Parent = InputFrame
+        Label.BackgroundTransparency = 1
+        Label.Position = UDim2.new(0, 12, 0, 0)
+        Label.Size = UDim2.new(0, 130, 1, 0)
+        Label.Font = Enum.Font.Gotham
+        Label.Text = name
+        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Label.TextSize = 12
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+
+        local TextBox = Instance.new("TextBox")
+        TextBox.Parent = InputFrame
+        TextBox.BackgroundColor3 = Color3.fromRGB(55, 55, 70)
+        TextBox.Position = UDim2.new(1, -135, 0.5, -13)
+        TextBox.Size = UDim2.new(0, 125, 0, 26)
+        TextBox.Font = Enum.Font.Gotham
+        TextBox.PlaceholderText = placeholder or "Ketik di sini..."
+        TextBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 160)
+        TextBox.Text = ""
+        TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TextBox.TextSize = 11
+        TextBox.ClearTextOnFocus = false
+
+        local BoxCorner = Instance.new("UICorner")
+        BoxCorner.CornerRadius = UDim.new(0, 4)
+        BoxCorner.Parent = TextBox
+
+        TextBox.FocusLost:Connect(function(enterPressed)
+            if callback then
+                pcall(callback, TextBox.Text, enterPressed)
+            end
+        end)
+    end
+
+    -------------------------------------------------------------------
+    -- FITUR F: KEYBIND (FITUR TAMBAHAN 1)
+    -------------------------------------------------------------------
+    function Elements:AddKeybind(name, defaultKey, callback)
+        local currentKey = defaultKey or Enum.KeyCode.RightControl
+
+        local KeyFrame = Instance.new("Frame")
+        KeyFrame.Parent = ScrollContainer
+        KeyFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
+        KeyFrame.Size = UDim2.new(1, 0, 0, 42)
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = KeyFrame
+
+        local Label = Instance.new("TextLabel")
+        Label.Parent = KeyFrame
+        Label.BackgroundTransparency = 1
+        Label.Position = UDim2.new(0, 12, 0, 0)
+        Label.Size = UDim2.new(0, 160, 1, 0)
+        Label.Font = Enum.Font.Gotham
+        Label.Text = name
+        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Label.TextSize = 12
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+
+        local KeyBtn = Instance.new("TextButton")
+        KeyBtn.Parent = KeyFrame
+        KeyBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 70)
+        KeyBtn.Position = UDim2.new(1, -90, 0.5, -13)
+        KeyBtn.Size = UDim2.new(0, 80, 0, 26)
+        KeyBtn.Font = Enum.Font.Gotham
+        KeyBtn.Text = currentKey.Name
+        KeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        KeyBtn.TextSize = 11
+
+        local BtnCorner = Instance.new("UICorner")
+        BtnCorner.CornerRadius = UDim.new(0, 4)
+        BtnCorner.Parent = KeyBtn
+
+        local listening = false
+        KeyBtn.MouseButton1Click:Connect(function()
+            listening = true
+            KeyBtn.Text = "..."
+        end)
+
+        UserInputService.InputBegan:Connect(function(input, gpe)
+            if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+                listening = false
+                currentKey = input.KeyCode
+                KeyBtn.Text = currentKey.Name
+            elseif not gpe and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
+                if callback then
+                    pcall(callback, currentKey)
+                end
+            end
+        end)
+    end
+
+    -------------------------------------------------------------------
+    -- FITUR G: PARAGRAPH / INFO LABEL (FITUR TAMBAHAN 2)
+    -------------------------------------------------------------------
+    function Elements:AddParagraph(titleText, contentText)
+        local ParaFrame = Instance.new("Frame")
+        ParaFrame.Parent = ScrollContainer
+        ParaFrame.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+        ParaFrame.Size = UDim2.new(1, 0, 0, 60)
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = ParaFrame
+
+        local TitleLabel = Instance.new("TextLabel")
+        TitleLabel.Parent = ParaFrame
+        TitleLabel.BackgroundTransparency = 1
+        TitleLabel.Position = UDim2.new(0, 10, 0, 6)
+        TitleLabel.Size = UDim2.new(1, -20, 0, 18)
+        TitleLabel.Font = Enum.Font.GothamBold
+        TitleLabel.Text = titleText or "Info"
+        TitleLabel.TextColor3 = Color3.fromRGB(90, 150, 255)
+        TitleLabel.TextSize = 12
+        TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        local ContentLabel = Instance.new("TextLabel")
+        ContentLabel.Parent = ParaFrame
+        ContentLabel.BackgroundTransparency = 1
+        ContentLabel.Position = UDim2.new(0, 10, 0, 26)
+        ContentLabel.Size = UDim2.new(1, -20, 0, 28)
+        ContentLabel.Font = Enum.Font.Gotham
+        ContentLabel.Text = contentText or ""
+        ContentLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+        ContentLabel.TextSize = 11
+        ContentLabel.TextWrapped = true
+        ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
+        ContentLabel.TextYAlignment = Enum.TextYAlignment.Top
     end
 
     return Elements
