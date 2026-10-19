@@ -1604,8 +1604,15 @@ function AetherLib:Init(customCommandsURL)
 -- AETHERLIB v5.2 - KOMPONEN BARU
 -------------------------------------------------------------------
 
--- 1. AddButtonWithDropdown (Dropdown Opsi + Tombol Eksekusi)
-function Elements:AddButtonWithDropdown(name, options, callback)
+-- AddButtonWithDropdown dengan dukungan kustomisasi teks tombol dari luar
+function Elements:AddButtonWithDropdown(name, options, buttonText, callback)
+    -- Menangani argumen opsional (jika parameter buttonText dilewati/langsung ke callback)
+    if type(buttonText) == "function" then
+        callback = buttonText
+        buttonText = "Execute"
+    end
+    buttonText = buttonText or "Execute"
+
     local Frame = Instance.new("Frame")
     Frame.Parent = ScrollContainer
     Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -1649,7 +1656,7 @@ function Elements:AddButtonWithDropdown(name, options, callback)
     ActionBtn.Position = UDim2.new(1, -78, 0.5, -13)
     ActionBtn.Size = UDim2.new(0, 70, 0, 26)
     ActionBtn.Font = Enum.Font.GothamBold
-    ActionBtn.Text = "Execute"
+    ActionBtn.Text = buttonText -- Menggunakan teks yang dikirim dari luar
     ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     ActionBtn.TextSize = 10
     ActionBtn.ZIndex = 10
@@ -1662,9 +1669,11 @@ function Elements:AddButtonWithDropdown(name, options, callback)
     local currentOptIndex = 1
 
     TrackConnection(DropBtn.MouseButton1Click:Connect(function()
-        currentOptIndex = (currentOptIndex % #options) + 1
-        selectedOption = options[currentOptIndex]
-        DropBtn.Text = selectedOption
+        if #options > 0 then
+            currentOptIndex = (currentOptIndex % #options) + 1
+            selectedOption = options[currentOptIndex]
+            DropBtn.Text = selectedOption
+        end
     end))
 
     TrackConnection(ActionBtn.MouseButton1Click:Connect(function()
@@ -1674,6 +1683,13 @@ function Elements:AddButtonWithDropdown(name, options, callback)
         end)
         if callback then pcall(callback, selectedOption) end
     end))
+
+    -- Mengembalikan objek untuk kontrol dinamis (opsional jika ingin mengubah teks nanti)
+    local ControlObj = {}
+    function ControlObj:SetButtonText(newText)
+        ActionBtn.Text = newText
+    end
+    return ControlObj
 end
 
 -- 2. AddMultiDropdown (Dropdown Pilihan Ganda / Checkbox Multi Select)
