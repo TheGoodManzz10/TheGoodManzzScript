@@ -1,3 +1,7 @@
+-- =================================================================
+-- AETHERLIB v5.2 - ULTRALIBRARY UI LENGKAP + COMMAND BAR + 52 KOMPONEN
+-- =================================================================
+
 local AetherLib = {
     Connections = {},
     Instances = {},
@@ -106,7 +110,7 @@ function AetherLib:Init(customCommandsURL)
     end))
 
     -------------------------------------------------------------------
-    -- 2. SIDEBAR INDIKATOR v5.3
+    -- 2. SIDEBAR INDIKATOR v5.2
     -------------------------------------------------------------------
     local SideBar = Instance.new("Frame")
     SideBar.Name = "SideBarIndicator"
@@ -133,7 +137,7 @@ function AetherLib:Init(customCommandsURL)
     SideIcon.Position = UDim2.new(0, -12, 0, 0)
     SideIcon.Size = UDim2.new(1, 14, 1, 0)
     SideIcon.Font = Enum.Font.GothamBold
-    SideIcon.Text = "5.3"
+    SideIcon.Text = "5.2"
     SideIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
     SideIcon.TextSize = 10
     SideIcon.ZIndex = 6
@@ -1596,21 +1600,6 @@ function AetherLib:Init(customCommandsURL)
         end))
     end
 
-    return Elements
-end
-
-function AetherLib:Unload()
-    for _, conn in ipairs(AetherLib.Connections) do
-        if conn and conn.Connected then conn:Disconnect() end
-    end
-    AetherLib.Connections = {}
-
-    for _, inst in ipairs(AetherLib.Instances) do
-        if inst then inst:Destroy() end
-    end
-    AetherLib.Instances = {}
-end
-
 -------------------------------------------------------------------
 -- AETHERLIB v5.3 - KOMPONEN BARU
 -------------------------------------------------------------------
@@ -2049,6 +2038,21 @@ function Elements:AddStepSlider(name, min, max, step, default, callback)
             update(input)
         end
     end))
+end
+
+    return Elements
+end
+
+function AetherLib:Unload()
+    for _, conn in ipairs(AetherLib.Connections) do
+        if conn and conn.Connected then conn:Disconnect() end
+    end
+    AetherLib.Connections = {}
+
+    for _, inst in ipairs(AetherLib.Instances) do
+        if inst then inst:Destroy() end
+    end
+    AetherLib.Instances = {}
 end
 
 return AetherLib
