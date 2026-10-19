@@ -515,13 +515,18 @@ function Elements:AddCommandListButton(buttonName)
             end))
         end
     end
-
+    
     TrackConnection(CmdListBtn.MouseButton1Click:Connect(function()
         RefreshCommandList()
         CmdListFrame.Visible = not CmdListFrame.Visible
     end))
 end
 
+    function Elements:AddCommandSystem(placeholder, buttonName)
+        self:AddCommandBar(placeholder or "fly 50, ws 100...")
+        self:AddCommandListButton(buttonName or "📜 Daftar Perintah")
+    end
+    
     -------------------------------------------------------------------
     -- REGISTRASI DAN EKSEKUSI PERINTAH
     -------------------------------------------------------------------
