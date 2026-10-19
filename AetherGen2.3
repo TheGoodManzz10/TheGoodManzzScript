@@ -35,7 +35,7 @@ function AetherLib:Init()
     FloatCorner.CornerRadius = UDim.new(1, 0)
     FloatCorner.Parent = FloatButton
 
-    -- Dragging System untuk Floating Button
+    -- Dragging System untuk Floating Button (Mobile & PC)
     local dragging, dragInput, dragStart, startPos
     FloatButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -65,7 +65,7 @@ function AetherLib:Init()
     end)
 
     -------------------------------------------------------------------
-    -- 2. BAR KANAN LAYAR (VERTIKAL "AetherGen2.3")
+    -- 2. BAR KANAN LAYAR (VERTIKAL "AETHERGEN 2.3")
     -------------------------------------------------------------------
     local SideBar = Instance.new("Frame")
     SideBar.Name = "SideBarIndicator"
@@ -85,7 +85,7 @@ function AetherLib:Init()
     SideText.BackgroundTransparency = 1
     SideText.Size = UDim2.new(1, 0, 1, 0)
     SideText.Font = Enum.Font.GothamBold
-    SideText.Text = "A\ne\nt\nh\ne\nr\nG\ne\nn\n2.3"
+    SideText.Text = "A\nE\nT\nH\nE\nR\nG\nE\nN\n2.3"
     SideText.TextColor3 = Color3.fromRGB(200, 200, 220)
     SideText.TextSize = 10
     SideText.LineHeight = 0.95
@@ -139,13 +139,13 @@ function AetherLib:Init()
     Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Garis Putih Panjang di Bawah Judul
+    -- Garis Putih Panjang di Bawah Judul (Langsung Panjang)
     local Underline = Instance.new("Frame")
     Underline.Parent = TopBar
     Underline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Underline.BorderSizePixel = 0
     Underline.Position = UDim2.new(0, 12, 0, 33)
-    Underline.Size = UDim2.new(0, 276, 0, 2) -- Diperpanjang menyesuaikan lebar frame
+    Underline.Size = UDim2.new(0, 276, 0, 2)
 
     -- Tombol Close "X"
     local CloseBtn = Instance.new("TextButton")
@@ -187,6 +187,20 @@ function AetherLib:Init()
     UIListLayout.Padding = UDim.new(0, 8)
 
     local Elements = {}
+
+    -------------------------------------------------------------------
+    -- FITUR KHUSUS: CURVE (Membuat Sisi Sisi UI Menjadi Sangat Melengkung)
+    -------------------------------------------------------------------
+    function Elements:Curve()
+        -- Mengubah sudut MainFrame dan TopBar menjadi sangat melengkung (CornerRadius = 24)
+        TweenService:Create(MainCorner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            CornerRadius = UDim.new(0, 24)
+        }):Play()
+
+        TweenService:Create(TopCorner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            CornerRadius = UDim.new(0, 24)
+        }):Play()
+    end
 
     -------------------------------------------------------------------
     -- FITUR A: TOGGLE
@@ -459,7 +473,7 @@ function AetherLib:Init()
     end
 
     -------------------------------------------------------------------
-    -- FITUR E: INPUT (TEXTBOX / BARU)
+    -- FITUR E: INPUT (TEXTBOX)
     -------------------------------------------------------------------
     function Elements:AddInput(name, placeholder, callback)
         local InputFrame = Instance.new("Frame")
@@ -507,66 +521,7 @@ function AetherLib:Init()
     end
 
     -------------------------------------------------------------------
-    -- FITUR F: KEYBIND (FITUR TAMBAHAN 1)
-    -------------------------------------------------------------------
-    function Elements:AddKeybind(name, defaultKey, callback)
-        local currentKey = defaultKey or Enum.KeyCode.RightControl
-
-        local KeyFrame = Instance.new("Frame")
-        KeyFrame.Parent = ScrollContainer
-        KeyFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
-        KeyFrame.Size = UDim2.new(1, 0, 0, 42)
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = KeyFrame
-
-        local Label = Instance.new("TextLabel")
-        Label.Parent = KeyFrame
-        Label.BackgroundTransparency = 1
-        Label.Position = UDim2.new(0, 12, 0, 0)
-        Label.Size = UDim2.new(0, 160, 1, 0)
-        Label.Font = Enum.Font.Gotham
-        Label.Text = name
-        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Label.TextSize = 12
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-
-        local KeyBtn = Instance.new("TextButton")
-        KeyBtn.Parent = KeyFrame
-        KeyBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 70)
-        KeyBtn.Position = UDim2.new(1, -90, 0.5, -13)
-        KeyBtn.Size = UDim2.new(0, 80, 0, 26)
-        KeyBtn.Font = Enum.Font.Gotham
-        KeyBtn.Text = currentKey.Name
-        KeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        KeyBtn.TextSize = 11
-
-        local BtnCorner = Instance.new("UICorner")
-        BtnCorner.CornerRadius = UDim.new(0, 4)
-        BtnCorner.Parent = KeyBtn
-
-        local listening = false
-        KeyBtn.MouseButton1Click:Connect(function()
-            listening = true
-            KeyBtn.Text = "..."
-        end)
-
-        UserInputService.InputBegan:Connect(function(input, gpe)
-            if listening and input.UserInputType == Enum.UserInputType.Keyboard then
-                listening = false
-                currentKey = input.KeyCode
-                KeyBtn.Text = currentKey.Name
-            elseif not gpe and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
-                if callback then
-                    pcall(callback, currentKey)
-                end
-            end
-        end)
-    end
-
-    -------------------------------------------------------------------
-    -- FITUR G: PARAGRAPH / INFO LABEL (FITUR TAMBAHAN 2)
+    -- FITUR F: PARAGRAPH / INFO LABEL
     -------------------------------------------------------------------
     function Elements:AddParagraph(titleText, contentText)
         local ParaFrame = Instance.new("Frame")
