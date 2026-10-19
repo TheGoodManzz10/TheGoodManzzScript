@@ -239,65 +239,9 @@ function AetherLib:Init(customCommandsURL)
     TrackConnection(CloseBtn.MouseButton1Click:Connect(function()
         ToggleUI(false)
     end))
-
+    
     -------------------------------------------------------------------
-    -- 4. COMMAND BAR DENGAN AWALAN ';'
-    -------------------------------------------------------------------
-    local CmdContainer = Instance.new("Frame")
-    CmdContainer.Parent = MainFrame
-    CmdContainer.BackgroundColor3 = Color3.fromRGB(34, 34, 44)
-    CmdContainer.Position = UDim2.new(0, 10, 0, 48)
-    CmdContainer.Size = UDim2.new(1, -20, 0, 28)
-    CmdContainer.ZIndex = 10
-
-    local CmdContainerCorner = Instance.new("UICorner")
-    CmdContainerCorner.CornerRadius = UDim.new(0, 6)
-    CmdContainerCorner.Parent = CmdContainer
-
-    local PrefixLbl = Instance.new("TextLabel")
-    PrefixLbl.Parent = CmdContainer
-    PrefixLbl.BackgroundTransparency = 1
-    PrefixLbl.Position = UDim2.new(0, 8, 0, 0)
-    PrefixLbl.Size = UDim2.new(0, 12, 1, 0)
-    PrefixLbl.Font = Enum.Font.Code
-    PrefixLbl.Text = ";"
-    PrefixLbl.TextColor3 = Color3.fromRGB(90, 150, 255)
-    PrefixLbl.TextSize = 13
-    PrefixLbl.ZIndex = 11
-
-    local CmdBar = Instance.new("TextBox")
-    CmdBar.Parent = CmdContainer
-    CmdBar.BackgroundTransparency = 1
-    CmdBar.Position = UDim2.new(0, 20, 0, 0)
-    CmdBar.Size = UDim2.new(1, -24, 1, 0)
-    CmdBar.Font = Enum.Font.Code
-    CmdBar.PlaceholderText = "fly 50, ws 100..."
-    CmdBar.PlaceholderColor3 = Color3.fromRGB(140, 140, 155)
-    CmdBar.Text = ""
-    CmdBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CmdBar.TextSize = 11
-    CmdBar.TextXAlignment = Enum.TextXAlignment.Left
-    CmdBar.ClearTextOnFocus = false
-    CmdBar.ZIndex = 11
-
-    -- Tombol Menu Perintah ";" di TopBar
-    local CmdListBtn = Instance.new("TextButton")
-    CmdListBtn.Parent = TopBar
-    CmdListBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
-    CmdListBtn.Position = UDim2.new(1, -68, 0, 7)
-    CmdListBtn.Size = UDim2.new(0, 26, 0, 24)
-    CmdListBtn.Font = Enum.Font.GothamBold
-    CmdListBtn.Text = ";"
-    CmdListBtn.TextColor3 = Color3.fromRGB(90, 150, 255)
-    CmdListBtn.TextSize = 13
-    CmdListBtn.ZIndex = 10
-
-    local CmdListBtnCorner = Instance.new("UICorner")
-    CmdListBtnCorner.CornerRadius = UDim.new(0, 5)
-    CmdListBtnCorner.Parent = CmdListBtn
-
-    -------------------------------------------------------------------
-    -- 5. SCROLL CONTAINER UTAMA
+    -- 4. SCROLL CONTAINER UTAMA
     -------------------------------------------------------------------
     local ScrollContainer = Instance.new("ScrollingFrame")
     ScrollContainer.Parent = MainFrame
@@ -317,9 +261,104 @@ function AetherLib:Init(customCommandsURL)
 
     local Elements = {}
 
-    -------------------------------------------------------------------
-    -- COMMAND LIST MENU & DETAIL PANEL
-    -------------------------------------------------------------------
+-------------------------------------------------------------------
+--5. KOMPONEN MODULAR: COMMAND BAR & COMMAND LIST MENU
+-------------------------------------------------------------------
+
+-- 1. Menambahkan Command Bar sebagai Komponen Pilihan dalam ScrollContainer
+function Elements:AddCommandBar(placeholder)
+    local CmdContainer = Instance.new("Frame")
+    CmdContainer.Parent = ScrollContainer
+    CmdContainer.BackgroundColor3 = Color3.fromRGB(34, 34, 44)
+    CmdContainer.Size = UDim2.new(1, 0, 0, 32)
+    CmdContainer.ZIndex = 9
+    table.insert(AetherLib.Instances, CmdContainer)
+
+    local CmdContainerCorner = Instance.new("UICorner")
+    CmdContainerCorner.CornerRadius = UDim.new(0, 6)
+    CmdContainerCorner.Parent = CmdContainer
+
+    local PrefixLbl = Instance.new("TextLabel")
+    PrefixLbl.Parent = CmdContainer
+    PrefixLbl.BackgroundTransparency = 1
+    PrefixLbl.Position = UDim2.new(0, 8, 0, 0)
+    PrefixLbl.Size = UDim2.new(0, 12, 1, 0)
+    PrefixLbl.Font = Enum.Font.Code
+    PrefixLbl.Text = ";"
+    PrefixLbl.TextColor3 = Color3.fromRGB(90, 150, 255)
+    PrefixLbl.TextSize = 13
+    PrefixLbl.ZIndex = 10
+
+    local CmdBar = Instance.new("TextBox")
+    CmdBar.Parent = CmdContainer
+    CmdBar.BackgroundTransparency = 1
+    CmdBar.Position = UDim2.new(0, 20, 0, 0)
+    CmdBar.Size = UDim2.new(1, -24, 1, 0)
+    CmdBar.Font = Enum.Font.Code
+    CmdBar.PlaceholderText = placeholder or "fly 50, ws 100..."
+    CmdBar.PlaceholderColor3 = Color3.fromRGB(140, 140, 155)
+    CmdBar.Text = ""
+    CmdBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CmdBar.TextSize = 11
+    CmdBar.TextXAlignment = Enum.TextXAlignment.Left
+    CmdBar.ClearTextOnFocus = false
+    CmdBar.ZIndex = 10
+
+    -- Event Eksekusi Perintah
+    TrackConnection(CmdBar.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            local text = CmdBar.Text
+            if text:sub(1,1) == ";" then
+                text = text:sub(2)
+            end
+            if text ~= "" then
+                local parts = {}
+                for word in text:gmatch("%S+") do
+                    table.insert(parts, word)
+                end
+                local cmdName = string.lower(parts[1] or "")
+                table.remove(parts, 1)
+                
+                if AetherLib.RegisteredCommands[cmdName] then
+                    local success, err = pcall(function()
+                        AetherLib.RegisteredCommands[cmdName].Callback(parts)
+                    end)
+                    if success then
+                        Elements:AddNotification("Command", "Mengeksekusi: ;" .. cmdName, 2)
+                    else
+                        Elements:AddNotification("Command Error", tostring(err), 3)
+                    end
+                else
+                    Elements:AddNotification("Command", "Perintah ';" .. cmdName .. "' tidak ditemukan!", 2)
+                end
+                CmdBar.Text = ""
+            end
+        end
+    end))
+end
+
+-- 2. Menambahkan Tombol & Panel Daftar Perintah (Command List Menu) secara Modular
+function Elements:AddCommandListButton(buttonName)
+    buttonName = buttonName or "📜 Daftar Perintah"
+    
+    -- Tombol untuk membuka menu daftar perintah di ScrollContainer
+    local CmdListBtn = Instance.new("TextButton")
+    CmdListBtn.Parent = ScrollContainer
+    CmdListBtn.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
+    CmdListBtn.Size = UDim2.new(1, 0, 0, 38)
+    CmdListBtn.Font = Enum.Font.Gotham
+    CmdListBtn.Text = " " .. buttonName
+    CmdListBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CmdListBtn.TextSize = 12
+    CmdListBtn.TextXAlignment = Enum.TextXAlignment.Left
+    CmdListBtn.ZIndex = 9
+    table.insert(AetherLib.Instances, CmdListBtn)
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 6)
+    BtnCorner.Parent = CmdListBtn
+
+    -- Frame Menu Daftar Perintah (Popup)
     local CmdListFrame = Instance.new("Frame")
     CmdListFrame.Name = "CommandListMenu"
     CmdListFrame.Parent = ScreenGui
@@ -328,6 +367,7 @@ function AetherLib:Init(customCommandsURL)
     CmdListFrame.Size = UDim2.new(0, 280, 0, 260)
     CmdListFrame.ZIndex = 250
     CmdListFrame.Visible = false
+    table.insert(AetherLib.Instances, CmdListFrame)
 
     local CLCorner = Instance.new("UICorner")
     CLCorner.CornerRadius = UDim.new(0, 10)
@@ -389,6 +429,7 @@ function AetherLib:Init(customCommandsURL)
     DetailFrame.Size = UDim2.new(0, 240, 0, 100)
     DetailFrame.ZIndex = 300
     DetailFrame.Visible = false
+    table.insert(AetherLib.Instances, DetailFrame)
 
     local DFCorner = Instance.new("UICorner")
     DFCorner.CornerRadius = UDim.new(0, 8)
@@ -444,22 +485,20 @@ function AetherLib:Init(customCommandsURL)
         DetailFrame.Visible = false
     end))
 
-    TrackConnection(CmdListBtn.MouseButton1Click:Connect(function()
-        CmdListFrame.Visible = not CmdListFrame.Visible
-    end))
-
+    -- Fungsi untuk Refresh Daftar Perintah di dalam Modal
     local function RefreshCommandList()
         for _, child in ipairs(CLScroll:GetChildren()) do
-            if child:IsA("TextButton") then child:Destroy() end
+            if child:IsA("TextButton") then
+                child:Destroy()
+            end
         end
-
         for cmdName, cmdData in pairs(AetherLib.RegisteredCommands) do
             local ItemBtn = Instance.new("TextButton")
             ItemBtn.Parent = CLScroll
             ItemBtn.BackgroundColor3 = Color3.fromRGB(42, 42, 56)
             ItemBtn.Size = UDim2.new(1, 0, 0, 26)
             ItemBtn.Font = Enum.Font.Code
-            ItemBtn.Text = "  > ;" .. cmdName .. " (" .. cmdData.Syntax .. ")"
+            ItemBtn.Text = " > ;" .. cmdName .. " (" .. cmdData.Syntax .. ")"
             ItemBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
             ItemBtn.TextSize = 10
             ItemBtn.TextXAlignment = Enum.TextXAlignment.Left
@@ -476,6 +515,12 @@ function AetherLib:Init(customCommandsURL)
             end))
         end
     end
+
+    TrackConnection(CmdListBtn.MouseButton1Click:Connect(function()
+        RefreshCommandList()
+        CmdListFrame.Visible = not CmdListFrame.Visible
+    end))
+end
 
     -------------------------------------------------------------------
     -- REGISTRASI DAN EKSEKUSI PERINTAH
