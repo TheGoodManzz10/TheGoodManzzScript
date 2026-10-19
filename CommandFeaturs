@@ -1,0 +1,470 @@
+-- =================================================================
+-- AETHERLIB v5.0 - MODUL 50 PERINTAH POWERFUL, SINGKATAN (ALIAS) & AWALAN ';'
+-- Simpan kode ini di GitHub/Pastebin/RAW URL kamu
+-- =================================================================
+
+return function(AetherLib)
+    local Players = game:GetService("Players")
+    local TweenService = game:GetService("TweenService")
+    local RunService = game:GetService("RunService")
+    local Lighting = game:GetService("Lighting")
+    local TeleportService = game:GetService("TeleportService")
+    local LocalPlayer = Players.LocalPlayer
+
+    -- State Manager
+    local States = {
+        Fly = false,
+        Noclip = false,
+        InfJump = false,
+        ESP = false,
+        Fullbright = false,
+        Xray = false,
+        Spin = false,
+        Godmode = false,
+        Invisible = false,
+        AutoClick = false,
+        OriginalLighting = {
+            Ambient = Lighting.Ambient,
+            Brightness = Lighting.Brightness,
+            ClockTime = Lighting.ClockTime,
+            GlobalShadows = Lighting.GlobalShadows
+        }
+    }
+
+    local Connections = {}
+
+    -- Fungsi pembantu pendaftaran perintah + singkatan (Alias)
+    local function Register(mainCmd, aliasCmd, desc, syntax, callback)
+        AetherLib:RegisterCommand(mainCmd, desc, syntax, callback)
+        if aliasCmd and aliasCmd ~= "" and aliasCmd ~= mainCmd then
+            AetherLib:RegisterCommand(aliasCmd, "[Singkatan] " .. desc, syntax, callback)
+        end
+    end
+
+    -------------------------------------------------------------------
+    -- BAGIAN 1: PERINTAH LAMA (1 - 25) DENGAN SINGKATAN
+    -------------------------------------------------------------------
+
+    -- 1. Get Tools
+    Register("gettools", "gt", "Mengambil seluruh Tool di Workspace", "gt / gettools", function()
+        local count = 0
+        for _, item in ipairs(workspace:GetDescendants()) do
+            if item:IsA("Tool") or item:IsA("HopperBin") then
+                item.Parent = LocalPlayer:FindFirstChildOfClass("Backpack") or LocalPlayer.Backpack
+                count = count + 1
+            end
+        end
+        AetherLib:AddNotification("GetTools", count .. " Tools diambil!", 2)
+    end)
+
+    -- 2. BTools
+    Register("btools", "bt", "Mendapatkan Hammer/BTools", "bt / btools", function()
+        for i = 1, 4 do
+            local tool = Instance.new("HopperBin")
+            tool.BinType = i
+            tool.Parent = LocalPlayer:FindFirstChildOfClass("Backpack")
+        end
+        AetherLib:AddNotification("BTools", "BTools diberikan!", 2)
+    end)
+
+    -- 3. Delete Object
+    Register("delete", "del", "Menghapus objek yang ditunjuk mouse", "del / delete", function()
+        local mouse = LocalPlayer:GetMouse()
+        if mouse and mouse.Target then
+            mouse.Target:Destroy()
+            AetherLib:AddNotification("Delete", "Objek dihapus!", 1.5)
+        end
+    end)
+
+    -- 4. Dex Explorer
+    Register("dex", "dex", "Membuka Dark Dex Explorer", "dex", function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+    end)
+
+    -- 5. Remote Spy
+    Register("spy", "rspy", "Membuka SimpleSpy Remote Event", "spy / rspy", function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ex-ser/SimpleSpy/main/source.lua"))()
+    end)
+
+    -- 6. Fly
+    Register("fly", "f", "Mengaktifkan mode terbang", "fly [speed] / f [speed]", function(args)
+        local speed = tonumber(args[1]) or 50
+        States.Fly = true
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        local hrp = char.HumanoidRootPart
+        
+        local bg = hrp:FindFirstChild("AetherFlyGyro") or Instance.new("BodyGyro", hrp)
+        bg.Name = "AetherFlyGyro"
+        bg.P = 9e4
+        bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+
+        local bv = hrp:FindFirstChild("AetherFlyVel") or Instance.new("BodyVelocity", hrp)
+        bv.Name = "AetherFlyVel"
+        bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+
+        task.spawn(function()
+            while States.Fly and char and char:FindFirstChild("HumanoidRootPart") do
+                bv.velocity = workspace.CurrentCamera.CFrame.LookVector * speed
+                bg.cframe = workspace.CurrentCamera.CFrame
+                RunService.RenderStepped:Wait()
+            end
+        end)
+    end)
+
+    -- 7. Unfly
+    Register("unfly", "unf", "Mematikan mode terbang", "unfly / unf", function()
+        States.Fly = false
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = LocalPlayer.Character.HumanoidRootPart
+            if hrp:FindFirstChild("AetherFlyGyro") then hrp.AetherFlyGyro:Destroy() end
+            if hrp:FindFirstChild("AetherFlyVel") then hrp.AetherFlyVel:Destroy() end
+        end
+    end)
+
+    -- 8. Noclip
+    Register("noclip", "nc", "Menembus semua dinding", "noclip / nc", function()
+        States.Noclip = true
+        task.spawn(function()
+            while States.Noclip do
+                if LocalPlayer.Character then
+                    for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then part.CanCollide = false end
+                    end
+                end
+                RunService.Stepped:Wait()
+            end
+        end)
+    end)
+
+    -- 9. Clip
+    Register("clip", "c", "Mematikan noclip", "clip / c", function()
+        States.Noclip = false
+        if LocalPlayer.Character then
+            for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+        end
+    end)
+
+    -- 10. Infinite Jump
+    Register("infjump", "ijump", "Lompat tanpa batas di udara", "infjump / ijump", function()
+        States.InfJump = true
+        if not Connections["InfJump"] then
+            Connections["InfJump"] = game:GetService("UserInputService").JumpRequest:Connect(function()
+                if States.InfJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                    LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        end
+    end)
+
+    -- 11. Uninfjump
+    Register("uninfjump", "unijump", "Mematikan lompatan tanpa batas", "uninfjump / unijump", function()
+        States.InfJump = false
+    end)
+
+    -- 12. Freeze
+    Register("freeze", "frz", "Membekukan karakter di tempat", "freeze / frz", function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.Anchored = true
+        end
+    end)
+
+    -- 13. Unfreeze
+    Register("unfreeze", "unfrz", "Melepaskan pembekuan karakter", "unfreeze / unfrz", function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.Anchored = false
+        end
+    end)
+
+    -- 14. ESP Player
+    Register("esp", "esp", "Melihat outline pemain tembus dinding", "esp", function()
+        States.ESP = true
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local hl = p.Character:FindFirstChild("AetherESP") or Instance.new("Highlight")
+                hl.Name = "AetherESP"
+                hl.FillColor = Color3.fromRGB(255, 50, 50)
+                hl.Parent = p.Character
+            end
+        end
+    end)
+
+    -- 15. Unesp
+    Register("unesp", "unesp", "Mematikan ESP", "unesp", function()
+        States.ESP = false
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("AetherESP") then
+                p.Character.AetherESP:Destroy()
+            end
+        end
+    end)
+
+    -- 16. Fullbright
+    Register("fullbright", "fb", "Pencahayaan terang maksimal", "fullbright / fb", function()
+        States.Fullbright = true
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 14
+        Lighting.GlobalShadows = false
+    end)
+
+    -- 17. Unfullbright
+    Register("unfullbright", "unfb", "Mengembalikan pencahayaan asli", "unfullbright / unfb", function()
+        States.Fullbright = false
+        Lighting.Ambient = States.OriginalLighting.Ambient
+        Lighting.Brightness = States.OriginalLighting.Brightness
+        Lighting.ClockTime = States.OriginalLighting.ClockTime
+        Lighting.GlobalShadows = States.OriginalLighting.GlobalShadows
+    end)
+
+    -- 18. Speed
+    Register("speed", "ws", "Mengatur kecepatan jalan karakter", "speed [nilai] / ws [nilai]", function(args)
+        local val = tonumber(args[1]) or 16
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = val
+        end
+    end)
+
+    -- 19. Unspeed
+    Register("unspeed", "unws", "Mereset kecepatan ke normal (16)", "unspeed / unws", function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
+        end
+    end)
+
+    -- 20. JumpPower
+    Register("jumppower", "jp", "Mengatur tinggi lompatan", "jumppower [nilai] / jp [nilai]", function(args)
+        local val = tonumber(args[1]) or 50
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            hum.UseJumpPower = true
+            hum.JumpPower = val
+        end
+    end)
+
+    -- 21. Unjumppower
+    Register("unjumppower", "unjp", "Mereset lompatan ke normal (50)", "unjumppower / unjp", function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            hum.UseJumpPower = true
+            hum.JumpPower = 50
+        end
+    end)
+
+    -- 22. Click TP
+    Register("clicktp", "ctp", "Teleportasi ke titik klik mouse/sentuhan", "clicktp / ctp", function()
+        local mouse = LocalPlayer:GetMouse()
+        if mouse and LocalPlayer.Character then
+            LocalPlayer.Character:MoveTo(mouse.Hit.Position)
+        end
+    end)
+
+    -- 23. Rejoin
+    Register("rejoin", "rj", "Masuk ulang ke server ini", "rejoin / rj", function()
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+    end)
+
+    -- 24. Server Hop
+    Register("serverhop", "shop", "Pindah ke server Roblox lain", "serverhop / shop", function()
+        TeleportService:Teleport(game.PlaceId, LocalPlayer)
+    end)
+
+    -- 25. Reset
+    Register("re", "res", "Mereset/Respawn karakter", "re / res", function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health = 0
+        end
+    end)
+
+    -------------------------------------------------------------------
+    -- BAGIAN 2: 25 FITUR BARU TERBARU (26 - 50) + SINGKATAN
+    -------------------------------------------------------------------
+
+    -- 26. Teleport to Player
+    Register("teleport", "to", "Teleportasi langsung ke pemain lain", "to [nama_pemain]", function(args)
+        local targetName = string.lower(args[1] or "")
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and string.find(string.lower(p.Name), targetName) then
+                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character then
+                    LocalPlayer.Character:MoveTo(p.Character.HumanoidRootPart.Position)
+                end
+                break
+            end
+        end
+    end)
+
+    -- 27. Field of View
+    Register("fieldofview", "fov", "Mengatur luas pandangan kamera", "fov [30-120]", function(args)
+        local val = tonumber(args[1]) or 70
+        workspace.CurrentCamera.FieldOfView = math.clamp(val, 10, 120)
+    end)
+
+    -- 28. Unfieldofview
+    Register("unfov", "unfov", "Mereset FOV ke standar (70)", "unfov", function()
+        workspace.CurrentCamera.FieldOfView = 70
+    end)
+
+    -- 29. Gravity
+    Register("gravity", "grav", "Mengubah gravitasi dunia/game", "grav [nilai]", function(args)
+        local val = tonumber(args[1]) or 196.2
+        workspace.Gravity = val
+    end)
+
+    -- 30. Ungravity / Reset Gravity
+    Register("ungravity", "ungrav", "Mereset gravitasi ke standar (196.2)", "ungrav", function()
+        workspace.Gravity = 196.2
+    end)
+
+    -- 31. HipHeight
+    Register("hipheight", "hh", "Mengatur tinggi melayang kaki karakter", "hh [nilai]", function(args)
+        local val = tonumber(args[1]) or 2
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").HipHeight = val
+        end
+    end)
+
+    -- 32. Unhipheight
+    Register("unhipheight", "unhh", "Mereset tinggi melayang kaki", "unhh", function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").HipHeight = 2
+        end
+    end)
+
+    -- 33. Xray
+    Register("xray", "xr", "Membuat dinding/objek transparan", "xray / xr", function()
+        States.Xray = true
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsDescendantOf(LocalPlayer.Character) then
+                obj.LocalTransparencyModifier = 0.6
+            end
+        end
+    end)
+
+    -- 34. Unxray
+    Register("unxray", "unxr", "Mematikan mode transparan dinding", "unxray / unxr", function()
+        States.Xray = false
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                obj.LocalTransparencyModifier = 0
+            end
+        end
+    end)
+
+    -- 35. Spin Character
+    Register("spin", "sp", "Memutar karakter dengan cepat", "spin [speed] / sp [speed]", function(args)
+        local speed = tonumber(args[1]) or 30
+        States.Spin = true
+        task.spawn(function()
+            while States.Spin and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") do
+                LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(speed), 0)
+                RunService.RenderStepped:Wait()
+            end
+        end)
+    end)
+
+    -- 36. Unspin
+    Register("unspin", "unsp", "Mematikan putaran karakter", "unspin / unsp", function()
+        States.Spin = false
+    end)
+
+    -- 37. Invisible (Local Simulation)
+    Register("invis", "inv", "Menyembunyikan karakter secara lokal", "invis / inv", function()
+        if LocalPlayer.Character then
+            for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") or part:IsA("Decal") then
+                    part.Transparency = 1
+                end
+            end
+        end
+    end)
+
+    -- 38. Uninvisible
+    Register("uninvis", "uninv", "Memunculkan kembali karakter", "uninvis / uninv", function()
+        if LocalPlayer.Character then
+            for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    part.Transparency = 0
+                end
+            end
+        end
+    end)
+
+    -- 39. Max Zoom Distance
+    Register("maxzoom", "mz", "Mengatur jarak maksimum zoom kamera", "mz [nilai]", function(args)
+        local val = tonumber(args[1]) or 10000
+        LocalPlayer.CameraMaxZoomDistance = val
+    end)
+
+    -- 40. Unmaxzoom
+    Register("unmaxzoom", "unmz", "Mereset jarak zoom kamera ke standar", "unmaxzoom", function()
+        LocalPlayer.CameraMaxZoomDistance = 128
+    end)
+
+    -- 41. Clear Backpack
+    Register("clearbackpack", "cb", "Menghapus seluruh item di Backpack", "cb / clearbackpack", function()
+        if LocalPlayer:FindFirstChild("Backpack") then
+            LocalPlayer.Backpack:ClearAllChildren()
+        end
+    end)
+
+    -- 42. Anti AFK
+    Register("antiafk", "aafk", "Mencegah terputus koneksi karena AFK", "aafk", function()
+        local vu = game:GetService("VirtualUser")
+        LocalPlayer.Idled:Connect(function()
+            vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            task.wait(1)
+            vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        end)
+        AetherLib:AddNotification("AntiAFK", "Anti AFK Aktif!", 2)
+    end)
+
+    -- 43. Copy Place ID
+    Register("copyplaceid", "cpid", "Menyalin Place ID game ke clipboard", "cpid", function()
+        if setclipboard then setclipboard(tostring(game.PlaceId)) end
+    end)
+
+    -- 44. Copy Job ID
+    Register("copyjobid", "cjid", "Menyalin Job/Server ID ke clipboard", "cjid", function()
+        if setclipboard then setclipboard(tostring(game.JobId)) end
+    end)
+
+    -- 45. Night Vision
+    Register("nightvision", "nv", "Membuat malam menjadi terang tembus", "nv", function()
+        Lighting.ClockTime = 0
+        Lighting.Ambient = Color3.fromRGB(0, 255, 100)
+    end)
+
+    -- 46. Unnightvision
+    Register("unnightvision", "unnv", "Mematikan Night Vision", "unnv", function()
+        Lighting.ClockTime = States.OriginalLighting.ClockTime
+        Lighting.Ambient = States.OriginalLighting.Ambient
+    end)
+
+    -- 47. Remove Fog
+    Register("nofog", "nf", "Menghilangkan kabut di dalam game", "nf", function()
+        Lighting.FogEnd = 9e9
+    end)
+
+    -- 48. Save Position
+    Register("savepos", "spos", "Menyimpan posisi koordinat saat ini", "spos", function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            States.SavedPos = LocalPlayer.Character.HumanoidRootPart.CFrame
+            AetherLib:AddNotification("SavePos", "Posisi tersimpan!", 1.5)
+        end
+    end)
+
+    -- 49. Load Position
+    Register("loadpos", "lpos", "Teleportasi ke posisi yang disimpan", "lpos", function()
+        if States.SavedPos and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = States.SavedPos
+        end
+    end)
+
+    -- 50. Destroy UI
+    Register("destroyui", "dui", "Menutup dan menghapus AetherLib", "dui", function()
+        AetherLib:Unload()
+    end)
+
+end
