@@ -35,7 +35,7 @@ function AetherLib:Init()
     FloatCorner.CornerRadius = UDim.new(1, 0)
     FloatCorner.Parent = FloatButton
 
-    -- Dragging System untuk Floating Button (Mobile & PC)
+    -- Dragging System untuk Floating Button
     local dragging, dragInput, dragStart, startPos
     FloatButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -65,33 +65,40 @@ function AetherLib:Init()
     end)
 
     -------------------------------------------------------------------
-    -- 2. BAR KANAN LAYAR (VERTIKAL "AETHERGEN 2.3")
+    -- 2. REDESIGNED SIDEBAR (Versi 2.4 - Sleek Pill & Clickable)
     -------------------------------------------------------------------
-    local SideBar = Instance.new("Frame")
+    local SideBar = Instance.new("TextButton")
     SideBar.Name = "SideBarIndicator"
     SideBar.Parent = ScreenGui
     SideBar.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
-    SideBar.Position = UDim2.new(1, -22, 0.5, -130)
-    SideBar.Size = UDim2.new(0, 22, 0, 260)
-    SideBar.BorderSizePixel = 0
+    SideBar.Position = UDim2.new(1, -36, 0.5, -45)
+    SideBar.Size = UDim2.new(0, 36, 0, 90)
+    SideBar.AutoButtonColor = false
+    SideBar.Text = ""
     SideBar.Visible = true
 
     local SideCorner = Instance.new("UICorner")
-    SideCorner.CornerRadius = UDim.new(0, 6)
+    SideCorner.CornerRadius = UDim.new(1, 18)
     SideCorner.Parent = SideBar
 
-    local SideText = Instance.new("TextLabel")
-    SideText.Parent = SideBar
-    SideText.BackgroundTransparency = 1
-    SideText.Size = UDim2.new(1, 0, 1, 0)
-    SideText.Font = Enum.Font.GothamBold
-    SideText.Text = "A\nE\nT\nH\nE\nR\nG\nE\nN\n2.3"
-    SideText.TextColor3 = Color3.fromRGB(200, 200, 220)
-    SideText.TextSize = 10
-    SideText.LineHeight = 0.95
+    local SideStroke = Instance.new("UIStroke")
+    SideStroke.Color = Color3.fromRGB(90, 150, 255)
+    SideStroke.Transparency = 0.5
+    SideStroke.Thickness = 1.5
+    SideStroke.Parent = SideBar
+
+    local SideIcon = Instance.new("TextLabel")
+    SideIcon.Parent = SideBar
+    SideIcon.BackgroundTransparency = 1
+    SideIcon.Size = UDim2.new(1, 0, 1, 0)
+    SideIcon.Font = Enum.Font.GothamBold
+    SideIcon.Text = "AG\n2.4"
+    SideIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SideIcon.TextSize = 11
+    SideIcon.LineHeight = 1.1
 
     -------------------------------------------------------------------
-    -- 3. MAIN FRAME / COMMAND BAR
+    -- 3. MAIN FRAME / COMMAND BAR (Versi 2.4)
     -------------------------------------------------------------------
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
@@ -116,6 +123,10 @@ function AetherLib:Init()
         ToggleUI(not MainFrame.Visible)
     end)
 
+    SideBar.MouseButton1Click:Connect(function()
+        ToggleUI(true)
+    end)
+
     -- TopBar Header
     local TopBar = Instance.new("Frame")
     TopBar.Parent = MainFrame
@@ -127,19 +138,19 @@ function AetherLib:Init()
     TopCorner.CornerRadius = UDim.new(0, 8)
     TopCorner.Parent = TopBar
 
-    -- Judul "AetherGen 2.3"
+    -- Judul "AetherGen 2.4"
     local Title = Instance.new("TextLabel")
     Title.Parent = TopBar
     Title.BackgroundTransparency = 1
     Title.Position = UDim2.new(0, 12, 0, 0)
     Title.Size = UDim2.new(1, -50, 0, 32)
     Title.Font = Enum.Font.GothamBold
-    Title.Text = "AetherGen 2.3"
+    Title.Text = "AetherGen 2.4"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Garis Putih Panjang di Bawah Judul (Langsung Panjang)
+    -- Garis Putih Panjang di Bawah Judul
     local Underline = Instance.new("Frame")
     Underline.Parent = TopBar
     Underline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -189,10 +200,9 @@ function AetherLib:Init()
     local Elements = {}
 
     -------------------------------------------------------------------
-    -- FITUR KHUSUS: CURVE (Membuat Sisi Sisi UI Menjadi Sangat Melengkung)
+    -- FITUR KHUSUS: CURVE
     -------------------------------------------------------------------
     function Elements:Curve()
-        -- Mengubah sudut MainFrame dan TopBar menjadi sangat melengkung (CornerRadius = 24)
         TweenService:Create(MainCorner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             CornerRadius = UDim.new(0, 24)
         }):Play()
@@ -200,6 +210,86 @@ function AetherLib:Init()
         TweenService:Create(TopCorner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             CornerRadius = UDim.new(0, 24)
         }):Play()
+    end
+
+    -------------------------------------------------------------------
+    -- FITUR BARU 1: ADD LABEL (Section Header)
+    -------------------------------------------------------------------
+    function Elements:AddLabel(text)
+        local LabelFrame = Instance.new("Frame")
+        LabelFrame.Parent = ScrollContainer
+        LabelFrame.BackgroundTransparency = 1
+        LabelFrame.Size = UDim2.new(1, 0, 0, 24)
+
+        local TextLabel = Instance.new("TextLabel")
+        TextLabel.Parent = LabelFrame
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Position = UDim2.new(0, 4, 0, 0)
+        TextLabel.Size = UDim2.new(1, -8, 1, 0)
+        TextLabel.Font = Enum.Font.GothamBold
+        TextLabel.Text = text
+        TextLabel.TextColor3 = Color3.fromRGB(90, 150, 255)
+        TextLabel.TextSize = 11
+        TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    end
+
+    -------------------------------------------------------------------
+    -- FITUR BARU 2: ADD NOTIFICATION (Toast Popup)
+    -------------------------------------------------------------------
+    function Elements:AddNotification(title, message, duration)
+        duration = duration or 3
+        local NotifGui = Instance.new("Frame")
+        NotifGui.Parent = ScreenGui
+        NotifGui.BackgroundColor3 = Color3.fromRGB(36, 36, 48)
+        NotifGui.Position = UDim2.new(0.5, -125, 0, -60)
+        NotifGui.Size = UDim2.new(0, 250, 0, 50)
+        NotifGui.ZIndex = 100
+
+        local NotifCorner = Instance.new("UICorner")
+        NotifCorner.CornerRadius = UDim.new(0, 8)
+        NotifCorner.Parent = NotifGui
+
+        local NotifStroke = Instance.new("UIStroke")
+        NotifStroke.Color = Color3.fromRGB(90, 150, 255)
+        NotifStroke.Thickness = 1
+        NotifStroke.Parent = NotifGui
+
+        local TitleLbl = Instance.new("TextLabel")
+        TitleLbl.Parent = NotifGui
+        TitleLbl.BackgroundTransparency = 1
+        TitleLbl.Position = UDim2.new(0, 10, 0, 5)
+        TitleLbl.Size = UDim2.new(1, -20, 0, 18)
+        TitleLbl.Font = Enum.Font.GothamBold
+        TitleLbl.Text = title or "Notifikasi"
+        TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TitleLbl.TextSize = 12
+        TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+        local MsgLbl = Instance.new("TextLabel")
+        MsgLbl.Parent = NotifGui
+        MsgLbl.BackgroundTransparency = 1
+        MsgLbl.Position = UDim2.new(0, 10, 0, 23)
+        MsgLbl.Size = UDim2.new(1, -20, 0, 20)
+        MsgLbl.Font = Enum.Font.Gotham
+        MsgLbl.Text = message or ""
+        MsgLbl.TextColor3 = Color3.fromRGB(200, 200, 210)
+        MsgLbl.TextSize = 10
+        MsgLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+        -- Animasi Slide Down
+        TweenService:Create(NotifGui, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0.5, -125, 0, 20)
+        }):Play()
+
+        task.delay(duration, function()
+            local tweenOut = TweenService:Create(NotifGui, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Position = UDim2.new(0.5, -125, 0, -70)
+            })
+            tweenOut:Play()
+            tweenOut.Completed:Connect(function()
+                NotifGui:Destroy()
+            end)
+        end)
     end
 
     -------------------------------------------------------------------
