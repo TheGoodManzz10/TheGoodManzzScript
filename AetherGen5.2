@@ -1,33 +1,35 @@
 -- =================================================================
 -- AETHERLIB v5.2 - ULTRALIBRARY UI LENGKAP + COMMAND BAR + 52 KOMPONEN
 -- =================================================================
+local CoreGui = game:GetService("CoreGui")
 
-local AetherLib = {
-    Connections = {},
-    Instances = {},
-    RegisteredCommands = {},
-    CommandsURL = "https://raw.githubusercontent.com/TheGoodManzz10/TheGoodManzzScript/refs/heads/main/CommandFeaturs"
+-- Paksa hapus semua GUI lama bernama "AetherGenUI" secara total
+for _, gui in ipairs(CoreGui:GetChildren()) do
+    if gui.Name == "AetherGenUI" then
+        pcall(function()
+            gui:Destroy()
+        end)
+    end
+end
+
+local AetherLib = { 
+    Connections = {}, 
+    Instances = {}, 
+    RegisteredCommands = {}, 
+    CommandsURL = "https://raw.githubusercontent.com/TheGoodManzz10/TheGoodManzzScript/refs/heads/main/CommandFeaturs" 
 }
 
 function AetherLib:Init(customCommandsURL)
     local Players = game:GetService("Players")
-    local CoreGui = game:GetService("CoreGui")
     local TweenService = game:GetService("TweenService")
     local UserInputService = game:GetService("UserInputService")
     local Stats = game:GetService("Stats")
     local LogService = game:GetService("LogService")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local ReplicatedStorage =
+    game:GetService("ReplicatedStorage")
     local LocalPlayer = Players.LocalPlayer
 
-    -- Hapus UI lama & putus koneksi terdahulu (Mencegah Memory Leak)
-    if CoreGui:FindFirstChild("AetherGenUI") then
-        if AetherLib.Unload then
-            AetherLib:Unload()
-        else
-            CoreGui.AetherGenUI:Destroy()
-        end
-    end
-
+    -- Pastikan benar-benar bersih dari sisa instance sebelumnya
     AetherLib.Connections = {}
     AetherLib.Instances = {}
     AetherLib.RegisteredCommands = {}
@@ -42,7 +44,7 @@ function AetherLib:Init(customCommandsURL)
     ScreenGui.Parent = CoreGui
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     table.insert(AetherLib.Instances, ScreenGui)
-
+    
     -------------------------------------------------------------------
     -- REGISTRI ICON BUILT-IN (Format ["Nama"] = "rbxassetid://...")
     -------------------------------------------------------------------
