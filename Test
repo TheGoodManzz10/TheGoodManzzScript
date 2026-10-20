@@ -120,7 +120,7 @@ function AetherLib:Init(customCommandsURL)
     SideBar.Position = UDim2.new(1, -12, 0.5, -45)
     SideBar.Size = UDim2.new(0, 26, 0, 90)
     SideBar.Text = ""
-    SideBar.ZIndex = 5
+    SideBar.ZIndex = 20
 
     local SideCorner = Instance.new("UICorner")
     SideCorner.CornerRadius = UDim.new(0, 12)
@@ -141,7 +141,7 @@ function AetherLib:Init(customCommandsURL)
     SideIcon.Text = "8.7"
     SideIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
     SideIcon.TextSize = 10
-    SideIcon.ZIndex = 6
+    SideIcon.ZIndex = 21
 
     -------------------------------------------------------------------
     -- 3. MAIN FRAME & HEADER
@@ -339,7 +339,6 @@ function AetherLib:Init(customCommandsURL)
             isAnimating = true
             MainFrame.Size = UDim2.new(0, MainFrame.Size.X.Offset, 0, 0)
             MainFrame.Visible = true
-            SideBar.Visible = false
             
             local targetSize = isFluentMode and FLUENT_SIZE or MINI_SIZE
             local tween = TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { 
@@ -357,7 +356,6 @@ function AetherLib:Init(customCommandsURL)
             tween:Play()
             tween.Completed:Connect(function()
                 MainFrame.Visible = false
-                SideBar.Visible = true
                 isAnimating = false
             end)
         end
