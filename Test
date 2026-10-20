@@ -283,6 +283,108 @@ FluentContentArea.Position = UDim2.new(0, 146, 0, 8)
 FluentContentArea.Size = UDim2.new(1, -154, 1, -16)
 FluentContentArea.ZIndex = 9
 
+-------------------------------------------------------------------
+-- ANIMASI BUKA/TUTUP & TRANSISI DUAL-MODE (MINI <-> FLUENT)
+-------------------------------------------------------------------
+local isFluentMode = false
+local isAnimating = false
+local MINI_SIZE = UDim2.new(0, 300, 0, 410)
+local FLUENT_SIZE = UDim2.new(0, 520, 0, 410)
+
+-- 1. Animasi Buka / Tutup UI
+local function ToggleUI(state)
+    if isAnimating then return end
+    if state then
+        isAnimating = true
+        MainFrame.Size = UDim2.new(0, MainFrame.Size.X.Offset, 0, 0)
+        MainFrame.Visible = true
+        SideBar.Visible = false
+        
+        local targetSize = isFluentMode and FLUENT_SIZE or MINI_SIZE
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { 
+            Size = targetSize 
+        })
+        tween:Play()
+        tween.Completed:Connect(function() 
+            isAnimating = false 
+        end)
+    else
+        isAnimating = true
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { 
+            Size = UDim2.new(0, MainFrame.Size.X.Offset, 0, 0) 
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            MainFrame.Visible = false
+            SideBar.Visible = true
+            isAnimating = false
+        end)
+    end
+end
+
+-- 2. Animasi Memanjang / Menyusut (Beralih Mode Mini <-> Fluent)
+local function SwitchUIMode(toFluent)
+    if isAnimating or isFluentMode == toFluent then return end
+    isAnimating = true
+    isFluentMode = toFluent
+
+    if toFluent then
+        -- Transisi ke Mode Fluent (Melebar ke kiri)
+        MiniContainer.Visible = false
+        local goalPos = UDim2.new(1, -535, MainFrame.Position.Y.Scale, MainFrame.Position.Y.Offset)
+        
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = FLUENT_SIZE,
+            Position = goalPos
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            FluentContainer.Visible = true
+            isAnimating = false
+        end)
+    else
+        -- Transisi kembali ke Mode Mini (Menyusut)
+        FluentContainer.Visible = false
+        local goalPos = UDim2.new(1, -315, MainFrame.Position.Y.Scale, MainFrame.Position.Y.Offset)
+        
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = MINI_SIZE,
+            Position = goalPos
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            MiniContainer.Visible = true
+            isAnimating = false
+        end)
+    end
+end
+
+-------------------------------------------------------------------
+-- EVENT LISTENER TOMBOL "AG" & TOMBOL PIL "5.2"
+-------------------------------------------------------------------
+
+-- Pencet Tombol Pil "5.2" di kanan -> Buka UI & animasi melebar ke Mode Fluent
+TrackConnection(SideBar.MouseButton1Click:Connect(function()
+    if not MainFrame.Visible then
+        ToggleUI(true)
+    end
+    SwitchUIMode(true)
+end))
+
+-- Pencet Floating Button "AG" -> Jika lagi di Fluent kembalikan ke Mini, jika tidak Buka/Tutup biasa
+TrackConnection(FloatButton.MouseButton1Click:Connect(function()
+    if MainFrame.Visible and isFluentMode then
+        SwitchUIMode(false)
+    else
+        ToggleUI(not MainFrame.Visible)
+    end
+end))
+
+-- Pencet Tombol Close "X"
+TrackConnection(CloseBtn.MouseButton1Click:Connect(function()
+    ToggleUI(false)
+end))
+
     -------------------------------------------------------------------
     -- 4. COMMAND BAR DENGAN AWALAN ';'
     -------------------------------------------------------------------
