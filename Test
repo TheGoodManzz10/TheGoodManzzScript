@@ -1,5 +1,6 @@
 -- =================================================================
--- AETHERLIB v5.2 - ULTRALIBRARY UI LENGKAP + STARLIGHT ENGINE
+-- AETHERLIB v7.8 - ULTRALIBRARY UI LENGKAP + STARLIGHT ENGINE
+-- UPDATE v7.8: OPTIONAL COMMAND BAR + CUSTOM LUCIDE ICONS + NO EMOJIS
 -- =================================================================
 local CoreGui = game:GetService("CoreGui")
 
@@ -43,25 +44,55 @@ function AetherLib:Init(customCommandsURL)
     ScreenGui.Parent = CoreGui
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     table.insert(AetherLib.Instances, ScreenGui)
-    
+
     -------------------------------------------------------------------
-    -- REGISTRI ICON BUILT-IN
+    -- REGISTRI ICON LUCIDE ASSET ID (PILIHAN UNTUK LIBRARY & USER)
     -------------------------------------------------------------------
     local Icons = {
-        ["Home"]     = "rbxassetid://6023426915",
-        ["User"]     = "rbxassetid://6023426872",
-        ["Lock"]     = "rbxassetid://6034818372",
-        ["Play"]     = "rbxassetid://6023426895",
-        ["Settings"] = "rbxassetid://6023426915",
-        ["Shield"]   = "rbxassetid://6034818372",
-        ["Search"]   = "rbxassetid://6023426915",
-        ["Check"]    = "rbxassetid://6023426842",
-        ["Close"]    = "rbxassetid://6035047409",
-        ["Star"]     = "rbxassetid://6034818372",
-        ["Console"]  = "rbxassetid://6031280882",
-        ["Radar"]    = "rbxassetid://6034818372",
-        ["Terminal"] = "rbxassetid://6023426915"
+        ["Logo"]                    = "rbxassetid://107391174248131",
+        ["Settings"]                = "rbxassetid://10734950309",
+        ["SpinOuter"]               = "rbxassetid://109694296016043",
+        ["Block"]                   = "rbxassetid://10709782497",
+        ["lucide-activity"]         = "rbxassetid://10709752035",
+        ["lucide-alert-circle"]     = "rbxassetid://10709752996",
+        ["lucide-check"]            = "rbxassetid://10709790644",
+        ["lucide-chevron-down"]     = "rbxassetid://10709790948",
+        ["lucide-chevron-right"]    = "rbxassetid://10709791437",
+        ["lucide-clipboard"]        = "rbxassetid://10709799288",
+        ["lucide-code"]             = "rbxassetid://10709810463",
+        ["lucide-command"]          = "rbxassetid://10709811365",
+        ["lucide-copy"]             = "rbxassetid://10709812159",
+        ["lucide-file-text"]        = "rbxassetid://10723367380",
+        ["lucide-home"]             = "rbxassetid://10723407389",
+        ["lucide-info"]             = "rbxassetid://10723415903",
+        ["lucide-play"]             = "rbxassetid://10734923549",
+        ["lucide-search"]           = "rbxassetid://10734943674",
+        ["lucide-shield"]           = "rbxassetid://10734951847",
+        ["lucide-signal"]           = "rbxassetid://10734961133",
+        ["lucide-terminal"]         = "rbxassetid://10734982144",
+        ["lucide-user"]             = "rbxassetid://10747373176",
+        ["lucide-wifi"]             = "rbxassetid://10747382504",
+        ["lucide-x"]                = "rbxassetid://10747384394",
+        ["lucide-x-circle"]         = "rbxassetid://10747383819"
     }
+
+    local function CreateIcon(iconNameOrId, parent, position, size, zIndex)
+        local img = Instance.new("ImageLabel")
+        img.BackgroundTransparency = 1
+        img.Position = position or UDim2.new(0, 0, 0, 0)
+        img.Size = size or UDim2.new(0, 16, 0, 16)
+        img.ZIndex = zIndex or 10
+
+        if Icons[iconNameOrId] then
+            img.Image = Icons[iconNameOrId]
+        elseif type(iconNameOrId) == "string" and (iconNameOrId:find("rbxassetid://") or iconNameOrId:find("http")) then
+            img.Image = iconNameOrId
+        else
+            img.Image = Icons["Block"] or "rbxassetid://10709782497"
+        end
+        img.Parent = parent
+        return img
+    end
 
     -------------------------------------------------------------------
     -- 1. FLOATING BUTTON ("AG") - Draggable
@@ -111,7 +142,7 @@ function AetherLib:Init(customCommandsURL)
     end))
 
     -------------------------------------------------------------------
-    -- 2. SIDEBAR INDIKATOR v5.2 (INTERAKTIF)
+    -- 2. SIDEBAR INDIKATOR v7.8
     -------------------------------------------------------------------
     local SideBar = Instance.new("TextButton")
     SideBar.Name = "SideBarIndicator"
@@ -139,7 +170,7 @@ function AetherLib:Init(customCommandsURL)
     SideIcon.Position = UDim2.new(0, -14, 0, 0)
     SideIcon.Size = UDim2.new(1, 14, 1, 0)
     SideIcon.Font = Enum.Font.GothamBold
-    SideIcon.Text = "5.2"
+    SideIcon.Text = "7.8"
     SideIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
     SideIcon.TextSize = 10
     SideIcon.ZIndex = 6
@@ -169,7 +200,7 @@ function AetherLib:Init(customCommandsURL)
     MainStroke.Transparency = 0
 
     -------------------------------------------------------------------
-    -- STARLIGHT ENGINE FRAME (MODE UI DENGAN SIDEBAR SCROLLABLE)
+    -- STARLIGHT ENGINE FRAME (MODE UI SIDEBAR SCROLLABLE)
     -------------------------------------------------------------------
     local StarlightFrame = Instance.new("Frame")
     StarlightFrame.Name = "StarlightEngineFrame"
@@ -203,13 +234,24 @@ function AetherLib:Init(customCommandsURL)
     SHeaderTitle.Parent = StarlightHeader
     SHeaderTitle.BackgroundTransparency = 1
     SHeaderTitle.Position = UDim2.new(0, 12, 0, 0)
-    SHeaderTitle.Size = UDim2.new(1, -20, 1, 0)
+    SHeaderTitle.Size = UDim2.new(1, -50, 1, 0)
     SHeaderTitle.Font = Enum.Font.GothamBold
-    SHeaderTitle.Text = "STARLIGHT ENGINE v5.2"
+    SHeaderTitle.Text = "STARLIGHT ENGINE v7.8"
     SHeaderTitle.TextColor3 = Color3.fromRGB(90, 150, 255)
     SHeaderTitle.TextSize = 12
     SHeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
     SHeaderTitle.ZIndex = 22
+
+    local SCloseBtn = Instance.new("TextButton")
+    SCloseBtn.Parent = StarlightHeader
+    SCloseBtn.BackgroundTransparency = 1
+    SCloseBtn.Position = UDim2.new(1, -34, 0, 4)
+    SCloseBtn.Size = UDim2.new(0, 30, 0, 30)
+    SCloseBtn.Font = Enum.Font.GothamBold
+    SCloseBtn.Text = "X"
+    SCloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SCloseBtn.TextSize = 14
+    SCloseBtn.ZIndex = 23
 
     -- Sidebar Scrollable Tanpa Batas Kategori
     local StarlightSidebar = Instance.new("ScrollingFrame")
@@ -255,7 +297,21 @@ function AetherLib:Init(customCommandsURL)
         end
     end
 
-    -- Event Membuka Starlight Engine & Animasi Melebar Halus Ke Kiri
+    TrackConnection(SCloseBtn.MouseButton1Click:Connect(function()
+        if isAnimating then return end
+        isAnimating = true
+        local tweenClose = TweenService:Create(StarlightFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 410),
+            Position = UDim2.new(1, -15, 0.1, 0)
+        })
+        tweenClose:Play()
+        tweenClose.Completed:Connect(function()
+            StarlightFrame.Visible = false
+            SideBar.Visible = true
+            isAnimating = false
+        end)
+    end))
+
     TrackConnection(SideBar.MouseButton1Click:Connect(function()
         if isAnimating then return end
         isAnimating = true
@@ -266,7 +322,7 @@ function AetherLib:Init(customCommandsURL)
         StarlightFrame.Position = UDim2.new(1, -315, 0.1, 0)
         StarlightFrame.Visible = true
 
-        local tweenExpand = TweenService:Create(StarlightFrame, TweenInfo.new(0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+        local tweenExpand = TweenService:Create(StarlightFrame, TweenInfo.new(0.65, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 550, 0, 410),
             Position = UDim2.new(1, -565, 0.1, 0)
         })
@@ -276,7 +332,6 @@ function AetherLib:Init(customCommandsURL)
         end)
     end))
 
-    -- Event Floating Button "AG" (Menutup/Kembali Ke UI Biasa secara Smooth)
     TrackConnection(FloatButton.MouseButton1Click:Connect(function()
         if isAnimating then return end
 
@@ -315,7 +370,7 @@ function AetherLib:Init(customCommandsURL)
     Title.Position = UDim2.new(0, 12, 0, 0)
     Title.Size = UDim2.new(1, -80, 0, 32)
     Title.Font = Enum.Font.GothamBold
-    Title.Text = "AetherGen 5.2"
+    Title.Text = "AetherGen 7.8"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -345,13 +400,14 @@ function AetherLib:Init(customCommandsURL)
     end))
 
     -------------------------------------------------------------------
-    -- 4. COMMAND BAR DENGAN AWALAN ';'
+    -- 4. COMMAND BAR v7.8 (DISEMBUNYIKAN SECARA DEFAULT)
     -------------------------------------------------------------------
     local CmdContainer = Instance.new("Frame")
     CmdContainer.Parent = MainFrame
     CmdContainer.BackgroundColor3 = Color3.fromRGB(34, 34, 44)
     CmdContainer.Position = UDim2.new(0, 10, 0, 48)
     CmdContainer.Size = UDim2.new(1, -20, 0, 28)
+    CmdContainer.Visible = false
     CmdContainer.ZIndex = 10
 
     local CmdContainerCorner = Instance.new("UICorner")
@@ -393,11 +449,28 @@ function AetherLib:Init(customCommandsURL)
     CmdListBtn.Text = ";"
     CmdListBtn.TextColor3 = Color3.fromRGB(90, 150, 255)
     CmdListBtn.TextSize = 13
+    CmdListBtn.Visible = false
     CmdListBtn.ZIndex = 10
 
     local CmdListBtnCorner = Instance.new("UICorner")
     CmdListBtnCorner.CornerRadius = UDim.new(0, 5)
     CmdListBtnCorner.Parent = CmdListBtn
+
+    local SCmdListBtn = Instance.new("TextButton")
+    SCmdListBtn.Parent = StarlightHeader
+    SCmdListBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+    SCmdListBtn.Position = UDim2.new(1, -68, 0, 7)
+    SCmdListBtn.Size = UDim2.new(0, 26, 0, 24)
+    SCmdListBtn.Font = Enum.Font.GothamBold
+    SCmdListBtn.Text = ";"
+    SCmdListBtn.TextColor3 = Color3.fromRGB(90, 150, 255)
+    SCmdListBtn.TextSize = 13
+    SCmdListBtn.Visible = false
+    SCmdListBtn.ZIndex = 23
+
+    local SCmdListBtnCorner = Instance.new("UICorner")
+    SCmdListBtnCorner.CornerRadius = UDim.new(0, 5)
+    SCmdListBtnCorner.Parent = SCmdListBtn
 
     -------------------------------------------------------------------
     -- 5. SCROLL CONTAINER UTAMA
@@ -405,8 +478,8 @@ function AetherLib:Init(customCommandsURL)
     local ScrollContainer = Instance.new("ScrollingFrame")
     ScrollContainer.Parent = MainFrame
     ScrollContainer.BackgroundTransparency = 1
-    ScrollContainer.Position = UDim2.new(0, 10, 0, 82)
-    ScrollContainer.Size = UDim2.new(1, -20, 1, -90)
+    ScrollContainer.Position = UDim2.new(0, 10, 0, 48)
+    ScrollContainer.Size = UDim2.new(1, -20, 1, -56)
     ScrollContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
     ScrollContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
     ScrollContainer.ScrollBarThickness = 4
@@ -419,6 +492,17 @@ function AetherLib:Init(customCommandsURL)
     UIListLayout.Padding = UDim.new(0, 8)
 
     local Elements = {}
+
+    -------------------------------------------------------------------
+    -- METHOD ENABLE COMMAND BAR (MEMANGGIL FITUR COMMAND BAR)
+    -------------------------------------------------------------------
+    function Elements:EnableCommandBar()
+        CmdContainer.Visible = true
+        CmdListBtn.Visible = true
+        SCmdListBtn.Visible = true
+        ScrollContainer.Position = UDim2.new(0, 10, 0, 82)
+        ScrollContainer.Size = UDim2.new(1, -20, 1, -90)
+    end
 
     -------------------------------------------------------------------
     -- COMMAND LIST MENU & DETAIL PANEL
@@ -441,13 +525,15 @@ function AetherLib:Init(customCommandsURL)
     CLStroke.Thickness = 2
     CLStroke.Parent = CmdListFrame
 
+    CreateIcon("lucide-file-text", CmdListFrame, UDim2.new(0, 10, 0, 10), UDim2.new(0, 16, 0, 16), 251)
+
     local CLTitle = Instance.new("TextLabel")
     CLTitle.Parent = CmdListFrame
     CLTitle.BackgroundTransparency = 1
-    CLTitle.Position = UDim2.new(0, 12, 0, 8)
-    CLTitle.Size = UDim2.new(1, -40, 0, 22)
+    CLTitle.Position = UDim2.new(0, 32, 0, 8)
+    CLTitle.Size = UDim2.new(1, -60, 0, 22)
     CLTitle.Font = Enum.Font.GothamBold
-    CLTitle.Text = "📜 AetherGen Commands"
+    CLTitle.Text = "AetherGen Commands"
     CLTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     CLTitle.TextSize = 12
     CLTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -551,6 +637,10 @@ function AetherLib:Init(customCommandsURL)
         CmdListFrame.Visible = not CmdListFrame.Visible
     end))
 
+    TrackConnection(SCmdListBtn.MouseButton1Click:Connect(function()
+        CmdListFrame.Visible = not CmdListFrame.Visible
+    end))
+
     local function RefreshCommandList()
         for _, child in ipairs(CLScroll:GetChildren()) do
             if child:IsA("TextButton") then child:Destroy() end
@@ -573,7 +663,7 @@ function AetherLib:Init(customCommandsURL)
             ItemCorner.Parent = ItemBtn
 
             TrackConnection(ItemBtn.MouseButton1Click:Connect(function()
-                DFTitle.Text = "📌 ;" .. cmdName
+                DFTitle.Text = ";" .. cmdName
                 DFDesc.Text = "Sintaks: ;" .. cmdData.Syntax .. "\nKegunaan: " .. cmdData.Desc
                 DetailFrame.Visible = true
             end))
@@ -581,18 +671,18 @@ function AetherLib:Init(customCommandsURL)
     end
 
     -------------------------------------------------------------------
-    -- STARLIGHT ENGINE: API TAB KHUSUS TANPA BATAS KATEGORI
+    -- STARLIGHT ENGINE: API TAB KHUSUS TANPA BATAS KATEGORI + CUSTOM ICON
     -------------------------------------------------------------------
     local StarlightTabs = {}
 
-    function Elements:AddTab(tabName)
+    function Elements:AddTab(tabName, iconName)
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = tabName .. "_StarlightTab"
         TabBtn.Parent = StarlightSidebar
         TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
         TabBtn.Size = UDim2.new(1, 0, 0, 32)
         TabBtn.Font = Enum.Font.GothamMedium
-        TabBtn.Text = "  " .. tabName
+        TabBtn.Text = iconName and ("      " .. tabName) or ("  " .. tabName)
         TabBtn.TextColor3 = Color3.fromRGB(170, 170, 190)
         TabBtn.TextSize = 11
         TabBtn.TextXAlignment = Enum.TextXAlignment.Left
@@ -606,6 +696,10 @@ function AetherLib:Init(customCommandsURL)
         TabStroke.Color = Color3.fromRGB(45, 45, 60)
         TabStroke.Thickness = 1
         TabStroke.Parent = TabBtn
+
+        if iconName then
+            CreateIcon(iconName, TabBtn, UDim2.new(0, 8, 0.5, -8), UDim2.new(0, 16, 0, 16), 23)
+        end
 
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName .. "_Content"
@@ -656,13 +750,18 @@ function AetherLib:Init(customCommandsURL)
 
         table.insert(StarlightTabs, TabObj)
 
-        function TabObj:AddButton(btnText, callback)
+        function TabObj:AddButton(btnText, iconName, callback)
+            if type(iconName) == "function" then
+                callback = iconName
+                iconName = nil
+            end
+
             local Btn = Instance.new("TextButton")
             Btn.Parent = TabContent
             Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
             Btn.Size = UDim2.new(1, 0, 0, 36)
             Btn.Font = Enum.Font.Gotham
-            Btn.Text = "  " .. btnText
+            Btn.Text = iconName and ("      " .. btnText) or ("  " .. btnText)
             Btn.TextColor3 = Color3.fromRGB(240, 240, 250)
             Btn.TextSize = 11
             Btn.TextXAlignment = Enum.TextXAlignment.Left
@@ -676,6 +775,10 @@ function AetherLib:Init(customCommandsURL)
             Stroke.Color = Color3.fromRGB(50, 50, 70)
             Stroke.Thickness = 1
             Stroke.Parent = Btn
+
+            if iconName then
+                CreateIcon(iconName, Btn, UDim2.new(0, 8, 0.5, -8), UDim2.new(0, 16, 0, 16), 23)
+            end
 
             TrackConnection(Btn.MouseButton1Click:Connect(function()
                 TweenService:Create(Btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(90, 150, 255)}):Play()
@@ -798,7 +901,7 @@ function AetherLib:Init(customCommandsURL)
     end))
 
     -------------------------------------------------------------------
-    -- PROSES SEEDING LOADSTRING PERINTAH EKSTERNAL (v5.2)
+    -- SEEDING SCRIPT EKSTERNAL
     -------------------------------------------------------------------
     local targetURL = customCommandsURL or AetherLib.CommandsURL
     task.spawn(function()
@@ -808,15 +911,21 @@ function AetherLib:Init(customCommandsURL)
 
         if success and type(scriptFunc) == "function" then
             scriptFunc(AetherLib)
-            Elements:AddNotification("AetherLib 5.2", "50+ Perintah eksternal dimuat!", 3)
-        else
-            Elements:AddNotification("AetherLib Error", "Gagal memuat perintah eksternal!", 3)
+            Elements:AddNotification("AetherLib 7.8", "50+ Perintah eksternal dimuat!", 3)
         end
     end)
 
     -------------------------------------------------------------------
     -- SELURUH KOMPONEN UI LENGKAP LAMA & BARU (TOTAL 52+ KOMPONEN)
     -------------------------------------------------------------------
+
+    function Elements:Curved()
+        if StarlightCorner then
+            TweenService:Create(StarlightCorner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                CornerRadius = UDim.new(0, 22)
+            }):Play()
+        end
+    end
 
     function Elements:Curve()
         TweenService:Create(MainCorner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -845,6 +954,11 @@ function AetherLib:Init(customCommandsURL)
     end
 
     function Elements:AddButton(name, iconName, callback)
+        if type(iconName) == "function" then
+            callback = iconName
+            iconName = nil
+        end
+
         local BtnFrame = Instance.new("TextButton")
         BtnFrame.Parent = ScrollContainer
         BtnFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -860,14 +974,8 @@ function AetherLib:Init(customCommandsURL)
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = BtnFrame
 
-        if iconName and Icons[iconName] then
-            local IconImg = Instance.new("ImageLabel")
-            IconImg.Parent = BtnFrame
-            IconImg.BackgroundTransparency = 1
-            IconImg.Position = UDim2.new(0, 10, 0.5, -9)
-            IconImg.Size = UDim2.new(0, 18, 0, 18)
-            IconImg.Image = Icons[iconName]
-            IconImg.ZIndex = 10
+        if iconName then
+            CreateIcon(iconName, BtnFrame, UDim2.new(0, 10, 0.5, -9), UDim2.new(0, 18, 0, 18), 10)
         end
 
         TrackConnection(BtnFrame.MouseButton1Click:Connect(function()
@@ -880,6 +988,11 @@ function AetherLib:Init(customCommandsURL)
     end
 
     function Elements:AddToggle(name, iconName, callback)
+        if type(iconName) == "function" then
+            callback = iconName
+            iconName = nil
+        end
+
         local ToggleFrame = Instance.new("Frame")
         ToggleFrame.Parent = ScrollContainer
         ToggleFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -890,14 +1003,8 @@ function AetherLib:Init(customCommandsURL)
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = ToggleFrame
 
-        if iconName and Icons[iconName] then
-            local IconImg = Instance.new("ImageLabel")
-            IconImg.Parent = ToggleFrame
-            IconImg.BackgroundTransparency = 1
-            IconImg.Position = UDim2.new(0, 10, 0.5, -9)
-            IconImg.Size = UDim2.new(0, 18, 0, 18)
-            IconImg.Image = Icons[iconName]
-            IconImg.ZIndex = 10
+        if iconName then
+            CreateIcon(iconName, ToggleFrame, UDim2.new(0, 10, 0.5, -9), UDim2.new(0, 18, 0, 18), 10)
         end
 
         local Label = Instance.new("TextLabel")
@@ -1023,9 +1130,7 @@ function AetherLib:Init(customCommandsURL)
         end
 
         TrackConnection(Knob.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                sliding = true
-            end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true end
         end))
 
         TrackConnection(SliderBar.InputBegan:Connect(function(input)
@@ -1036,9 +1141,7 @@ function AetherLib:Init(customCommandsURL)
         end))
 
         TrackConnection(UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                sliding = false
-            end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end
         end))
 
         TrackConnection(UserInputService.InputChanged:Connect(function(input)
@@ -1385,7 +1488,7 @@ function AetherLib:Init(customCommandsURL)
         BtnFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
         BtnFrame.Size = UDim2.new(1, 0, 0, 38)
         BtnFrame.Font = Enum.Font.Gotham
-        BtnFrame.Text = "  📋 " .. name
+        BtnFrame.Text = "       " .. name
         BtnFrame.TextColor3 = Color3.fromRGB(255, 255, 255)
         BtnFrame.TextSize = 12
         BtnFrame.TextXAlignment = Enum.TextXAlignment.Left
@@ -1395,14 +1498,16 @@ function AetherLib:Init(customCommandsURL)
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = BtnFrame
 
+        CreateIcon("lucide-copy", BtnFrame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
+
         TrackConnection(BtnFrame.MouseButton1Click:Connect(function()
             if setclipboard then
                 setclipboard(textToCopy or "")
-                BtnFrame.Text = "  ✅ Tersalin!"
-                task.delay(1.5, function() BtnFrame.Text = "  📋 " .. name end)
+                BtnFrame.Text = "       Tersalin!"
+                task.delay(1.5, function() BtnFrame.Text = "       " .. name end)
             else
-                BtnFrame.Text = "  ❌ No Clipboard"
-                task.delay(1.5, function() BtnFrame.Text = "  📋 " .. name end)
+                BtnFrame.Text = "       No Clipboard"
+                task.delay(1.5, function() BtnFrame.Text = "       " .. name end)
             end
         end))
     end
@@ -1547,14 +1652,19 @@ function AetherLib:Init(customCommandsURL)
         Stroke.Transparency = 0.5
         Stroke.Parent = PerfFrame
 
+        CreateIcon("lucide-activity", PerfFrame, UDim2.new(0, 8, 0.5, -7), UDim2.new(0, 14, 0, 14), 151)
+        CreateIcon("lucide-wifi", PerfFrame, UDim2.new(0, 100, 0.5, -7), UDim2.new(0, 14, 0, 14), 151)
+
         local PerfText = Instance.new("TextLabel")
         PerfText.Parent = PerfFrame
         PerfText.BackgroundTransparency = 1
-        PerfText.Size = UDim2.new(1, 0, 1, 0)
+        PerfText.Position = UDim2.new(0, 26, 0, 0)
+        PerfText.Size = UDim2.new(1, -26, 1, 0)
         PerfText.Font = Enum.Font.GothamBold
-        PerfText.Text = "⚡ FPS: -- | 📶 Ping: -- ms"
+        PerfText.Text = "FPS: -- | Ping: -- ms"
         PerfText.TextColor3 = Color3.fromRGB(255, 255, 255)
         PerfText.TextSize = 10
+        PerfText.TextXAlignment = Enum.TextXAlignment.Left
         PerfText.ZIndex = 151
 
         local lastUpdate = tick()
@@ -1565,7 +1675,7 @@ function AetherLib:Init(customCommandsURL)
             if tick() - lastUpdate >= 1 then
                 local fps = frameCount
                 local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-                PerfText.Text = string.format("⚡ FPS: %d | 📶 Ping: %d ms", fps, ping)
+                PerfText.Text = string.format("FPS: %d  |   Ping: %d ms", fps, ping)
                 frameCount = 0
                 lastUpdate = tick()
             end
@@ -1590,27 +1700,31 @@ function AetherLib:Init(customCommandsURL)
         NotifStroke.Thickness = 1
         NotifStroke.Parent = NotifGui
 
+        CreateIcon("lucide-info", NotifGui, UDim2.new(0, 10, 0, 8), UDim2.new(0, 16, 0, 16), 351)
+
         local TitleLbl = Instance.new("TextLabel")
         TitleLbl.Parent = NotifGui
         TitleLbl.BackgroundTransparency = 1
-        TitleLbl.Position = UDim2.new(0, 10, 0, 5)
-        TitleLbl.Size = UDim2.new(1, -20, 0, 18)
+        TitleLbl.Position = UDim2.new(0, 32, 0, 5)
+        TitleLbl.Size = UDim2.new(1, -40, 0, 18)
         TitleLbl.Font = Enum.Font.GothamBold
         TitleLbl.Text = title or "Notifikasi"
         TitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
         TitleLbl.TextSize = 12
         TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+        TitleLbl.ZIndex = 351
 
         local MsgLbl = Instance.new("TextLabel")
         MsgLbl.Parent = NotifGui
         MsgLbl.BackgroundTransparency = 1
-        MsgLbl.Position = UDim2.new(0, 10, 0, 23)
-        MsgLbl.Size = UDim2.new(1, -20, 0, 20)
+        MsgLbl.Position = UDim2.new(0, 32, 0, 23)
+        MsgLbl.Size = UDim2.new(1, -40, 0, 20)
         MsgLbl.Font = Enum.Font.Gotham
         MsgLbl.Text = message or ""
         MsgLbl.TextColor3 = Color3.fromRGB(200, 200, 210)
         MsgLbl.TextSize = 10
         MsgLbl.TextXAlignment = Enum.TextXAlignment.Left
+        MsgLbl.ZIndex = 351
 
         TweenService:Create(NotifGui, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Position = UDim2.new(0.5, -125, 0, 20)
@@ -1999,7 +2113,7 @@ function AetherLib:Init(customCommandsURL)
             TrackConnection(OptBtn.MouseButton1Click:Connect(function()
                 selectedTable[opt] = not selectedTable[opt]
                 if selectedTable[opt] then
-                    OptBtn.Text = "[✓] " .. opt
+                    OptBtn.Text = "[x] " .. opt
                     OptBtn.TextColor3 = Color3.fromRGB(90, 150, 255)
                 else
                     OptBtn.Text = "[ ] " .. opt
@@ -2014,93 +2128,6 @@ function AetherLib:Init(customCommandsURL)
                 if callback then pcall(callback, selectedTable) end
             end))
         end
-    end
-
-    function Elements:AddCollapsibleSection(titleText)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-        Frame.Size = UDim2.new(1, 0, 0, 32)
-        Frame.ClipsDescendants = true
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = Frame
-
-        local Header = Instance.new("TextButton")
-        Header.Parent = Frame
-        Header.BackgroundTransparency = 1
-        Header.Size = UDim2.new(1, 0, 0, 32)
-        Header.Font = Enum.Font.GothamBold
-        Header.Text = "  ▶  " .. titleText
-        Header.TextColor3 = Color3.fromRGB(90, 150, 255)
-        Header.TextSize = 11
-        Header.TextXAlignment = Enum.TextXAlignment.Left
-        Header.ZIndex = 10
-
-        local Content = Instance.new("Frame")
-        Content.Parent = Frame
-        Content.BackgroundTransparency = 1
-        Content.Position = UDim2.new(0, 8, 0, 32)
-        Content.Size = UDim2.new(1, -16, 0, 0)
-        Content.ZIndex = 10
-
-        local ListLayout = Instance.new("UIListLayout")
-        ListLayout.Parent = Content
-        ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        ListLayout.Padding = UDim.new(0, 6)
-
-        local expanded = false
-        TrackConnection(Header.MouseButton1Click:Connect(function()
-            expanded = not expanded
-            Header.Text = expanded and ("  ▼  " .. titleText) or ("  ▶  " .. titleText)
-            local targetH = expanded and (ListLayout.AbsoluteContentSize.Y + 40) or 32
-            TweenService:Create(Frame, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, targetH)}):Play()
-        end))
-
-        return Content
-    end
-
-    function Elements:AddSearchInput(placeholder, callback)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
-        Frame.Size = UDim2.new(1, 0, 0, 36)
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = Frame
-
-        local Icon = Instance.new("TextLabel")
-        Icon.Parent = Frame
-        Icon.BackgroundTransparency = 1
-        Icon.Position = UDim2.new(0, 8, 0, 0)
-        Icon.Size = UDim2.new(0, 20, 1, 0)
-        Icon.Font = Enum.Font.Gotham
-        Icon.Text = "🔍"
-        Icon.TextSize = 11
-        Icon.ZIndex = 10
-
-        local Box = Instance.new("TextBox")
-        Box.Parent = Frame
-        Box.BackgroundTransparency = 1
-        Box.Position = UDim2.new(0, 30, 0, 0)
-        Box.Size = UDim2.new(1, -38, 1, 0)
-        Box.Font = Enum.Font.Gotham
-        Box.PlaceholderText = placeholder or "Search..."
-        Box.PlaceholderColor3 = Color3.fromRGB(140, 140, 155)
-        Box.Text = ""
-        Box.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Box.TextSize = 11
-        Box.TextXAlignment = Enum.TextXAlignment.Left
-        Box.ClearTextOnFocus = false
-        Box.ZIndex = 10
-
-        TrackConnection(Box:GetPropertyChangedSignal("Text"):Connect(function()
-            if callback then pcall(callback, Box.Text) end
-        end))
     end
 
     function Elements:AddKeybindWithToggle(name, defaultKey, callback)
