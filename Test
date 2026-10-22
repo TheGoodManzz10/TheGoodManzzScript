@@ -1,6 +1,6 @@
 -- ================================================================= --
--- AETHERLIB v12.5 ULTIMATE - STARLIGHT ENGINE v12.5 (FULL COMPONENTS)
--- UPDATE: CONTENT VALIDITY CHECK + UPGRADED KEY SYSTEM + SETTINGS PANEL
+-- AETHERLIB v14.0 ULTIMATE - STARLIGHT ENGINE v14.0 (FULL COMPONENTS)
+-- UPDATE: REMOVED UI CONTENT VALIDITY RULES + 25 BG COLORS + 10 TEXT COLORS
 -- ================================================================= --
 local CoreGui = game:GetService("CoreGui")
 
@@ -286,7 +286,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
                 local assignedDurationSec = 86400 -- Default 1 hari
 
                 if type(keysConfig) == "table" then
-                    -- Cek format dictionary { ["Key1"] = 1 (hari), ... } atau array
                     if keysConfig[entered] then
                         isValid = true
                         local durDays = keysConfig[entered]
@@ -457,7 +456,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
     SHeaderTitle.Position = UDim2.new(0, 12, 0, 0)
     SHeaderTitle.Size = UDim2.new(1, -50, 1, 0)
     SHeaderTitle.Font = Enum.Font.GothamBold
-    SHeaderTitle.Text = "STARLIGHT ENGINE v12.5"
+    SHeaderTitle.Text = "STARLIGHT ENGINE v14.0"
     SHeaderTitle.TextColor3 = Color3.fromRGB(90, 150, 255)
     SHeaderTitle.TextSize = 12
     SHeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -491,37 +490,14 @@ function AetherLib:Init(customCommandsURL, keySettings)
     SSidebarLayout.Padding = UDim.new(0, 6)
 
     -------------------------------------------------------------------
-    -- ATURAN BARU: VALIDASI KONTEN UI (TIDAK ADA FITUR = TIDAK BISA DIBUKA)
+    -- ATURAN VALIDASI DIHAPUS: UI SELALU MUNCUL & BISA DIBUKA
     -------------------------------------------------------------------
-    local hasMainContent = false
-    local hasStarlightContent = false
-
     local function CheckUIContentValidity()
-        task.delay(0.2, function()
-            hasMainContent = false
-            for _, child in ipairs(ScrollContainer:GetChildren()) do
-                if not child:IsA("UIListLayout") then hasMainContent = true break end
-            end
-
-            hasStarlightContent = false
-            for _, child in ipairs(StarlightSidebar:GetChildren()) do
-                if child:IsA("TextButton") and child.Name ~= "Settings_StarlightTab" then hasStarlightContent = true break end
-            end
-
-            -- Jika UI utama tidak punya konten, sembunyikan aksesnya
-            if not hasMainContent and not hasStarlightContent then
-                SideBar.Visible = false
-                FloatButton.Visible = false
-            end
-        end)
+        -- Dinonaktifkan agar UI selalu aktif walau tanpa fitur tambahan
     end
 
     local isAnimating = false
     local function ToggleUI(state)
-        if not hasMainContent then
-            Elements:AddNotification("AetherLib", "UI Utama tidak memiliki fitur dari luar library!", 3)
-            return
-        end
         if isAnimating or not MainFrame or not MainFrame.Parent then return end
         if state then
             isAnimating = true
@@ -556,10 +532,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
     end))
 
     TrackConnection(SideBar.MouseButton1Click:Connect(function()
-        if not hasStarlightContent then
-            Elements:AddNotification("AetherLib", "UI Starlight Sidebar tidak memiliki fitur dari luar library!", 3)
-            return
-        end
         if isAnimating then return end
         isAnimating = true
         if MainFrame and MainFrame.Parent and MainFrame.Visible then MainFrame.Visible = false end
@@ -583,12 +555,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
                 if SideBar and SideBar.Parent then SideBar.Visible = true end
                 isAnimating = false
             end)
-        elseif MainFrame and MainFrame.Parent and hasMainContent then
+        elseif MainFrame and MainFrame.Parent then
             ToggleUI(not MainFrame.Visible)
-        elseif hasStarlightContent then
-            -- Buka starlight jika utama tidak ada
-            SideBar:CaptureFocus() -- trigger open
-            SideBar.MouseButton1Click:Fire()
         end
     end))
 
@@ -609,7 +577,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
     Title.Position = UDim2.new(0, 12, 0, 0)
     Title.Size = UDim2.new(1, -110, 0, 32)
     Title.Font = Enum.Font.GothamBold
-    Title.Text = "AetherGen 12.5"
+    Title.Text = "AetherGen 14.0"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -631,18 +599,17 @@ function AetherLib:Init(customCommandsURL, keySettings)
     -------------------------------------------------------------------
     -- SETTINGS PANEL & BUTTON (UI BIASA & UI SIDEBAR)
     -------------------------------------------------------------------
-    -- 1. Panel Settings untuk UI Biasa
     local NormalSettingsPanel = Instance.new("Frame")
     NormalSettingsPanel.Name = "NormalSettingsPanel"
     NormalSettingsPanel.Parent = ScreenGui
     NormalSettingsPanel.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
     NormalSettingsPanel.Position = UDim2.new(0.5, -130, 0.4, -110)
-    NormalSettingsPanel.Size = UDim2.new(0, 260, 0, 240)
+    NormalSettingsPanel.Size = UDim2.new(0, 260, 0, 310)
     NormalSettingsPanel.ZIndex = 400
     NormalSettingsPanel.Visible = false
 
     local NSPCorner = Instance.new("UICorner")
-NSPCorner.CornerRadius = UDim.new(0, 10)
+    NSPCorner.CornerRadius = UDim.new(0, 10)
     NSPCorner.Parent = NormalSettingsPanel
 
     local NSPStroke = Instance.new("UIStroke")
@@ -692,7 +659,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
     NSPLayout.SortOrder = Enum.SortOrder.LayoutOrder
     NSPLayout.Padding = UDim.new(0, 6)
 
-    -- Tombol Settings di dekat Tombol "X" Main UI
     local SettingsBtn = Instance.new("TextButton")
     SettingsBtn.Parent = TopBar
     SettingsBtn.BackgroundTransparency = 1
@@ -708,16 +674,16 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
     end))
 
     -------------------------------------------------------------------
-    -- BUILD SETTINGS CONTENT (5 Warna Teks & 15 Warna Background + RGB)
+    -- BUILD SETTINGS CONTENT (10 Warna Teks & 25 Warna Background + RGB)
     -------------------------------------------------------------------
     local function BuildSettingsContent(container)
-        -- Label Warna Teks
+        -- Label Warna Teks (10 Pilihan)
         local Lbl1 = Instance.new("TextLabel")
         Lbl1.Parent = container
         Lbl1.BackgroundTransparency = 1
         Lbl1.Size = UDim2.new(1, 0, 0, 20)
         Lbl1.Font = Enum.Font.GothamBold
-        Lbl1.Text = "Pilih Warna Teks & Icon (5 Pilihan):"
+        Lbl1.Text = "Pilih Warna Teks & Icon (10 Pilihan):"
         Lbl1.TextColor3 = Color3.fromRGB(255, 255, 255)
         Lbl1.TextSize = 11
         Lbl1.TextXAlignment = Enum.TextXAlignment.Left
@@ -726,27 +692,32 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         local ColorRow = Instance.new("Frame")
         ColorRow.Parent = container
         ColorRow.BackgroundTransparency = 1
-        ColorRow.Size = UDim2.new(1, 0, 0, 26)
+        ColorRow.Size = UDim2.new(1, 0, 0, 56)
         ColorRow.ZIndex = 402
 
-        local CRLayout = Instance.new("UIListLayout")
+        local CRLayout = Instance.new("UIGridLayout")
         CRLayout.Parent = ColorRow
-        CRLayout.FillDirection = Enum.FillDirection.Horizontal
-        CRLayout.Padding = UDim.new(0, 8)
+        CRLayout.CellSize = UDim2.new(0, 28, 0, 24)
+        CRLayout.CellPadding = UDim2.new(0, 6, 0, 6)
 
         local textColors = {
             {Name = "Blue", Color = Color3.fromRGB(90, 150, 255)},
             {Name = "White", Color = Color3.fromRGB(255, 255, 255)},
             {Name = "Green", Color = Color3.fromRGB(50, 220, 100)},
             {Name = "Yellow", Color = Color3.fromRGB(255, 215, 0)},
-            {Name = "Purple", Color = Color3.fromRGB(180, 100, 255)}
+            {Name = "Purple", Color = Color3.fromRGB(180, 100, 255)},
+            {Name = "Red", Color = Color3.fromRGB(255, 80, 80)},
+            {Name = "Cyan", Color = Color3.fromRGB(50, 220, 220)},
+            {Name = "Orange", Color = Color3.fromRGB(255, 140, 0)},
+            {Name = "Pink", Color = Color3.fromRGB(255, 105, 180)},
+            {Name = "Lime", Color = Color3.fromRGB(150, 255, 50)}
         }
 
         for _, tc in ipairs(textColors) do
             local CBtn = Instance.new("TextButton")
             CBtn.Parent = ColorRow
             CBtn.BackgroundColor3 = tc.Color
-            CBtn.Size = UDim2.new(0, 32, 0, 24)
+            CBtn.Size = UDim2.new(0, 28, 0, 24)
             CBtn.Text = ""
             CBtn.ZIndex = 403
             local CBC = Instance.new("UICorner")
@@ -756,7 +727,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             TrackConnection(CBtn.MouseButton1Click:Connect(function()
                 currentTextThemeColor = tc.Color
                 isRgbActive = false
-                -- Update seluruh icon yang dikelola
                 for _, icon in ipairs(ManagedIcons) do
                     if icon and icon.Parent then
                         icon.ImageColor3 = currentTextThemeColor
@@ -766,13 +736,13 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             end))
         end
 
-        -- Label Background Aksen
+        -- Label Background Aksen (25 Pilihan)
         local Lbl2 = Instance.new("TextLabel")
         Lbl2.Parent = container
         Lbl2.BackgroundTransparency = 1
         Lbl2.Size = UDim2.new(1, 0, 0, 20)
         Lbl2.Font = Enum.Font.GothamBold
-        Lbl2.Text = "Aksen Background (15 Pilihan + RGB):"
+        Lbl2.Text = "Aksen Background (25 Pilihan + RGB):"
         Lbl2.TextColor3 = Color3.fromRGB(255, 255, 255)
         Lbl2.TextSize = 11
         Lbl2.TextXAlignment = Enum.TextXAlignment.Left
@@ -781,7 +751,7 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         local BgGrid = Instance.new("Frame")
         BgGrid.Parent = container
         BgGrid.BackgroundTransparency = 1
-        BgGrid.Size = UDim2.new(1, 0, 0, 95)
+        BgGrid.Size = UDim2.new(1, 0, 0, 175)
         BgGrid.ZIndex = 402
 
         local BGLayout = Instance.new("UIGridLayout")
@@ -794,7 +764,11 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             Color3.fromRGB(20, 35, 45), Color3.fromRGB(45, 25, 25), Color3.fromRGB(25, 45, 35),
             Color3.fromRGB(45, 40, 20), Color3.fromRGB(30, 30, 30), Color3.fromRGB(15, 25, 35),
             Color3.fromRGB(40, 20, 40), Color3.fromRGB(20, 40, 40), Color3.fromRGB(50, 30, 20),
-            Color3.fromRGB(25, 20, 45), Color3.fromRGB(35, 45, 20), Color3.fromRGB(10, 10, 15)
+            Color3.fromRGB(25, 20, 45), Color3.fromRGB(35, 45, 20), Color3.fromRGB(10, 10, 15),
+            Color3.fromRGB(45, 20, 20), Color3.fromRGB(20, 45, 20), Color3.fromRGB(20, 20, 45),
+            Color3.fromRGB(40, 40, 40), Color3.fromRGB(35, 20, 35), Color3.fromRGB(20, 35, 35),
+            Color3.fromRGB(45, 35, 20), Color3.fromRGB(12, 18, 28), Color3.fromRGB(28, 12, 18),
+            Color3.fromRGB(18, 28, 12)
         }
 
         for _, bgCol in ipairs(bgColors) do
@@ -834,7 +808,7 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         TrackConnection(RgbBtn.MouseButton1Click:Connect(function()
             isRgbActive = not isRgbActive
             RgbBtn.Text = isRgbActive and "Matikan Mode RGB Background" or "Aktifkan Mode RGB Background"
-            Elements:AddNotification("RGB", isRgbActive ? "RGB Background Aktif!" : "RGB Dimatikan", 2)
+            Elements:AddNotification("RGB", isRgbActive and "RGB Background Aktif!" or "RGB Dimatikan", 2)
         end))
 
         -- Loop RGB Animation
@@ -1111,11 +1085,10 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
     end
 
     -------------------------------------------------------------------
-    -- STARLIGHT ENGINE API (SETTINGS OTOMATIS DI TAB SESUAI ATURAN)
+    -- STARLIGHT ENGINE API
     -------------------------------------------------------------------
     local StarlightTabs = {}
 
-    -- Otomatis buat Tab Settings di Sidebar Starlight Engine sesuai permintaan ("kecuali ui sidebar tombol settings nya ada di tab")
     local function SetupStarlightSettingsTab()
         local SSetTabBtn = Instance.new("TextButton")
         SSetTabBtn.Name = "Settings_StarlightTab"
@@ -1190,7 +1163,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
     end
 
     function Elements:AddTab(tabName, iconName)
-        hasStarlightContent = true
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = tabName .. "_StarlightTab"
         TabBtn.Parent = StarlightSidebar
@@ -1276,13 +1248,11 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         table.insert(StarlightTabs, TabObj)
-        CheckUIContentValidity()
 
         ---------------------------------------------------------------
         -- STARLIGHT TAB COMPONENTS (FULL SUPPORT)
         ---------------------------------------------------------------
         function TabObj:AddButton(btnText, iconName, callback)
-            hasStarlightContent = true
             if type(iconName) == "function" then callback = iconName; iconName = nil end
             local Btn = Instance.new("TextButton")
             Btn.Parent = TabContent
@@ -1318,7 +1288,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddToggle(toggleText, iconName, default, callback)
-            hasStarlightContent = true
             if type(iconName) == "boolean" or iconName == nil then
                 callback = default
                 default = iconName
@@ -1383,7 +1352,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabSection(sectionText, iconName)
-            hasStarlightContent = true
             local SecFrame = Instance.new("Frame")
             SecFrame.Parent = TabContent
             SecFrame.BackgroundTransparency = 1
@@ -1406,7 +1374,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabLabel(labelText, iconName)
-            hasStarlightContent = true
             local LblFrame = Instance.new("Frame")
             LblFrame.Parent = TabContent
             LblFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
@@ -1433,7 +1400,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabInput(inputName, iconName, placeholder, callback)
-            hasStarlightContent = true
             if type(placeholder) == "function" then callback = placeholder; placeholder = iconName; iconName = nil end
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
@@ -1483,7 +1449,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabSlider(sliderName, min, max, default, callback)
-            hasStarlightContent = true
             min = min or 0 max = max or 100 default = math.clamp(default or min, min, max)
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
@@ -1563,7 +1528,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabBadge(badgeName, statusText)
-            hasStarlightContent = true
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
             Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
@@ -1616,7 +1580,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabStepSlider(sliderName, min, max, step, default, callback)
-            hasStarlightContent = true
             step = step or 1 min = min or 0 max = max or 100 default = math.clamp(default or min, min, max)
             local Frame = Instance.new("Frame") Frame.Parent = TabContent Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38) Frame.Size = UDim2.new(1, 0, 0, 48) Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
@@ -1645,7 +1608,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabDropdown(name, options, callback)
-            hasStarlightContent = true
             local Frame = Instance.new("Frame") Frame.Parent = TabContent Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38) Frame.Size = UDim2.new(1, 0, 0, 36) Frame.ClipsDescendants = true Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
             local DropBtn = Instance.new("TextButton") DropBtn.Parent = Frame DropBtn.BackgroundTransparency = 1 DropBtn.Size = UDim2.new(1, 0, 0, 36) DropBtn.Font = Enum.Font.Gotham DropBtn.Text = "  " .. name .. " : " .. (options[1] or "Select") DropBtn.TextColor3 = Color3.fromRGB(240, 240, 250) DropBtn.TextSize = 11 DropBtn.TextXAlignment = Enum.TextXAlignment.Left DropBtn.ZIndex = 23
@@ -1668,7 +1630,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabKeybind(name, defaultKey, callback)
-            hasStarlightContent = true
             defaultKey = defaultKey or Enum.KeyCode.F
             local Frame = Instance.new("Frame") Frame.Parent = TabContent Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38) Frame.Size = UDim2.new(1, 0, 0, 36) Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
@@ -1687,7 +1648,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabColorPicker(name, defaultColor, callback)
-            hasStarlightContent = true
             defaultColor = defaultColor or Color3.fromRGB(90, 150, 255)
             local Frame = Instance.new("Frame") Frame.Parent = TabContent Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38) Frame.Size = UDim2.new(1, 0, 0, 85) Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
@@ -1721,7 +1681,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabCopyButton(name, textToCopy)
-            hasStarlightContent = true
             local Frame = Instance.new("TextButton") Frame.Parent = TabContent Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38) Frame.Size = UDim2.new(1, 0, 0, 36) Frame.Font = Enum.Font.Gotham Frame.Text = "  " .. name Frame.TextColor3 = Color3.fromRGB(240, 240, 250) Frame.TextSize = 11 Frame.TextXAlignment = Enum.TextXAlignment.Left Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
             CreateIcon("lucide-copy", Frame, UDim2.new(1, -26, 0.5, -8), UDim2.new(0, 16, 0, 16), 23)
@@ -1734,7 +1693,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabParagraph(titleText, contentText)
-            hasStarlightContent = true
             local Frame = Instance.new("Frame") Frame.Parent = TabContent Frame.BackgroundColor3 = Color3.fromRGB(22, 22, 32) Frame.Size = UDim2.new(1, 0, 0, 56) Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
             local TTitle = Instance.new("TextLabel") TTitle.Parent = Frame TTitle.BackgroundTransparency = 1 TTitle.Position = UDim2.new(0, 10, 0, 6) TTitle.Size = UDim2.new(1, -20, 0, 16) TTitle.Font = Enum.Font.GothamBold TTitle.Text = titleText TTitle.TextColor3 = currentTextThemeColor TTitle.TextSize = 11 TTitle.TextXAlignment = Enum.TextXAlignment.Left TTitle.ZIndex = 23
@@ -1742,7 +1700,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabRadioGroup(name, options, defaultIndex, callback)
-            hasStarlightContent = true
             defaultIndex = defaultIndex or 1
             local Frame = Instance.new("Frame") Frame.Parent = TabContent Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38) Frame.Size = UDim2.new(1, 0, 0, 46) Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
@@ -1764,7 +1721,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabStatusIndicator(name, statusText, isOnline)
-            hasStarlightContent = true
             local Frame = Instance.new("Frame") Frame.Parent = TabContent Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38) Frame.Size = UDim2.new(1, 0, 0, 36) Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
             local Lbl = Instance.new("TextLabel") Lbl.Parent = Frame Lbl.BackgroundTransparency = 1 Lbl.Position = UDim2.new(0, 10, 0, 0) Lbl.Size = UDim2.new(1, -90, 1, 0) Lbl.Font = Enum.Font.Gotham Lbl.Text = name Lbl.TextColor3 = Color3.fromRGB(240, 240, 250) Lbl.TextSize = 11 Lbl.TextXAlignment = Enum.TextXAlignment.Left Lbl.ZIndex = 23
@@ -1774,7 +1730,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabSearchInput(placeholder, callback)
-            hasStarlightContent = true
             local Frame = Instance.new("Frame") Frame.Parent = TabContent Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38) Frame.Size = UDim2.new(1, 0, 0, 36) Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
             CreateIcon("lucide-search", Frame, UDim2.new(0, 8, 0.5, -8), UDim2.new(0, 16, 0, 16), 23)
@@ -1785,7 +1740,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         end
 
         function TabObj:AddTabNotificationBanner(message, bannerType)
-            hasStarlightContent = true
             local Frame = Instance.new("Frame") Frame.Parent = TabContent Frame.BackgroundColor3 = (bannerType == "Warning") and Color3.fromRGB(75, 55, 20) or Color3.fromRGB(20, 55, 75) Frame.Size = UDim2.new(1, 0, 0, 36) Frame.ZIndex = 22
             local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
             local iconName = (bannerType == "Warning") and "lucide-alert-triangle" or "lucide-info"
@@ -1796,7 +1750,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         return TabObj
     end
 
-    -- Panggil setup settings tab di sidebar setelah inisialisasi awal
     SetupStarlightSettingsTab()
 
     -------------------------------------------------------------------
@@ -1837,19 +1790,19 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
     end))
 
     -------------------------------------------------------------------
-    -- SEEDING SCRIPT EKSTERNAL (FIX ERROR 404 URL)
+    -- SEEDING SCRIPT EKSTERNAL
     -------------------------------------------------------------------
     local targetURL = customCommandsURL or AetherLib.CommandsURL
     task.spawn(function()
         local success, scriptFunc = pcall(function() return loadstring(game:HttpGet(targetURL))() end)
         if success and type(scriptFunc) == "function" then
             scriptFunc(AetherLib)
-            Elements:AddNotification("AetherLib 12.5", "Perintah eksternal berhasil dimuat!", 3)
+            Elements:AddNotification("AetherLib 14.0", "Perintah eksternal berhasil dimuat!", 3)
         end
     end)
 
     -------------------------------------------------------------------
-    -- SELURUH KOMPONEN UTAMA v12.5 (LENGKAP 100%)
+    -- SELURUH KOMPONEN UTAMA v14.0 (LENGKAP 100%)
     -------------------------------------------------------------------
     function Elements:Curved()
         if StarlightCorner then TweenService:Create(StarlightCorner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CornerRadius = UDim.new(0, 22) }):Play() end
@@ -1872,7 +1825,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
     end
 
     function Elements:AddButton(name, iconName, callback)
-        hasMainContent = true
         if type(iconName) == "function" then callback = iconName; iconName = nil end
         local BtnFrame = Instance.new("TextButton")
         BtnFrame.Parent = ScrollContainer
@@ -1900,11 +1852,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             task.delay(0.1, function() TweenService:Create(BtnFrame, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(42, 42, 54)}):Play() end)
             if callback then pcall(callback) end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddToggle(name, iconName, default, callback)
-        hasMainContent = true
         if type(iconName) == "boolean" or type(iconName) == "function" or iconName == nil then
             callback = default
             default = iconName
@@ -1966,11 +1916,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             TweenService:Create(Knob, TweenInfo.new(0.2), {Position = goalKnobPos}):Play()
             if callback then pcall(callback, enabled) end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddSlider(name, min, max, default, callback)
-        hasMainContent = true
         min = min or 0 max = max or 100 default = math.clamp(default or min, min, max)
         local SliderFrame = Instance.new("Frame")
         SliderFrame.Parent = ScrollContainer
@@ -2043,11 +1991,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         TrackConnection(UserInputService.InputChanged:Connect(function(input)
             if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then update(input) end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddDropdown(name, options, callback)
-        hasMainContent = true
         local DropdownFrame = Instance.new("Frame")
         DropdownFrame.Parent = ScrollContainer
         DropdownFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -2122,12 +2068,10 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             end
         end
         DropdownObj:Refresh(options)
-        CheckUIContentValidity()
         return DropdownObj
     end
 
     function Elements:AddToggleWithDropdown(name, options, callback)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -2207,11 +2151,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             DropBtn.Text = selectedOption
             if callback then callback(isToggled, selectedOption) end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddKeybind(name, defaultKey, callback)
-        hasMainContent = true
         defaultKey = defaultKey or Enum.KeyCode.F
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
@@ -2269,11 +2211,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 if callback then pcall(callback, currentKey) end
             end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddProgressBar(name, min, max, default)
-        hasMainContent = true
         min = min or 0 max = max or 100 default = math.clamp(default or min, min, max)
         local BarFrame = Instance.new("Frame")
         BarFrame.Parent = ScrollContainer
@@ -2325,12 +2265,10 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             TweenService:Create(InnerBar, TweenInfo.new(0.2), {Size = UDim2.new(ratio, 0, 1, 0)}):Play()
             Label.Text = name .. " : " .. tostring(val)
         end
-        CheckUIContentValidity()
         return BarObj
     end
 
     function Elements:AddBadge(name, statusText)
-        hasMainContent = true
         local BadgeFrame = Instance.new("Frame")
         BadgeFrame.Parent = ScrollContainer
         BadgeFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -2379,12 +2317,10 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             StatusLabel.Text = text
             if color then StatusBox.BackgroundColor3 = color end
         end
-        CheckUIContentValidity()
         return BadgeObj
     end
 
     function Elements:AddCopyButton(name, textToCopy)
-        hasMainContent = true
         local BtnFrame = Instance.new("TextButton")
         BtnFrame.Parent = ScrollContainer
         BtnFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -2412,11 +2348,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 task.delay(1.5, function() BtnFrame.Text = " " .. name end)
             end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddInput(name, placeholder, callback)
-        hasMainContent = true
         local InputFrame = Instance.new("Frame")
         InputFrame.Parent = ScrollContainer
         InputFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -2460,11 +2394,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         TrackConnection(TextBox.FocusLost:Connect(function(enterPressed)
             if callback then pcall(callback, TextBox.Text, enterPressed) end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddParagraph(titleText, contentText)
-        hasMainContent = true
         local ParaFrame = Instance.new("Frame")
         ParaFrame.Parent = ScrollContainer
         ParaFrame.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
@@ -2500,11 +2432,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
         ContentLabel.TextYAlignment = Enum.TextYAlignment.Top
         ContentLabel.ZIndex = 10
-        CheckUIContentValidity()
     end
 
     function Elements:AddLabel(text)
-        hasMainContent = true
         local LabelFrame = Instance.new("Frame")
         LabelFrame.Parent = ScrollContainer
         LabelFrame.BackgroundTransparency = 1
@@ -2522,11 +2452,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         TextLabel.TextSize = 11
         TextLabel.TextXAlignment = Enum.TextXAlignment.Left
         TextLabel.ZIndex = 10
-        CheckUIContentValidity()
     end
 
     function Elements:AddDivider()
-        hasMainContent = true
         local DivFrame = Instance.new("Frame")
         DivFrame.Parent = ScrollContainer
         DivFrame.BackgroundTransparency = 1
@@ -2540,11 +2468,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         Line.Position = UDim2.new(0, 4, 0.5, -1)
         Line.Size = UDim2.new(1, -8, 0, 2)
         Line.ZIndex = 10
-        CheckUIContentValidity()
     end
 
     function Elements:AddPerformanceOverlay()
-        hasMainContent = true
         local PerfFrame = Instance.new("Frame")
         PerfFrame.Name = "PerformanceOverlay"
         PerfFrame.Parent = ScreenGui
@@ -2591,7 +2517,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 lastUpdate = tick()
             end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddNotification(title, message, duration)
@@ -2647,7 +2572,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
     end
 
     function Elements:AddColorPicker(name, defaultColor, callback)
-        hasMainContent = true
         defaultColor = defaultColor or Color3.fromRGB(90, 150, 255)
         local PickerFrame = Instance.new("Frame")
         PickerFrame.Parent = ScrollContainer
@@ -2739,11 +2663,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         CreateMiniSlider(28, "R", r, function(val) r = val; local newCol = Color3.fromRGB(r, g, b); PreviewBox.BackgroundColor3 = newCol; if callback then pcall(callback, newCol) end end)
         CreateMiniSlider(48, "G", g, function(val) g = val; local newCol = Color3.fromRGB(r, g, b); PreviewBox.BackgroundColor3 = newCol; if callback then pcall(callback, newCol) end end)
         CreateMiniSlider(68, "B", b, function(val) b = val; local newCol = Color3.fromRGB(r, g, b); PreviewBox.BackgroundColor3 = newCol; if callback then pcall(callback, newCol) end end)
-        CheckUIContentValidity()
     end
 
     function Elements:AddDualRangeSlider(name, min, max, defaultMin, defaultMax, callback)
-        hasMainContent = true
         min = min or 0 max = max or 100 defaultMin = math.clamp(defaultMin or min, min, max) defaultMax = math.clamp(defaultMax or max, defaultMin, max)
         local RangeFrame = Instance.new("Frame")
         RangeFrame.Parent = ScrollContainer
@@ -2834,11 +2756,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 if callback then pcall(callback, currentMin, currentMax) end
             end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddButtonWithDropdown(name, options, buttonText, callback)
-        hasMainContent = true
         if type(buttonText) == "function" then callback = buttonText; buttonText = "Execute" end
         buttonText = buttonText or "Execute"
         local Frame = Instance.new("Frame")
@@ -2912,12 +2832,10 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
 
         local ControlObj = {}
         function ControlObj:SetButtonText(newText) ActionBtn.Text = newText end
-        CheckUIContentValidity()
         return ControlObj
     end
 
     function Elements:AddMultiDropdown(name, options, callback)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -2993,11 +2911,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 if callback then pcall(callback, selectedTable) end
             end))
         end
-        CheckUIContentValidity()
     end
 
     function Elements:AddKeybindWithToggle(name, defaultKey, callback)
-        hasMainContent = true
         defaultKey = defaultKey or Enum.KeyCode.E
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
@@ -3083,11 +2999,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 updateToggle(not isToggled)
             end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddStepSlider(name, min, max, step, default, callback)
-        hasMainContent = true
         step = step or 1 min = min or 0 max = max or 100 default = math.clamp(default or min, min, max)
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
@@ -3163,11 +3077,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         TrackConnection(UserInputService.InputChanged:Connect(function(input)
             if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then update(input) end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddStepper(name, min, max, default, step, callback)
-        hasMainContent = true
         min = min or 0 max = max or 100 step = step or 1 default = math.clamp(default or min, min, max)
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
@@ -3235,11 +3147,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             ValLbl.Text = tostring(currentVal)
             if callback then pcall(callback, currentVal) end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddAccordion(titleText, defaultOpen)
-        hasMainContent = true
         local isOpen = defaultOpen or false
         local AccordionFrame = Instance.new("Frame")
         AccordionFrame.Parent = ScrollContainer
@@ -3284,13 +3194,11 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             TweenService:Create(AccordionFrame, TweenInfo.new(0.25), { Size = isOpen and UDim2.new(1, 0, 0, 110) or UDim2.new(1, 0, 0, 38) }):Play()
         end))
 
-        CheckUIContentValidity()
         local AccObj = { Container = InnerScroll }
         return AccObj
     end
 
     function Elements:AddTextBoxWithButton(name, placeholder, buttonText, callback)
-        hasMainContent = true
         buttonText = buttonText or "Save"
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
@@ -3342,11 +3250,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         TrackConnection(ActionBtn.MouseButton1Click:Connect(function()
             if callback then pcall(callback, TextBox.Text) end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddRadioGroup(name, options, defaultIndex, callback)
-        hasMainContent = true
         defaultIndex = defaultIndex or 1
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
@@ -3407,11 +3313,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 if callback then pcall(callback, opt) end
             end))
         end
-        CheckUIContentValidity()
     end
 
     function Elements:AddStatusIndicator(name, statusText, isOnline)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -3462,12 +3366,10 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             StatusLbl.Text = text
             Dot.BackgroundColor3 = online and Color3.fromRGB(50, 220, 100) or Color3.fromRGB(220, 50, 50)
         end
-        CheckUIContentValidity()
         return StatusObj
     end
 
     function Elements:AddSearchInput(placeholder, callback)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -3497,11 +3399,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         TrackConnection(TextBox.Changed:Connect(function(prop)
             if prop == "Text" and callback then pcall(callback, TextBox.Text) end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddInteractiveCard(title, desc, buttonText, callback)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(38, 38, 50)
@@ -3553,11 +3453,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         BCorner.Parent = Btn
 
         TrackConnection(Btn.MouseButton1Click:Connect(function() if callback then pcall(callback) end end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddKeybindPicker(name, defaultKey, callback)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -3613,11 +3511,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 if callback then pcall(callback, currentKey) end
             end
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddNotificationBanner(message, bannerType)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = (bannerType == "Warning") and Color3.fromRGB(80, 60, 20) or Color3.fromRGB(20, 60, 80)
@@ -3642,11 +3538,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         Lbl.TextSize = 10
         Lbl.TextXAlignment = Enum.TextXAlignment.Left
         Lbl.ZIndex = 10
-        CheckUIContentValidity()
     end
 
     function Elements:AddIconHeader(title, iconName)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundTransparency = 1
@@ -3666,11 +3560,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         Lbl.TextSize = 12
         Lbl.TextXAlignment = Enum.TextXAlignment.Left
         Lbl.ZIndex = 10
-        CheckUIContentValidity()
     end
 
     function Elements:AddColorPalette(name, colorList, callback)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -3721,11 +3613,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 if callback then pcall(callback, col) end
             end))
         end
-        CheckUIContentValidity()
     end
 
     function Elements:AddMultiSlider(name, min, max, defaultA, defaultB, callback)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -3747,11 +3637,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         Label.TextSize = 11
         Label.TextXAlignment = Enum.TextXAlignment.Left
         Label.ZIndex = 10
-        CheckUIContentValidity()
     end
 
     function Elements:AddCounterBadge(name, count)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -3788,11 +3676,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         local BCorner = Instance.new("UICorner")
         BCorner.CornerRadius = UDim.new(1, 0)
         BCorner.Parent = Badge
-        CheckUIContentValidity()
     end
 
     function Elements:AddValueTracker(name, valueText)
-        hasMainContent = true
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
         Frame.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
@@ -3828,22 +3714,18 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         ValLbl.TextSize = 11
         ValLbl.TextXAlignment = Enum.TextXAlignment.Right
         ValLbl.ZIndex = 10
-        CheckUIContentValidity()
     end
 
     -------------------------------------------------------------------
-    -- 25 KOMPONEN / FITUR BARU TAMBAHAN
+    -- 25 KOMPONEN / FITUR TAMBAHAN
     -------------------------------------------------------------------
     function Elements:AddCodeBox(codeString)
-        hasMainContent = true
         local Frame = Instance.new("Frame") Frame.Parent = ScrollContainer Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 26) Frame.Size = UDim2.new(1, 0, 0, 70) Frame.ZIndex = 9
         local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
         local Txt = Instance.new("TextBox") Txt.Parent = Frame Txt.BackgroundTransparency = 1 Txt.Position = UDim2.new(0, 8, 0, 8) Txt.Size = UDim2.new(1, -16, 1, -16) Txt.Font = Enum.Font.Code Txt.Text = codeString or "-- Code block" Txt.TextColor3 = Color3.fromRGB(150, 220, 255) Txt.TextSize = 10 Txt.ClearTextOnFocus = false Txt.MultiLine = true Txt.TextXAlignment = Enum.TextXAlignment.Left Txt.TextYAlignment = Enum.TextYAlignment.Top Txt.ZIndex = 10
-        CheckUIContentValidity()
     end
 
     function Elements:AddTagList(title, tags)
-        hasMainContent = true
         local Frame = Instance.new("Frame") Frame.Parent = ScrollContainer Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54) Frame.Size = UDim2.new(1, 0, 0, 42) Frame.ZIndex = 9
         local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
         local Lbl = Instance.new("TextLabel") Lbl.Parent = Frame Lbl.BackgroundTransparency = 1 Lbl.Position = UDim2.new(0, 10, 0, 4) Lbl.Size = UDim2.new(1, -20, 0, 14) Lbl.Font = Enum.Font.GothamBold Lbl.Text = title Lbl.TextColor3 = Color3.fromRGB(255, 255, 255) Lbl.TextSize = 11 Lbl.TextXAlignment = Enum.TextXAlignment.Left Lbl.ZIndex = 10
@@ -3853,11 +3735,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             local Tag = Instance.new("TextLabel") Tag.Parent = Con Tag.BackgroundColor3 = Color3.fromRGB(60, 60, 80) Tag.Size = UDim2.new(0, 50, 0, 16) Tag.Font = Enum.Font.Gotham Tag.Text = t Tag.TextColor3 = Color3.fromRGB(255, 255, 255) Tag.TextSize = 9 Tag.ZIndex = 11
             local TC = Instance.new("UICorner") TC.CornerRadius = UDim.new(0, 3) TC.Parent = Tag
         end
-        CheckUIContentValidity()
     end
 
     function Elements:AddSpoiler(title, text)
-        hasMainContent = true
         local isOpen = false
         local Frame = Instance.new("Frame") Frame.Parent = ScrollContainer Frame.BackgroundColor3 = Color3.fromRGB(38, 38, 48) Frame.Size = UDim2.new(1, 0, 0, 36) Frame.ClipsDescendants = true Frame.ZIndex = 9
         local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
@@ -3868,11 +3748,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             Btn.Text = isOpen and (" [-] " .. title) or (" [+] " .. title)
             TweenService:Create(Frame, TweenInfo.new(0.2), {Size = isOpen and UDim2.new(1, 0, 0, 72) or UDim2.new(1, 0, 0, 36)}):Play()
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddRating(title, callback)
-        hasMainContent = true
         local Frame = Instance.new("Frame") Frame.Parent = ScrollContainer Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54) Frame.Size = UDim2.new(1, 0, 0, 42) Frame.ZIndex = 9
         local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
         local Lbl = Instance.new("TextLabel") Lbl.Parent = Frame Lbl.BackgroundTransparency = 1 Lbl.Position = UDim2.new(0, 12, 0, 0) Lbl.Size = UDim2.new(0, 120, 1, 0) Lbl.Font = Enum.Font.Gotham Lbl.Text = title Lbl.TextColor3 = Color3.fromRGB(255, 255, 255) Lbl.TextSize = 12 Lbl.TextXAlignment = Enum.TextXAlignment.Left Lbl.ZIndex = 10
@@ -3890,11 +3768,9 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 if callback then pcall(callback, i) end
             end))
         end
-        CheckUIContentValidity()
     end
 
     function Elements:AddSpinner(name)
-        hasMainContent = true
         local Frame = Instance.new("Frame") Frame.Parent = ScrollContainer Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54) Frame.Size = UDim2.new(1, 0, 0, 36) Frame.ZIndex = 9
         local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
         local Lbl = Instance.new("TextLabel") Lbl.Parent = Frame Lbl.BackgroundTransparency = 1 Lbl.Position = UDim2.new(0, 12, 0, 0) Lbl.Size = UDim2.new(1, -50, 1, 0) Lbl.Font = Enum.Font.Gotham Lbl.Text = name Lbl.TextColor3 = Color3.fromRGB(255, 255, 255) Lbl.TextSize = 12 Lbl.TextXAlignment = Enum.TextXAlignment.Left Lbl.ZIndex = 10
@@ -3905,7 +3781,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
                 task.wait(0.01)
             end
         end)
-        CheckUIContentValidity()
     end
 
     function Elements:AddSwitchBox(name, default, callback)
@@ -3913,15 +3788,12 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
     end
 
     function Elements:AddBreadcrumb(steps)
-        hasMainContent = true
         local Frame = Instance.new("Frame") Frame.Parent = ScrollContainer Frame.BackgroundColor3 = Color3.fromRGB(38, 38, 48) Frame.Size = UDim2.new(1, 0, 0, 32) Frame.ZIndex = 9
         local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
         local Lbl = Instance.new("TextLabel") Lbl.Parent = Frame Lbl.BackgroundTransparency = 1 Lbl.Position = UDim2.new(0, 10, 0, 0) Lbl.Size = UDim2.new(1, -20, 1, 0) Lbl.Font = Enum.Font.GothamBold Lbl.Text = table.concat(steps or {"Home", "Settings", "Profile"}, " > ") Lbl.TextColor3 = currentTextThemeColor Lbl.TextSize = 11 Lbl.TextXAlignment = Enum.TextXAlignment.Left Lbl.ZIndex = 10
-        CheckUIContentValidity()
     end
 
     function Elements:AddExpandableCard(title, details)
-        hasMainContent = true
         local isOpen = false
         local Frame = Instance.new("Frame") Frame.Parent = ScrollContainer Frame.BackgroundColor3 = Color3.fromRGB(38, 38, 48) Frame.Size = UDim2.new(1, 0, 0, 40) Frame.ClipsDescendants = true Frame.ZIndex = 9
         local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
@@ -3931,19 +3803,16 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
             isOpen = not isOpen
             TweenService:Create(Frame, TweenInfo.new(0.25), {Size = isOpen and UDim2.new(1, 0, 0, 85) or UDim2.new(1, 0, 0, 40)}):Play()
         end))
-        CheckUIContentValidity()
     end
 
     function Elements:AddStatisticCard(title, value)
-        hasMainContent = true
         local Frame = Instance.new("Frame") Frame.Parent = ScrollContainer Frame.BackgroundColor3 = Color3.fromRGB(34, 34, 44) Frame.Size = UDim2.new(1, 0, 0, 50) Frame.ZIndex = 9
         local Corner = Instance.new("UICorner") Corner.CornerRadius = UDim.new(0, 6) Corner.Parent = Frame
         local Lbl = Instance.new("TextLabel") Lbl.Parent = Frame Lbl.BackgroundTransparency = 1 Lbl.Position = UDim2.new(0, 12, 0, 6) Lbl.Size = UDim2.new(1, -24, 0, 16) Lbl.Font = Enum.Font.Gotham Lbl.Text = title Lbl.TextColor3 = Color3.fromRGB(170, 170, 190) Lbl.TextSize = 10 Lbl.TextXAlignment = Enum.TextXAlignment.Left Lbl.ZIndex = 10
         local Val = Instance.new("TextLabel") Val.Parent = Frame Val.BackgroundTransparency = 1 Val.Position = UDim2.new(0, 12, 0, 22) Val.Size = UDim2.new(1, -24, 0, 22) Val.Font = Enum.Font.GothamBold Val.Text = tostring(value) Val.TextColor3 = currentTextThemeColor Val.TextSize = 14 Val.TextXAlignment = Enum.TextXAlignment.Left Val.ZIndex = 10
-        CheckUIContentValidity()
     end
 
-    -- Sisa 15 komponen tambahan
+    -- Sisa komponen tambahan
     function Elements:AddAvatarBadge(username) Elements:AddStatusIndicator(username, "Online", true) end
     function Elements:AddTimelineEvent(timeStr, eventDesc) Elements:AddParagraph(timeStr, eventDesc) end
     function Elements:AddAudioPlayerMock(trackName) Elements:AddButton("Play Audio: " .. trackName, "lucide-play", function() end) end
@@ -3964,8 +3833,6 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         return Elements:AddDropdown(name, options, callback)
     end
 
--- Salinan bagian paling bawah yang BENAR untuk file Library Anda:
-    CheckUIContentValidity()
     return Elements
 end
 
