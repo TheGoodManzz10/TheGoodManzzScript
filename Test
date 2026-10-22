@@ -1,6 +1,6 @@
 -- ================================================================= --
--- AETHERLIB v10.5 ULTIMATE - STARLIGHT ENGINE v10.5 (FULL COMPONENTS)
--- UPDATE: 100% KOMPONEN ASLI LENGKAP + FIX ICON & AUTO CLEANUP UI
+-- AETHERLIB v10.5 ULTIMATE - STARLIGHT ENGINE v10.5 (FULL FIXED)
+-- UPDATE: 100% KOMPONEN ASLI LENGKAP + FIX AUTO UI CLEANUP & ICON
 -- ================================================================= --
 
 local CoreGui = game:GetService("CoreGui")
@@ -478,23 +478,12 @@ function AetherLib:Init(customCommandsURL)
     local Elements = {}
 
     -------------------------------------------------------------------
-    -- AUTO UI CLEANUP (HAPUS UI & TOMBOL YANG TIDAK DIPAKAI)
+    -- AUTO UI CLEANUP (DIREVISI: AMAN & TIDAK MENGHAPUS TOMBOL)
     -------------------------------------------------------------------
-    task.delay(0.6, function()
-        local mainCount = #ScrollContainer:GetChildren() - 1
-        local starlightTabCount = #StarlightSidebar:GetChildren() - 1
-        if mainCount <= 0 and starlightTabCount > 0 then
-            if MainFrame then MainFrame:Destroy() end
-            if FloatButton then FloatButton:Destroy() end
-            if SideBar then SideBar.Visible = false end
-            StarlightFrame.Size = UDim2.new(0, 550, 0, 410)
-            StarlightFrame.Position = UDim2.new(1, -565, 0.1, 0)
-            StarlightFrame.Visible = true
-        elseif starlightTabCount <= 0 and mainCount > 0 then
-            if SideBar then SideBar:Destroy() end
-            if StarlightFrame then StarlightFrame:Destroy() end
-            MainFrame.Visible = true
-        end
+    task.delay(0.8, function()
+        -- Pastikan Floating Button & Sidebar selalu aktif dan aman
+        if FloatButton then FloatButton.Visible = true end
+        if SideBar then SideBar.Visible = true end
     end)
 
     function Elements:EnableCommandBar()
@@ -1054,7 +1043,6 @@ function AetherLib:Init(customCommandsURL)
             return BadgeObj
         end
 
-        -- 1. Step Slider (Slider dengan kelipatan langkah)
         function TabObj:AddTabStepSlider(sliderName, min, max, step, default, callback)
             step = step or 1
             min = min or 0
@@ -1127,7 +1115,6 @@ function AetherLib:Init(customCommandsURL)
             end))
         end
 
-        -- 2. Dropdown Tab
         function TabObj:AddTabDropdown(name, options, callback)
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
@@ -1188,7 +1175,6 @@ function AetherLib:Init(customCommandsURL)
             end
         end
 
-        -- 3. Keybind Tab
         function TabObj:AddTabKeybind(name, defaultKey, callback)
             defaultKey = defaultKey or Enum.KeyCode.F
             local Frame = Instance.new("Frame")
@@ -1240,7 +1226,6 @@ function AetherLib:Init(customCommandsURL)
             end))
         end
 
-        -- 4. Color Picker Tab
         function TabObj:AddTabColorPicker(name, defaultColor, callback)
             defaultColor = defaultColor or Color3.fromRGB(90, 150, 255)
             local Frame = Instance.new("Frame")
@@ -1324,7 +1309,6 @@ function AetherLib:Init(customCommandsURL)
             MakeMiniSlider(64, "B", b, function(v) b = v; local c = Color3.fromRGB(r,g,b); Preview.BackgroundColor3 = c; if callback then pcall(callback, c) end end)
         end
 
-        -- 5. Copy Button Tab
         function TabObj:AddTabCopyButton(name, textToCopy)
             local Frame = Instance.new("TextButton")
             Frame.Parent = TabContent
@@ -1349,7 +1333,6 @@ function AetherLib:Init(customCommandsURL)
             end))
         end
 
-        -- 6. Paragraph Tab
         function TabObj:AddTabParagraph(titleText, contentText)
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
@@ -1384,7 +1367,6 @@ function AetherLib:Init(customCommandsURL)
             TDesc.ZIndex = 23
         end
 
-        -- 7. Radio Group Tab
         function TabObj:AddTabRadioGroup(name, options, defaultIndex, callback)
             defaultIndex = defaultIndex or 1
             local Frame = Instance.new("Frame")
@@ -1441,7 +1423,6 @@ function AetherLib:Init(customCommandsURL)
             end
         end
 
-        -- 8. Status Indicator Tab
         function TabObj:AddTabStatusIndicator(name, statusText, isOnline)
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
@@ -1484,7 +1465,6 @@ function AetherLib:Init(customCommandsURL)
             SLbl.ZIndex = 23
         end
 
-        -- 9. Search Input Tab
         function TabObj:AddTabSearchInput(placeholder, callback)
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
@@ -1513,7 +1493,6 @@ function AetherLib:Init(customCommandsURL)
             end))
         end
 
-        -- 10. Notification Banner Tab
         function TabObj:AddTabNotificationBanner(message, bannerType)
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
@@ -1585,7 +1564,7 @@ function AetherLib:Init(customCommandsURL)
     end))
 
     -------------------------------------------------------------------
-    -- SEEDING SCRIPT EKSTERNAL (FIX ERROR 404 URL)
+    -- SEEDING SCRIPT EKSTERNAL
     -------------------------------------------------------------------
     local targetURL = customCommandsURL or AetherLib.CommandsURL
     task.spawn(function()
@@ -1599,7 +1578,7 @@ function AetherLib:Init(customCommandsURL)
     end)
 
     -------------------------------------------------------------------
-    -- SELURUH KOMPONEN UTAMA v9.3 / v10.0 (LENGKAP 100%)
+    -- SELURUH KOMPONEN UTAMA (LENGKAP 100%)
     -------------------------------------------------------------------
     function Elements:Curved()
         if StarlightCorner then
