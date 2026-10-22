@@ -1,23 +1,21 @@
--- =================================================================
--- AETHERLIB v9.9 ULTIMATE - FULL COMPONENTS v9.3 + STARLIGHT ENGINE v9.9
--- UPDATE: SEMUA KOMPONEN v9.3 DIKEMBALIKAN LENGKAP + FIX 404 & PADDING SIDEBAR
--- =================================================================
+-- ================================================================= --
+-- AETHERLIB v10.0 ULTIMATE - STARLIGHT ENGINE v10.0 (FULL COMPONENTS)
+-- UPDATE: 100% KOMPONEN ASLI LENGKAP + FIX ICON & AUTO CLEANUP UI
+-- ================================================================= --
 local CoreGui = game:GetService("CoreGui")
 
 -- Paksa hapus semua GUI lama bernama "AetherGenUI" secara total
 for _, gui in ipairs(CoreGui:GetChildren()) do
     if gui.Name == "AetherGenUI" then
-        pcall(function()
-            gui:Destroy()
-        end)
+        pcall(function() gui:Destroy() end)
     end
 end
 
-local AetherLib = { 
-    Connections = {}, 
-    Instances = {}, 
-    RegisteredCommands = {}, 
-    CommandsURL = "https://raw.githubusercontent.com/TheGoodManzz10/TheGoodManzzScript/refs/heads/main/CommandFeaturs" 
+local AetherLib = {
+    Connections = {},
+    Instances = {},
+    RegisteredCommands = {},
+    CommandsURL = "https://raw.githubusercontent.com/TheGoodManzz10/TheGoodManzzScript/refs/heads/main/CommandFeaturs"
 }
 
 function AetherLib:Init(customCommandsURL)
@@ -49,62 +47,62 @@ function AetherLib:Init(customCommandsURL)
     -- REGISTRI ICON LUCIDE ASSET ID
     -------------------------------------------------------------------
     local Icons = {
-        ["Logo"]                    = "rbxassetid://107391174248131",
-        ["Settings"]                = "rbxassetid://10734950309",
-        ["SpinOuter"]               = "rbxassetid://109694296016043",
-        ["Block"]                   = "rbxassetid://10709782497",
-        ["lucide-accessibility"]    = "rbxassetid://10709751939",
-        ["lucide-activity"]         = "rbxassetid://10709752035",
-        ["lucide-alert-circle"]     = "rbxassetid://10709752996",
-        ["lucide-alert-triangle"]   = "rbxassetid://10709753149",
-        ["lucide-archive"]          = "rbxassetid://10709762233",
-        ["lucide-award"]            = "rbxassetid://10709769406",
-        ["lucide-bar-chart"]        = "rbxassetid://10709773755",
-        ["lucide-bell"]             = "rbxassetid://10709775704",
-        ["lucide-bookmark"]         = "rbxassetid://10709782154",
-        ["lucide-box"]              = "rbxassetid://10709782497",
-        ["lucide-check"]            = "rbxassetid://10709790644",
-        ["lucide-chevron-down"]     = "rbxassetid://10709790948",
-        ["lucide-chevron-right"]    = "rbxassetid://10709791437",
-        ["lucide-clipboard"]        = "rbxassetid://10709799288",
-        ["lucide-code"]             = "rbxassetid://10709810463",
-        ["lucide-command"]          = "rbxassetid://10709811365",
-        ["lucide-copy"]             = "rbxassetid://10709812159",
-        ["lucide-database"]         = "rbxassetid://10709818996",
-        ["lucide-edit"]             = "rbxassetid://10734883598",
-        ["lucide-eye"]              = "rbxassetid://10723346959",
-        ["lucide-file-text"]        = "rbxassetid://10723367380",
-        ["lucide-flame"]            = "rbxassetid://10723376114",
-        ["lucide-folder"]           = "rbxassetid://10723387563",
-        ["lucide-gamepad"]          = "rbxassetid://10723395457",
-        ["lucide-gauge"]            = "rbxassetid://10723395708",
-        ["lucide-globe"]            = "rbxassetid://10723404337",
-        ["lucide-heart"]            = "rbxassetid://10723406885",
-        ["lucide-home"]             = "rbxassetid://10723407389",
-        ["lucide-info"]             = "rbxassetid://10723415903",
-        ["lucide-key"]              = "rbxassetid://10723416652",
-        ["lucide-layers"]           = "rbxassetid://10723424505",
-        ["lucide-layout"]           = "rbxassetid://10723425376",
-        ["lucide-lock"]             = "rbxassetid://10723434711",
-        ["lucide-map"]              = "rbxassetid://10734886202",
-        ["lucide-palette"]          = "rbxassetid://10734910430",
-        ["lucide-play"]             = "rbxassetid://10734923549",
-        ["lucide-plus"]             = "rbxassetid://10734924532",
-        ["lucide-power"]            = "rbxassetid://10734930466",
-        ["lucide-refresh-cw"]       = "rbxassetid://10734933222",
-        ["lucide-rocket"]           = "rbxassetid://10734934585",
-        ["lucide-search"]           = "rbxassetid://10734943674",
-        ["lucide-settings"]         = "rbxassetid://10734950309",
-        ["lucide-shield"]           = "rbxassetid://10734951847",
-        ["lucide-signal"]           = "rbxassetid://10734961133",
-        ["lucide-star"]             = "rbxassetid://10734966248",
-        ["lucide-sword"]            = "rbxassetid://10734975486",
-        ["lucide-terminal"]         = "rbxassetid://10734982144",
-        ["lucide-user"]             = "rbxassetid://10747373176",
-        ["lucide-wifi"]             = "rbxassetid://10747382504",
-        ["lucide-wrench"]           = "rbxassetid://10747383470",
-        ["lucide-x"]                = "rbxassetid://10747384394",
-        ["lucide-x-circle"]         = "rbxassetid://10747383819"
+        ["Logo"] = "rbxassetid://107391174248131",
+        ["Settings"] = "rbxassetid://10734950309",
+        ["SpinOuter"] = "rbxassetid://109694296016043",
+        ["Block"] = "rbxassetid://10709782497",
+        ["lucide-accessibility"] = "rbxassetid://10709751939",
+        ["lucide-activity"] = "rbxassetid://10709752035",
+        ["lucide-alert-circle"] = "rbxassetid://10709752996",
+        ["lucide-alert-triangle"] = "rbxassetid://10709753149",
+        ["lucide-archive"] = "rbxassetid://10709762233",
+        ["lucide-award"] = "rbxassetid://10709769406",
+        ["lucide-bar-chart"] = "rbxassetid://10709773755",
+        ["lucide-bell"] = "rbxassetid://10709775704",
+        ["lucide-bookmark"] = "rbxassetid://10709782154",
+        ["lucide-box"] = "rbxassetid://10709782497",
+        ["lucide-check"] = "rbxassetid://10709790644",
+        ["lucide-chevron-down"] = "rbxassetid://10709790948",
+        ["lucide-chevron-right"] = "rbxassetid://10709791437",
+        ["lucide-clipboard"] = "rbxassetid://10709799288",
+        ["lucide-code"] = "rbxassetid://10709810463",
+        ["lucide-command"] = "rbxassetid://10709811365",
+        ["lucide-copy"] = "rbxassetid://10709812159",
+        ["lucide-database"] = "rbxassetid://10709818996",
+        ["lucide-edit"] = "rbxassetid://10734883598",
+        ["lucide-eye"] = "rbxassetid://10723346959",
+        ["lucide-file-text"] = "rbxassetid://10723367380",
+        ["lucide-flame"] = "rbxassetid://10723376114",
+        ["lucide-folder"] = "rbxassetid://10723387563",
+        ["lucide-gamepad"] = "rbxassetid://10723395457",
+        ["lucide-gauge"] = "rbxassetid://10723395708",
+        ["lucide-globe"] = "rbxassetid://10723404337",
+        ["lucide-heart"] = "rbxassetid://10723406885",
+        ["lucide-home"] = "rbxassetid://10723407389",
+        ["lucide-info"] = "rbxassetid://10723415903",
+        ["lucide-key"] = "rbxassetid://10723416652",
+        ["lucide-layers"] = "rbxassetid://10723424505",
+        ["lucide-layout"] = "rbxassetid://10723425376",
+        ["lucide-lock"] = "rbxassetid://10723434711",
+        ["lucide-map"] = "rbxassetid://10734886202",
+        ["lucide-palette"] = "rbxassetid://10734910430",
+        ["lucide-play"] = "rbxassetid://10734923549",
+        ["lucide-plus"] = "rbxassetid://10734924532",
+        ["lucide-power"] = "rbxassetid://10734930466",
+        ["lucide-refresh-cw"] = "rbxassetid://10734933222",
+        ["lucide-rocket"] = "rbxassetid://10734934585",
+        ["lucide-search"] = "rbxassetid://10734943674",
+        ["lucide-settings"] = "rbxassetid://10734950309",
+        ["lucide-shield"] = "rbxassetid://10734951847",
+        ["lucide-signal"] = "rbxassetid://10734961133",
+        ["lucide-star"] = "rbxassetid://10734966248",
+        ["lucide-sword"] = "rbxassetid://10734975486",
+        ["lucide-terminal"] = "rbxassetid://10734982144",
+        ["lucide-user"] = "rbxassetid://10747373176",
+        ["lucide-wifi"] = "rbxassetid://10747382504",
+        ["lucide-wrench"] = "rbxassetid://10747383470",
+        ["lucide-x"] = "rbxassetid://10747384394",
+        ["lucide-x-circle"] = "rbxassetid://10747383819"
     }
 
     local function CreateIcon(iconNameOrId, parent, position, size, zIndex)
@@ -113,7 +111,6 @@ function AetherLib:Init(customCommandsURL)
         img.Position = position or UDim2.new(0, 0, 0, 0)
         img.Size = size or UDim2.new(0, 16, 0, 16)
         img.ZIndex = zIndex or 10
-
         if Icons[iconNameOrId] then
             img.Image = Icons[iconNameOrId]
         elseif type(iconNameOrId) == "string" and (iconNameOrId:find("rbxassetid://") or iconNameOrId:find("http")) then
@@ -150,7 +147,6 @@ function AetherLib:Init(customCommandsURL)
             draggingFloat = true
             dragStartFloat = input.Position
             startPosFloat = FloatButton.Position
-            
             TrackConnection(input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     draggingFloat = false
@@ -173,7 +169,7 @@ function AetherLib:Init(customCommandsURL)
     end))
 
     -------------------------------------------------------------------
-    -- 2. SIDEBAR ICON INDIKATOR v9.9
+    -- 2. SIDEBAR ICON INDIKATOR
     -------------------------------------------------------------------
     local SideBar = Instance.new("TextButton")
     SideBar.Name = "SideBarIndicator"
@@ -253,7 +249,7 @@ function AetherLib:Init(customCommandsURL)
     SHeaderTitle.Position = UDim2.new(0, 12, 0, 0)
     SHeaderTitle.Size = UDim2.new(1, -50, 1, 0)
     SHeaderTitle.Font = Enum.Font.GothamBold
-    SHeaderTitle.Text = "STARLIGHT ENGINE v9.9"
+    SHeaderTitle.Text = "STARLIGHT ENGINE v10.0"
     SHeaderTitle.TextColor3 = Color3.fromRGB(90, 150, 255)
     SHeaderTitle.TextSize = 12
     SHeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -288,26 +284,22 @@ function AetherLib:Init(customCommandsURL)
 
     local isAnimating = false
     local function ToggleUI(state)
-        if isAnimating then return end
+        if isAnimating or not MainFrame or not MainFrame.Parent then return end
         if state then
             isAnimating = true
             MainFrame.Size = UDim2.new(0, 300, 0, 0)
             MainFrame.Visible = true
-            SideBar.Visible = false
-            local tween = TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 300, 0, 410)
-            })
+            if SideBar and SideBar.Parent then SideBar.Visible = false end
+            local tween = TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = UDim2.new(0, 300, 0, 410) })
             tween:Play()
             tween.Completed:Connect(function() isAnimating = false end)
         else
             isAnimating = true
-            local tween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Size = UDim2.new(0, 300, 0, 0)
-            })
+            local tween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Size = UDim2.new(0, 300, 0, 0) })
             tween:Play()
             tween.Completed:Connect(function()
                 MainFrame.Visible = false
-                SideBar.Visible = true
+                if SideBar and SideBar.Parent then SideBar.Visible = true end
                 isAnimating = false
             end)
         end
@@ -316,14 +308,11 @@ function AetherLib:Init(customCommandsURL)
     TrackConnection(SCloseBtn.MouseButton1Click:Connect(function()
         if isAnimating then return end
         isAnimating = true
-        local tweenClose = TweenService:Create(StarlightFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 410),
-            Position = UDim2.new(1, -15, 0.1, 0)
-        })
+        local tweenClose = TweenService:Create(StarlightFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), { Size = UDim2.new(0, 0, 0, 410), Position = UDim2.new(1, -15, 0.1, 0) })
         tweenClose:Play()
         tweenClose.Completed:Connect(function()
             StarlightFrame.Visible = false
-            SideBar.Visible = true
+            if SideBar and SideBar.Parent then SideBar.Visible = true end
             isAnimating = false
         end)
     end))
@@ -331,38 +320,28 @@ function AetherLib:Init(customCommandsURL)
     TrackConnection(SideBar.MouseButton1Click:Connect(function()
         if isAnimating then return end
         isAnimating = true
-        if MainFrame.Visible then MainFrame.Visible = false end
-
+        if MainFrame and MainFrame.Parent and MainFrame.Visible then MainFrame.Visible = false end
         SideBar.Visible = false
         StarlightFrame.Size = UDim2.new(0, 300, 0, 410)
         StarlightFrame.Position = UDim2.new(1, -315, 0.1, 0)
         StarlightFrame.Visible = true
-
-        local tweenExpand = TweenService:Create(StarlightFrame, TweenInfo.new(0.65, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 550, 0, 410),
-            Position = UDim2.new(1, -565, 0.1, 0)
-        })
+        local tweenExpand = TweenService:Create(StarlightFrame, TweenInfo.new(0.65, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 550, 0, 410), Position = UDim2.new(1, -565, 0.1, 0) })
         tweenExpand:Play()
-        tweenExpand.Completed:Connect(function()
-            isAnimating = false
-        end)
+        tweenExpand.Completed:Connect(function() isAnimating = false end)
     end))
 
     TrackConnection(FloatButton.MouseButton1Click:Connect(function()
         if isAnimating then return end
-        if StarlightFrame.Visible then
+        if StarlightFrame and StarlightFrame.Parent and StarlightFrame.Visible then
             isAnimating = true
-            local tweenShrink = TweenService:Create(StarlightFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Size = UDim2.new(0, 0, 0, 410),
-                Position = UDim2.new(1, -15, 0.1, 0)
-            })
+            local tweenShrink = TweenService:Create(StarlightFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Size = UDim2.new(0, 0, 0, 410), Position = UDim2.new(1, -15, 0.1, 0) })
             tweenShrink:Play()
             tweenShrink.Completed:Connect(function()
                 StarlightFrame.Visible = false
-                SideBar.Visible = true
+                if SideBar and SideBar.Parent then SideBar.Visible = true end
                 isAnimating = false
             end)
-        else
+        elseif MainFrame and MainFrame.Parent then
             ToggleUI(not MainFrame.Visible)
         end
     end))
@@ -384,7 +363,7 @@ function AetherLib:Init(customCommandsURL)
     Title.Position = UDim2.new(0, 12, 0, 0)
     Title.Size = UDim2.new(1, -80, 0, 32)
     Title.Font = Enum.Font.GothamBold
-    Title.Text = "AetherGen 9.9"
+    Title.Text = "AetherGen 10.0"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -401,12 +380,10 @@ function AetherLib:Init(customCommandsURL)
     CloseBtn.TextSize = 14
     CloseBtn.ZIndex = 10
 
-    TrackConnection(CloseBtn.MouseButton1Click:Connect(function()
-        ToggleUI(false)
-    end))
+    TrackConnection(CloseBtn.MouseButton1Click:Connect(function() ToggleUI(false) end))
 
     -------------------------------------------------------------------
-    -- 4. COMMAND BAR v9.9
+    -- 4. COMMAND BAR
     -------------------------------------------------------------------
     local CmdContainer = Instance.new("Frame")
     CmdContainer.Parent = MainFrame
@@ -500,20 +477,23 @@ function AetherLib:Init(customCommandsURL)
     local Elements = {}
 
     -------------------------------------------------------------------
-    -- AUTO UI CLEANUP
+    -- AUTO UI CLEANUP (HAPUS UI & TOMBOL YANG TIDAK DIPAKAI)
     -------------------------------------------------------------------
     task.delay(0.6, function()
         local mainCount = #ScrollContainer:GetChildren() - 1
         local starlightTabCount = #StarlightSidebar:GetChildren() - 1
 
         if mainCount <= 0 and starlightTabCount > 0 then
-            SideBar.Visible = false
+            if MainFrame then MainFrame:Destroy() end
+            if FloatButton then FloatButton:Destroy() end
+            if SideBar then SideBar.Visible = false end
+
             StarlightFrame.Size = UDim2.new(0, 550, 0, 410)
             StarlightFrame.Position = UDim2.new(1, -565, 0.1, 0)
             StarlightFrame.Visible = true
         elseif starlightTabCount <= 0 and mainCount > 0 then
-            SideBar:Destroy()
-            StarlightFrame:Destroy()
+            if SideBar then SideBar:Destroy() end
+            if StarlightFrame then StarlightFrame:Destroy() end
             MainFrame.Visible = true
         end
     end)
@@ -571,6 +551,7 @@ function AetherLib:Init(customCommandsURL)
     CLClose.TextColor3 = Color3.fromRGB(255, 255, 255)
     CLClose.TextSize = 12
     CLClose.ZIndex = 251
+
     TrackConnection(CLClose.MouseButton1Click:Connect(function() CmdListFrame.Visible = false end))
 
     local CLScroll = Instance.new("ScrollingFrame")
@@ -646,8 +627,8 @@ function AetherLib:Init(customCommandsURL)
     local DFCCorner = Instance.new("UICorner")
     DFCCorner.CornerRadius = UDim.new(0, 4)
     DFCCorner.Parent = DFCloseBtn
-    TrackConnection(DFCloseBtn.MouseButton1Click:Connect(function() DetailFrame.Visible = false end))
 
+    TrackConnection(DFCloseBtn.MouseButton1Click:Connect(function() DetailFrame.Visible = false end))
     TrackConnection(CmdListBtn.MouseButton1Click:Connect(function() CmdListFrame.Visible = not CmdListFrame.Visible end))
     TrackConnection(SCmdListBtn.MouseButton1Click:Connect(function() CmdListFrame.Visible = not CmdListFrame.Visible end))
 
@@ -680,25 +661,18 @@ function AetherLib:Init(customCommandsURL)
     end
 
     -------------------------------------------------------------------
-    -- STARLIGHT ENGINE API & PADDING FIX v9.9 (+5 NEW TAB COMPONENTS)
+    -- STARLIGHT ENGINE API (FIX ICON ALIGNMENT)
     -------------------------------------------------------------------
     local StarlightTabs = {}
+
     function Elements:AddTab(tabName, iconName)
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = tabName .. "_StarlightTab"
         TabBtn.Parent = StarlightSidebar
         TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
         TabBtn.Size = UDim2.new(1, 0, 0, 32)
-        TabBtn.Font = Enum.Font.GothamMedium
-        TabBtn.Text = tabName
-        TabBtn.TextColor3 = Color3.fromRGB(170, 170, 190)
-        TabBtn.TextSize = 11
-        TabBtn.TextXAlignment = Enum.TextXAlignment.Left
+        TabBtn.Text = ""
         TabBtn.ZIndex = 22
-
-        local TabPadding = Instance.new("UIPadding")
-        TabPadding.Parent = TabBtn
-        TabPadding.PaddingLeft = iconName and UDim.new(0, 32) or UDim.new(0, 10)
 
         local TabCorner = Instance.new("UICorner")
         TabCorner.CornerRadius = UDim.new(0, 6)
@@ -709,9 +683,32 @@ function AetherLib:Init(customCommandsURL)
         TabStroke.Thickness = 1
         TabStroke.Parent = TabBtn
 
+        local HLayout = Instance.new("UIListLayout")
+        HLayout.Parent = TabBtn
+        HLayout.FillDirection = Enum.FillDirection.Horizontal
+        HLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+        HLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        HLayout.Padding = UDim.new(0, 8)
+
+        local TabPadding = Instance.new("UIPadding")
+        TabPadding.Parent = TabBtn
+        TabPadding.PaddingLeft = UDim.new(0, 8)
+
         if iconName then
-            CreateIcon(iconName, TabBtn, UDim2.new(0, 8, 0.5, -8), UDim2.new(0, 16, 0, 16), 23)
+            CreateIcon(iconName, TabBtn, UDim2.new(0,0,0,0), UDim2.new(0, 16, 0, 16), 23)
         end
+
+        local TabLbl = Instance.new("TextLabel")
+        TabLbl.Name = "TabLabel"
+        TabLbl.Parent = TabBtn
+        TabLbl.BackgroundTransparency = 1
+        TabLbl.Size = UDim2.new(1, -28, 1, 0)
+        TabLbl.Font = Enum.Font.GothamMedium
+        TabLbl.Text = tabName
+        TabLbl.TextColor3 = Color3.fromRGB(170, 170, 190)
+        TabLbl.TextSize = 11
+        TabLbl.TextXAlignment = Enum.TextXAlignment.Left
+        TabLbl.ZIndex = 23
 
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName .. "_Content"
@@ -734,40 +731,29 @@ function AetherLib:Init(customCommandsURL)
         local TabObj = { Frame = TabContent }
 
         TrackConnection(TabBtn.MouseButton1Click:Connect(function()
-            for _, t in pairs(StarlightTabs) do
-                t.Frame.Visible = false
-            end
+            for _, t in pairs(StarlightTabs) do t.Frame.Visible = false end
             TabContent.Visible = true
-
             for _, child in ipairs(StarlightSidebar:GetChildren()) do
                 if child:IsA("TextButton") then
-                    TweenService:Create(child, TweenInfo.new(0.2), {
-                        BackgroundColor3 = Color3.fromRGB(25, 25, 35),
-                        TextColor3 = Color3.fromRGB(170, 170, 190)
-                    }):Play()
+                    TweenService:Create(child, TweenInfo.new(0.2), { BackgroundColor3 = Color3.fromRGB(25, 25, 35) }):Play()
+                    local lbl = child:FindFirstChild("TabLabel")
+                    if lbl then TweenService:Create(lbl, TweenInfo.new(0.2), { TextColor3 = Color3.fromRGB(170, 170, 190) }):Play() end
                 end
             end
-
-            TweenService:Create(TabBtn, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(38, 38, 55),
-                TextColor3 = Color3.fromRGB(90, 150, 255)
-            }):Play()
+            TweenService:Create(TabBtn, TweenInfo.new(0.2), { BackgroundColor3 = Color3.fromRGB(38, 38, 55) }):Play()
+            TweenService:Create(TabLbl, TweenInfo.new(0.2), { TextColor3 = Color3.fromRGB(90, 150, 255) }):Play()
         end))
 
         if #StarlightSidebar:GetChildren() == 2 then
             TabContent.Visible = true
             TabBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 55)
-            TabBtn.TextColor3 = Color3.fromRGB(90, 150, 255)
+            TabLbl.TextColor3 = Color3.fromRGB(90, 150, 255)
         end
 
         table.insert(StarlightTabs, TabObj)
 
         function TabObj:AddButton(btnText, iconName, callback)
-            if type(iconName) == "function" then
-                callback = iconName
-                iconName = nil
-            end
-
+            if type(iconName) == "function" then callback = iconName; iconName = nil end
             local Btn = Instance.new("TextButton")
             Btn.Parent = TabContent
             Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
@@ -792,20 +778,21 @@ function AetherLib:Init(customCommandsURL)
             Stroke.Thickness = 1
             Stroke.Parent = Btn
 
-            if iconName then
-                CreateIcon(iconName, Btn, UDim2.new(0, 9, 0.5, -8), UDim2.new(0, 16, 0, 16), 23)
-            end
+            if iconName then CreateIcon(iconName, Btn, UDim2.new(0, 9, 0.5, -8), UDim2.new(0, 16, 0, 16), 23) end
 
             TrackConnection(Btn.MouseButton1Click:Connect(function()
                 TweenService:Create(Btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(90, 150, 255)}):Play()
-                task.delay(0.1, function()
-                    TweenService:Create(Btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(26, 26, 38)}):Play()
-                end)
+                task.delay(0.1, function() TweenService:Create(Btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(26, 26, 38)}):Play() end)
                 if callback then pcall(callback) end
             end))
         end
 
-        function TabObj:AddToggle(toggleText, default, callback)
+        function TabObj:AddToggle(toggleText, iconName, default, callback)
+            if type(iconName) == "boolean" or iconName == nil then
+                callback = default
+                default = iconName
+                iconName = nil
+            end
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
             Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
@@ -821,11 +808,13 @@ function AetherLib:Init(customCommandsURL)
             Stroke.Thickness = 1
             Stroke.Parent = Frame
 
+            if iconName then CreateIcon(iconName, Frame, UDim2.new(0, 9, 0.5, -8), UDim2.new(0, 16, 0, 16), 23) end
+
             local Lbl = Instance.new("TextLabel")
             Lbl.Parent = Frame
             Lbl.BackgroundTransparency = 1
-            Lbl.Position = UDim2.new(0, 12, 0, 0)
-            Lbl.Size = UDim2.new(1, -60, 1, 0)
+            Lbl.Position = iconName and UDim2.new(0, 32, 0, 0) or UDim2.new(0, 12, 0, 0)
+            Lbl.Size = iconName and UDim2.new(1, -80, 1, 0) or UDim2.new(1, -60, 1, 0)
             Lbl.Font = Enum.Font.Gotham
             Lbl.Text = toggleText
             Lbl.TextColor3 = Color3.fromRGB(240, 240, 250)
@@ -867,21 +856,20 @@ function AetherLib:Init(customCommandsURL)
             end))
         end
 
-        ---------------------------------------------------------------
-        -- 5 KOMPONEN BARU KHUSUS STARLIGHT SIDEBAR v9.9
-        ---------------------------------------------------------------
-        function TabObj:AddTabSection(sectionText)
+        function TabObj:AddTabSection(sectionText, iconName)
             local SecFrame = Instance.new("Frame")
             SecFrame.Parent = TabContent
             SecFrame.BackgroundTransparency = 1
             SecFrame.Size = UDim2.new(1, 0, 0, 24)
             SecFrame.ZIndex = 22
 
+            if iconName then CreateIcon(iconName, SecFrame, UDim2.new(0, 4, 0.5, -8), UDim2.new(0, 16, 0, 16), 23) end
+
             local Lbl = Instance.new("TextLabel")
             Lbl.Parent = SecFrame
             Lbl.BackgroundTransparency = 1
-            Lbl.Position = UDim2.new(0, 4, 0, 0)
-            Lbl.Size = UDim2.new(1, -8, 1, 0)
+            Lbl.Position = iconName and UDim2.new(0, 24, 0, 0) or UDim2.new(0, 4, 0, 0)
+            Lbl.Size = UDim2.new(1, -28, 1, 0)
             Lbl.Font = Enum.Font.GothamBold
             Lbl.Text = sectionText
             Lbl.TextColor3 = Color3.fromRGB(90, 150, 255)
@@ -890,7 +878,7 @@ function AetherLib:Init(customCommandsURL)
             Lbl.ZIndex = 23
         end
 
-        function TabObj:AddTabLabel(labelText)
+        function TabObj:AddTabLabel(labelText, iconName)
             local LblFrame = Instance.new("Frame")
             LblFrame.Parent = TabContent
             LblFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
@@ -901,11 +889,13 @@ function AetherLib:Init(customCommandsURL)
             Corner.CornerRadius = UDim.new(0, 6)
             Corner.Parent = LblFrame
 
+            if iconName then CreateIcon(iconName, LblFrame, UDim2.new(0, 8, 0.5, -8), UDim2.new(0, 16, 0, 16), 23) end
+
             local Lbl = Instance.new("TextLabel")
             Lbl.Parent = LblFrame
             Lbl.BackgroundTransparency = 1
-            Lbl.Position = UDim2.new(0, 10, 0, 0)
-            Lbl.Size = UDim2.new(1, -20, 1, 0)
+            Lbl.Position = iconName and UDim2.new(0, 30, 0, 0) or UDim2.new(0, 10, 0, 0)
+            Lbl.Size = iconName and UDim2.new(1, -40, 1, 0) or UDim2.new(1, -20, 1, 0)
             Lbl.Font = Enum.Font.Gotham
             Lbl.Text = labelText
             Lbl.TextColor3 = Color3.fromRGB(200, 200, 215)
@@ -914,7 +904,8 @@ function AetherLib:Init(customCommandsURL)
             Lbl.ZIndex = 23
         end
 
-        function TabObj:AddTabInput(inputName, placeholder, callback)
+        function TabObj:AddTabInput(inputName, iconName, placeholder, callback)
+            if type(placeholder) == "function" then callback = placeholder; placeholder = iconName; iconName = nil end
             local Frame = Instance.new("Frame")
             Frame.Parent = TabContent
             Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
@@ -925,11 +916,13 @@ function AetherLib:Init(customCommandsURL)
             Corner.CornerRadius = UDim.new(0, 6)
             Corner.Parent = Frame
 
+            if iconName then CreateIcon(iconName, Frame, UDim2.new(0, 8, 0.5, -8), UDim2.new(0, 16, 0, 16), 23) end
+
             local Lbl = Instance.new("TextLabel")
             Lbl.Parent = Frame
             Lbl.BackgroundTransparency = 1
-            Lbl.Position = UDim2.new(0, 10, 0, 0)
-            Lbl.Size = UDim2.new(0, 110, 1, 0)
+            Lbl.Position = iconName and UDim2.new(0, 30, 0, 0) or UDim2.new(0, 10, 0, 0)
+            Lbl.Size = UDim2.new(0, 95, 1, 0)
             Lbl.Font = Enum.Font.Gotham
             Lbl.Text = inputName
             Lbl.TextColor3 = Color3.fromRGB(240, 240, 250)
@@ -1004,10 +997,6 @@ function AetherLib:Init(customCommandsURL)
             Fill.Size = UDim2.new(initialRatio, 0, 1, 0)
             Fill.ZIndex = 24
 
-            local FillCorner = Instance.new("UICorner")
-            FillCorner.CornerRadius = UDim.new(1, 0)
-            FillCorner.Parent = Fill
-
             local Knob = Instance.new("Frame")
             Knob.Parent = SliderBar
             Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1033,7 +1022,7 @@ function AetherLib:Init(customCommandsURL)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true end
             end))
             TrackConnection(SliderBar.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true update(input) end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true; update(input) end
             end))
             TrackConnection(UserInputService.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end
@@ -1103,11 +1092,7 @@ function AetherLib:Init(customCommandsURL)
     -------------------------------------------------------------------
     function AetherLib:RegisterCommand(name, description, syntax, callback)
         name = string.lower(name)
-        AetherLib.RegisteredCommands[name] = {
-            Desc = description or "Tidak ada deskripsi",
-            Syntax = syntax or name,
-            Callback = callback
-        }
+        AetherLib.RegisteredCommands[name] = { Desc = description or "Tidak ada deskripsi", Syntax = syntax or name, Callback = callback }
         RefreshCommandList()
     end
 
@@ -1118,21 +1103,14 @@ function AetherLib:Init(customCommandsURL)
     TrackConnection(CmdBar.FocusLost:Connect(function(enterPressed)
         if enterPressed then
             local text = CmdBar.Text
-            if text:sub(1,1) == ";" then
-                text = text:sub(2)
-            end
+            if text:sub(1,1) == ";" then text = text:sub(2) end
             if text ~= "" then
                 local parts = {}
-                for word in text:gmatch("%S+") do
-                    table.insert(parts, word)
-                end
+                for word in text:gmatch("%S+") do table.insert(parts, word) end
                 local cmdName = string.lower(parts[1] or "")
                 table.remove(parts, 1)
-                
                 if AetherLib.RegisteredCommands[cmdName] then
-                    local success, err = pcall(function()
-                        AetherLib.RegisteredCommands[cmdName].Callback(parts)
-                    end)
+                    local success, err = pcall(function() AetherLib.RegisteredCommands[cmdName].Callback(parts) end)
                     if success then
                         Elements:AddNotification("Command", "Mengeksekusi: ;" .. cmdName, 2)
                     else
@@ -1151,22 +1129,18 @@ function AetherLib:Init(customCommandsURL)
     -------------------------------------------------------------------
     local targetURL = customCommandsURL or AetherLib.CommandsURL
     task.spawn(function()
-        local success, scriptFunc = pcall(function()
-            return loadstring(game:HttpGet(targetURL))()
-        end)
+        local success, scriptFunc = pcall(function() return loadstring(game:HttpGet(targetURL))() end)
         if success and type(scriptFunc) == "function" then
             scriptFunc(AetherLib)
-            Elements:AddNotification("AetherLib 9.9", "Perintah eksternal berhasil dimuat!", 3)
+            Elements:AddNotification("AetherLib 10.0", "Perintah eksternal berhasil dimuat!", 3)
         end
     end)
 
     -------------------------------------------------------------------
-    -- SELURUH KOMPONEN UTAMA v9.3 (KEMBALI LENGKAP 100%)
+    -- SELURUH KOMPONEN UTAMA v9.3 / v10.0 (LENGKAP 100%)
     -------------------------------------------------------------------
     function Elements:Curved()
-        if StarlightCorner then
-            TweenService:Create(StarlightCorner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CornerRadius = UDim.new(0, 22) }):Play()
-        end
+        if StarlightCorner then TweenService:Create(StarlightCorner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CornerRadius = UDim.new(0, 22) }):Play() end
     end
 
     function Elements:Curve()
@@ -1186,37 +1160,41 @@ function AetherLib:Init(customCommandsURL)
     end
 
     function Elements:AddButton(name, iconName, callback)
-        if type(iconName) == "function" then callback = iconName iconName = nil end
+        if type(iconName) == "function" then callback = iconName; iconName = nil end
         local BtnFrame = Instance.new("TextButton")
         BtnFrame.Parent = ScrollContainer
         BtnFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
         BtnFrame.Size = UDim2.new(1, 0, 0, 38)
         BtnFrame.Font = Enum.Font.Gotham
-        BtnFrame.Text = "  " .. name
+        BtnFrame.Text = " " .. name
         BtnFrame.TextColor3 = Color3.fromRGB(255, 255, 255)
         BtnFrame.TextSize = 12
         BtnFrame.TextXAlignment = Enum.TextXAlignment.Left
         BtnFrame.ZIndex = 9
 
+        local BtnPadding = Instance.new("UIPadding")
+        BtnPadding.Parent = BtnFrame
+        BtnPadding.PaddingLeft = iconName and UDim.new(0, 36) or UDim.new(0, 12)
+
         local Corner = Instance.new("UICorner")
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = BtnFrame
 
-        if iconName then
-            CreateIcon(iconName, BtnFrame, UDim2.new(0, 10, 0.5, -9), UDim2.new(0, 18, 0, 18), 10)
-        end
+        if iconName then CreateIcon(iconName, BtnFrame, UDim2.new(0, 10, 0.5, -9), UDim2.new(0, 18, 0, 18), 10) end
 
         TrackConnection(BtnFrame.MouseButton1Click:Connect(function()
             TweenService:Create(BtnFrame, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(90, 150, 255)}):Play()
-            task.delay(0.1, function()
-                TweenService:Create(BtnFrame, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(42, 42, 54)}):Play()
-            end)
+            task.delay(0.1, function() TweenService:Create(BtnFrame, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(42, 42, 54)}):Play() end)
             if callback then pcall(callback) end
         end))
     end
 
-    function Elements:AddToggle(name, iconName, callback)
-        if type(iconName) == "function" then callback = iconName iconName = nil end
+    function Elements:AddToggle(name, iconName, default, callback)
+        if type(iconName) == "boolean" or type(iconName) == "function" or iconName == nil then
+            callback = default
+            default = iconName
+            iconName = nil
+        end
         local ToggleFrame = Instance.new("Frame")
         ToggleFrame.Parent = ScrollContainer
         ToggleFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -1227,9 +1205,7 @@ function AetherLib:Init(customCommandsURL)
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = ToggleFrame
 
-        if iconName then
-            CreateIcon(iconName, ToggleFrame, UDim2.new(0, 10, 0.5, -9), UDim2.new(0, 18, 0, 18), 10)
-        end
+        if iconName then CreateIcon(iconName, ToggleFrame, UDim2.new(0, 10, 0.5, -9), UDim2.new(0, 18, 0, 18), 10) end
 
         local Label = Instance.new("TextLabel")
         Label.Parent = ToggleFrame
@@ -1245,7 +1221,7 @@ function AetherLib:Init(customCommandsURL)
 
         local SwitchBg = Instance.new("TextButton")
         SwitchBg.Parent = ToggleFrame
-        SwitchBg.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
+        SwitchBg.BackgroundColor3 = default and Color3.fromRGB(90, 150, 255) or Color3.fromRGB(60, 60, 75)
         SwitchBg.Position = UDim2.new(1, -48, 0.5, -10)
         SwitchBg.Size = UDim2.new(0, 38, 0, 20)
         SwitchBg.Text = ""
@@ -1258,7 +1234,7 @@ function AetherLib:Init(customCommandsURL)
         local Knob = Instance.new("Frame")
         Knob.Parent = SwitchBg
         Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Knob.Position = UDim2.new(0, 2, 0.5, -8)
+        Knob.Position = default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
         Knob.Size = UDim2.new(0, 16, 0, 16)
         Knob.ZIndex = 11
 
@@ -1266,7 +1242,7 @@ function AetherLib:Init(customCommandsURL)
         KnobCorner.CornerRadius = UDim.new(1, 0)
         KnobCorner.Parent = Knob
 
-        local enabled = false
+        local enabled = default or false
         TrackConnection(SwitchBg.MouseButton1Click:Connect(function()
             enabled = not enabled
             local goalBgColor = enabled and Color3.fromRGB(90, 150, 255) or Color3.fromRGB(60, 60, 75)
@@ -1342,7 +1318,7 @@ function AetherLib:Init(customCommandsURL)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true end
         end))
         TrackConnection(SliderBar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true update(input) end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true; update(input) end
         end))
         TrackConnection(UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end
@@ -1426,7 +1402,6 @@ function AetherLib:Init(customCommandsURL)
                 end))
             end
         end
-
         DropdownObj:Refresh(options)
         return DropdownObj
     end
@@ -1702,14 +1677,10 @@ function AetherLib:Init(customCommandsURL)
             if setclipboard then
                 setclipboard(textToCopy or "")
                 BtnFrame.Text = " Tersalin!"
-                task.delay(1.5, function()
-                    BtnFrame.Text = " " .. name
-                end)
+                task.delay(1.5, function() BtnFrame.Text = " " .. name end)
             else
                 BtnFrame.Text = " No Clipboard"
-                task.delay(1.5, function()
-                    BtnFrame.Text = " " .. name
-                end)
+                task.delay(1.5, function() BtnFrame.Text = " " .. name end)
             end
         end))
     end
@@ -1927,18 +1898,11 @@ function AetherLib:Init(customCommandsURL)
         MsgLbl.TextXAlignment = Enum.TextXAlignment.Left
         MsgLbl.ZIndex = 351
 
-        TweenService:Create(NotifGui, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0.5, -125, 0, 20)
-        }):Play()
-
+        TweenService:Create(NotifGui, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = UDim2.new(0.5, -125, 0, 20) }):Play()
         task.delay(duration, function()
-            local tweenOut = TweenService:Create(NotifGui, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Position = UDim2.new(0.5, -125, 0, -70)
-            })
+            local tweenOut = TweenService:Create(NotifGui, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Position = UDim2.new(0.5, -125, 0, -70) })
             tweenOut:Play()
-            tweenOut.Completed:Connect(function()
-                NotifGui:Destroy()
-            end)
+            tweenOut.Completed:Connect(function() NotifGui:Destroy() end)
         end)
     end
 
@@ -1978,7 +1942,6 @@ function AetherLib:Init(customCommandsURL)
         PreviewCorner.Parent = PreviewBox
 
         local r, g, b = math.floor(defaultColor.R * 255), math.floor(defaultColor.G * 255), math.floor(defaultColor.B * 255)
-
         local function CreateMiniSlider(posY, channelName, initVal, onUpdate)
             local SLabel = Instance.new("TextLabel")
             SLabel.Parent = PickerFrame
@@ -2009,10 +1972,6 @@ function AetherLib:Init(customCommandsURL)
             SFill.Size = UDim2.new(initVal / 255, 0, 1, 0)
             SFill.ZIndex = 11
 
-            local SFillCorner = Instance.new("UICorner")
-            SFillCorner.CornerRadius = UDim.new(1, 0)
-            SFillCorner.Parent = SFill
-
             local sliding = false
             TrackConnection(SBar.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -2036,9 +1995,9 @@ function AetherLib:Init(customCommandsURL)
             end))
         end
 
-        CreateMiniSlider(28, "R", r, function(val) r = val local newCol = Color3.fromRGB(r, g, b) PreviewBox.BackgroundColor3 = newCol if callback then pcall(callback, newCol) end end)
-        CreateMiniSlider(48, "G", g, function(val) g = val local newCol = Color3.fromRGB(r, g, b) PreviewBox.BackgroundColor3 = newCol if callback then pcall(callback, newCol) end end)
-        CreateMiniSlider(68, "B", b, function(val) b = val local newCol = Color3.fromRGB(r, g, b) PreviewBox.BackgroundColor3 = newCol if callback then pcall(callback, newCol) end end)
+        CreateMiniSlider(28, "R", r, function(val) r = val; local newCol = Color3.fromRGB(r, g, b); PreviewBox.BackgroundColor3 = newCol; if callback then pcall(callback, newCol) end end)
+        CreateMiniSlider(48, "G", g, function(val) g = val; local newCol = Color3.fromRGB(r, g, b); PreviewBox.BackgroundColor3 = newCol; if callback then pcall(callback, newCol) end end)
+        CreateMiniSlider(68, "B", b, function(val) b = val; local newCol = Color3.fromRGB(r, g, b); PreviewBox.BackgroundColor3 = newCol; if callback then pcall(callback, newCol) end end)
     end
 
     function Elements:AddDualRangeSlider(name, min, max, defaultMin, defaultMax, callback)
@@ -2095,20 +2054,12 @@ function AetherLib:Init(customCommandsURL)
         KnobMin.Size = UDim2.new(0, 16, 0, 16)
         KnobMin.ZIndex = 12
 
-        local KnobMinCorner = Instance.new("UICorner")
-        KnobMinCorner.CornerRadius = UDim.new(1, 0)
-        KnobMinCorner.Parent = KnobMin
-
         local KnobMax = Instance.new("Frame")
         KnobMax.Parent = SliderBar
         KnobMax.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         KnobMax.Position = UDim2.new(maxRatio, -8, 0.5, -8)
         KnobMax.Size = UDim2.new(0, 16, 0, 16)
         KnobMax.ZIndex = 12
-
-        local KnobMaxCorner = Instance.new("UICorner")
-        KnobMaxCorner.CornerRadius = UDim.new(1, 0)
-        KnobMaxCorner.Parent = KnobMax
 
         local slidingMin, slidingMax = false, false
         TrackConnection(KnobMin.InputBegan:Connect(function(input)
@@ -2143,7 +2094,7 @@ function AetherLib:Init(customCommandsURL)
     end
 
     function Elements:AddButtonWithDropdown(name, options, buttonText, callback)
-        if type(buttonText) == "function" then callback = buttonText buttonText = "Execute" end
+        if type(buttonText) == "function" then callback = buttonText; buttonText = "Execute" end
         buttonText = buttonText or "Execute"
         local Frame = Instance.new("Frame")
         Frame.Parent = ScrollContainer
@@ -2210,16 +2161,12 @@ function AetherLib:Init(customCommandsURL)
 
         TrackConnection(ActionBtn.MouseButton1Click:Connect(function()
             TweenService:Create(ActionBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120, 180, 255)}):Play()
-            task.delay(0.1, function()
-                TweenService:Create(ActionBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(90, 150, 255)}):Play()
-            end)
+            task.delay(0.1, function() TweenService:Create(ActionBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(90, 150, 255)}):Play() end)
             if callback then pcall(callback, selectedOption) end
         end))
 
         local ControlObj = {}
-        function ControlObj:SetButtonText(newText)
-            ActionBtn.Text = newText
-        end
+        function ControlObj:SetButtonText(newText) ActionBtn.Text = newText end
         return ControlObj
     end
 
@@ -2294,9 +2241,7 @@ function AetherLib:Init(customCommandsURL)
                     OptBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
                 end
                 local activeList = {}
-                for k, v in pairs(selectedTable) do
-                    if v then table.insert(activeList, k) end
-                end
+                for k, v in pairs(selectedTable) do if v then table.insert(activeList, k) end end
                 MainBtn.Text = " " .. name .. " : " .. (#activeList > 0 and table.concat(activeList, ", ") or "None")
                 if callback then pcall(callback, selectedTable) end
             end))
@@ -2378,15 +2323,8 @@ function AetherLib:Init(customCommandsURL)
             if callback then pcall(callback, isToggled, currentKey) end
         end
 
-        TrackConnection(SwitchBg.MouseButton1Click:Connect(function()
-            updateToggle(not isToggled)
-        end))
-
-        TrackConnection(KeyBtn.MouseButton1Click:Connect(function()
-            listening = true
-            KeyBtn.Text = "..."
-        end))
-
+        TrackConnection(SwitchBg.MouseButton1Click:Connect(function() updateToggle(not isToggled) end))
+        TrackConnection(KeyBtn.MouseButton1Click:Connect(function() listening = true; KeyBtn.Text = "..." end))
         TrackConnection(UserInputService.InputBegan:Connect(function(input)
             if listening and input.UserInputType == Enum.UserInputType.Keyboard then
                 currentKey = input.KeyCode
@@ -2466,7 +2404,7 @@ function AetherLib:Init(customCommandsURL)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true end
         end))
         TrackConnection(SliderBar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true update(input) end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true; update(input) end
         end))
         TrackConnection(UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end
@@ -2588,9 +2526,7 @@ function AetherLib:Init(customCommandsURL)
         TrackConnection(HeaderBtn.MouseButton1Click:Connect(function()
             isOpen = not isOpen
             HeaderBtn.Text = isOpen and (" v " .. titleText) or (" > " .. titleText)
-            TweenService:Create(AccordionFrame, TweenInfo.new(0.25), {
-                Size = isOpen and UDim2.new(1, 0, 0, 110) or UDim2.new(1, 0, 0, 38)
-            }):Play()
+            TweenService:Create(AccordionFrame, TweenInfo.new(0.25), { Size = isOpen and UDim2.new(1, 0, 0, 110) or UDim2.new(1, 0, 0, 38) }):Play()
         end))
 
         local AccObj = { Container = InnerScroll }
@@ -2707,9 +2643,7 @@ function AetherLib:Init(customCommandsURL)
             table.insert(buttons, OptBtn)
             TrackConnection(OptBtn.MouseButton1Click:Connect(function()
                 for idx, btn in ipairs(buttons) do
-                    TweenService:Create(btn, TweenInfo.new(0.2), {
-                        BackgroundColor3 = (options[idx] == opt) and Color3.fromRGB(90, 150, 255) or Color3.fromRGB(55, 55, 70)
-                    }):Play()
+                    TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundColor3 = (options[idx] == opt) and Color3.fromRGB(90, 150, 255) or Color3.fromRGB(55, 55, 70) }):Play()
                 end
                 if callback then pcall(callback, opt) end
             end))
@@ -2853,9 +2787,7 @@ function AetherLib:Init(customCommandsURL)
         BCorner.CornerRadius = UDim.new(0, 6)
         BCorner.Parent = Btn
 
-        TrackConnection(Btn.MouseButton1Click:Connect(function()
-            if callback then pcall(callback) end
-        end))
+        TrackConnection(Btn.MouseButton1Click:Connect(function() if callback then pcall(callback) end end))
     end
 
     function Elements:AddKeybindPicker(name, defaultKey, callback)
@@ -2950,9 +2882,7 @@ function AetherLib:Init(customCommandsURL)
         Frame.Size = UDim2.new(1, 0, 0, 28)
         Frame.ZIndex = 9
 
-        if iconName then
-            CreateIcon(iconName, Frame, UDim2.new(0, 4, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
-        end
+        if iconName then CreateIcon(iconName, Frame, UDim2.new(0, 4, 0.5, -8), UDim2.new(0, 16, 0, 16), 10) end
 
         local Lbl = Instance.new("TextLabel")
         Lbl.Parent = Frame
@@ -3133,7 +3063,6 @@ function AetherLib:Unload()
         if conn and conn.Connected then conn:Disconnect() end
     end
     AetherLib.Connections = {}
-
     for _, inst in ipairs(AetherLib.Instances) do
         if inst then inst:Destroy() end
     end
