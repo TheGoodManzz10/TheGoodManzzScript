@@ -3964,17 +3964,22 @@ NSPCorner.CornerRadius = UDim.new(0, 10)
         return Elements:AddDropdown(name, options, callback)
     end
 
+-- Salinan bagian paling bawah yang BENAR untuk file Library Anda:
     CheckUIContentValidity()
     return Elements
 end
 
 function AetherLib:Unload()
     for _, conn in ipairs(AetherLib.Connections) do
-        if conn and conn.Connected then conn:Disconnect() end
+        if conn and conn.Connected then
+            conn:Disconnect()
+        end
     end
     AetherLib.Connections = {}
     for _, inst in ipairs(AetherLib.Instances) do
-        if inst then inst:Destroy() end
+        if inst then
+            inst:Destroy()
+        end
     end
     AetherLib.Instances = {}
 end
