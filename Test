@@ -123,130 +123,162 @@ function AetherLib:Init(customCommandsURL, keySettings)
     end
 
     -------------------------------------------------------------------
-    -- KEY SYSTEM (Sistem Verifikasi Key Modern & Aman)
+    -- KEY SYSTEM (DENGAN CUSTOM DURASI HARI / JAM)
     -------------------------------------------------------------------
     local uiUnlocked = true
+    local keyFileName = "AetherLib_KeyCache.json"
+
     if keySettings and keySettings.Enabled then
-        uiUnlocked = false
-        local KeyGui = Instance.new("Frame")
-        KeyGui.Name = "KeySystemFrame"
-        KeyGui.Parent = ScreenGui
-        KeyGui.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
-        KeyGui.AnchorPoint = Vector2.new(0.5, 0.5)
-        KeyGui.Position = UDim2.new(0.5, 0, 0.5, 0)
-        KeyGui.Size = UDim2.new(0, 340, 0, 210)
-        KeyGui.ZIndex = 500
+        -- Hitung durasi dalam detik
+        local durationValue = keySettings.Duration or 1 -- Default 1
+        local durationType = keySettings.DurationType or "Days"
+        local durationInSeconds = durationValue * 3600 -- Default Jam
+        if durationType == "Days" then
+            durationInSeconds = durationValue * 86400 -- 1 Hari = 86400 detik
+        end
 
-        local KCorner = Instance.new("UICorner")
-        KCorner.CornerRadius = UDim.new(0, 12)
-        KCorner.Parent = KeyGui
-
-        local KStroke = Instance.new("UIStroke")
-        KStroke.Color = Color3.fromRGB(90, 150, 255)
-        KStroke.Thickness = 2
-        KStroke.Parent = KeyGui
-
-        CreateIcon("lucide-key", KeyGui, UDim2.new(0, 16, 0, 16), UDim2.new(0, 20, 0, 20), 501)
-
-        local KTitle = Instance.new("TextLabel")
-        KTitle.Parent = KeyGui
-        KTitle.BackgroundTransparency = 1
-        KTitle.Position = UDim2.new(0, 46, 0, 14)
-        KTitle.Size = UDim2.new(1, -60, 0, 24)
-        KTitle.Font = Enum.Font.GothamBold
-        KTitle.Text = keySettings.Title or "AetherLib Key Verification"
-        KTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-        KTitle.TextSize = 13
-        KTitle.TextXAlignment = Enum.TextXAlignment.Left
-        KTitle.ZIndex = 501
-
-        local KDesc = Instance.new("TextLabel")
-        KDesc.Parent = KeyGui
-        KDesc.BackgroundTransparency = 1
-        KDesc.Position = UDim2.new(0, 16, 0, 48)
-        KDesc.Size = UDim2.new(1, -32, 0, 36)
-        KDesc.Font = Enum.Font.Gotham
-        KDesc.Text = keySettings.Description or "Masukkan key yang valid untuk mengakses antarmuka AetherLib v11.0."
-        KDesc.TextColor3 = Color3.fromRGB(180, 180, 195)
-        KDesc.TextSize = 11
-        KDesc.TextWrapped = true
-        KDesc.TextXAlignment = Enum.TextXAlignment.Left
-        KDesc.ZIndex = 501
-
-        local KeyInput = Instance.new("TextBox")
-        KeyInput.Parent = KeyGui
-        KeyInput.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-        KeyInput.Position = UDim2.new(0, 16, 0, 94)
-        KeyInput.Size = UDim2.new(1, -32, 0, 36)
-        KeyInput.Font = Enum.Font.Gotham
-        KeyInput.PlaceholderText = "Ketik key di sini..."
-        KeyInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 150)
-        KeyInput.Text = ""
-        KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-        KeyInput.TextSize = 12
-        KeyInput.ClearTextOnFocus = false
-        KeyInput.ZIndex = 501
-
-        local BICorner = Instance.new("UICorner")
-        BICorner.CornerRadius = UDim.new(0, 6)
-        BICorner.Parent = KeyInput
-
-        local VerifyBtn = Instance.new("TextButton")
-        VerifyBtn.Parent = KeyGui
-        VerifyBtn.BackgroundColor3 = Color3.fromRGB(90, 150, 255)
-        VerifyBtn.Position = UDim2.new(0, 16, 0, 144)
-        VerifyBtn.Size = UDim2.new(0.48, -10, 0, 36)
-        VerifyBtn.Font = Enum.Font.GothamBold
-        VerifyBtn.Text = "Verifikasi"
-        VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        VerifyBtn.TextSize = 12
-        VerifyBtn.ZIndex = 501
-
-        local VCorner = Instance.new("UICorner")
-        VCorner.CornerRadius = UDim.new(0, 6)
-        VCorner.Parent = VerifyBtn
-
-        local GetKeyBtn = Instance.new("TextButton")
-        GetKeyBtn.Parent = KeyGui
-        GetKeyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-        GetKeyBtn.Position = UDim2.new(0.52, 6, 0, 144)
-        GetKeyBtn.Size = UDim2.new(0.48, -10, 0, 36)
-        GetKeyBtn.Font = Enum.Font.GothamBold
-        GetKeyBtn.Text = "Dapatkan Key"
-        GetKeyBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
-        GetKeyBtn.TextSize = 12
-        GetKeyBtn.ZIndex = 501
-
-        local GCorner = Instance.new("UICorner")
-        GCorner.CornerRadius = UDim.new(0, 6)
-        GCorner.Parent = GetKeyBtn
-
-        TrackConnection(VerifyBtn.MouseButton1Click:Connect(function()
-            local entered = KeyInput.Text
-            local validKeys = keySettings.Keys or {"AETHER-FREE-11"}
-            local isValid = false
-            for _, k in ipairs(validKeys) do
-                if entered == k then isValid = true break end
-            end
-            if isValid then
-                uiUnlocked = true
-                TweenService:Create(KeyGui, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-                task.delay(0.3, function() KeyGui:Destroy() end)
+        -- Cek apakah file cache key valid dan belum kedaluwarsa
+        if isfile and isfile(keyFileName) then
+            local success, data = pcall(function()
+                return game:GetService("HttpService"):JSONDecode(readfile(keyFileName))
+            end)
+            if success and data and data.ExpiryTime and os.time() < data.ExpiryTime then
+                uiUnlocked = true -- Masih dalam masa aktif durasi!
             else
-                KeyInput.Text = ""
-                KeyInput.PlaceholderText = "Key Salah! Coba lagi..."
+                uiUnlocked = false -- Sudah kedaluwarsa
             end
-        end))
+        else
+            uiUnlocked = false
+        end
 
-        TrackConnection(GetKeyBtn.MouseButton1Click:Connect(function()
-            if setclipboard then
-                setclipboard(keySettings.KeyLink or "https://github.com/TheGoodManzz10/TheGoodManzzScript")
-                GetKeyBtn.Text = "Link Tersalin!"
-                task.delay(1.5, function() GetKeyBtn.Text = "Dapatkan Key" end)
-            end
-        end))
+        if not uiUnlocked then
+            local KeyGui = Instance.new("Frame")
+            KeyGui.Name = "KeySystemFrame"
+            KeyGui.Parent = ScreenGui
+            KeyGui.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+            KeyGui.AnchorPoint = Vector2.new(0.5, 0.5)
+            KeyGui.Position = UDim2.new(0.5, 0, 0.5, 0)
+            KeyGui.Size = UDim2.new(0, 340, 0, 210)
+            KeyGui.ZIndex = 500
 
-        while not uiUnlocked do task.wait(0.1) end
+            local KCorner = Instance.new("UICorner")
+            KCorner.CornerRadius = UDim.new(0, 12)
+            KCorner.Parent = KeyGui
+
+            local KStroke = Instance.new("UIStroke")
+            KStroke.Color = Color3.fromRGB(90, 150, 255)
+            KStroke.Thickness = 2
+            KStroke.Parent = KeyGui
+
+            CreateIcon("lucide-key", KeyGui, UDim2.new(0, 16, 0, 16), UDim2.new(0, 20, 0, 20), 501)
+
+            local KTitle = Instance.new("TextLabel")
+            KTitle.Parent = KeyGui
+            KTitle.BackgroundTransparency = 1
+            KTitle.Position = UDim2.new(0, 46, 0, 14)
+            KTitle.Size = UDim2.new(1, -60, 0, 24)
+            KTitle.Font = Enum.Font.GothamBold
+            KTitle.Text = keySettings.Title or "AetherLib Key Verification"
+            KTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+            KTitle.TextSize = 13
+            KTitle.TextXAlignment = Enum.TextXAlignment.Left
+            KTitle.ZIndex = 501
+
+            local KDesc = Instance.new("TextLabel")
+            KDesc.Parent = KeyGui
+            KDesc.BackgroundTransparency = 1
+            KDesc.Position = UDim2.new(0, 16, 0, 48)
+            KDesc.Size = UDim2.new(1, -32, 0, 36)
+            KDesc.Font = Enum.Font.Gotham
+            KDesc.Text = (keySettings.Description or "Masukkan key yang valid.") .. " (Durasi: " .. durationValue .. " " .. durationType .. ")"
+            KDesc.TextColor3 = Color3.fromRGB(180, 180, 195)
+            KDesc.TextSize = 11
+            KDesc.TextWrapped = true
+            KDesc.TextXAlignment = Enum.TextXAlignment.Left
+            KDesc.ZIndex = 501
+
+            local KeyInput = Instance.new("TextBox")
+            KeyInput.Parent = KeyGui
+            KeyInput.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+            KeyInput.Position = UDim2.new(0, 16, 0, 94)
+            KeyInput.Size = UDim2.new(1, -32, 0, 36)
+            KeyInput.Font = Enum.Font.Gotham
+            KeyInput.PlaceholderText = "Ketik key di sini..."
+            KeyInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 150)
+            KeyInput.Text = ""
+            KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+            KeyInput.TextSize = 12
+            KeyInput.ClearTextOnFocus = false
+            KeyInput.ZIndex = 501
+
+            local BICorner = Instance.new("UICorner")
+            BICorner.CornerRadius = UDim.new(0, 6)
+            BICorner.Parent = KeyInput
+
+            local VerifyBtn = Instance.new("TextButton")
+            VerifyBtn.Parent = KeyGui
+            VerifyBtn.BackgroundColor3 = Color3.fromRGB(90, 150, 255)
+            VerifyBtn.Position = UDim2.new(0, 16, 0, 144)
+            VerifyBtn.Size = UDim2.new(0.48, -10, 0, 36)
+            VerifyBtn.Font = Enum.Font.GothamBold
+            VerifyBtn.Text = "Verifikasi"
+            VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            VerifyBtn.TextSize = 12
+            VerifyBtn.ZIndex = 501
+
+            local VCorner = Instance.new("UICorner")
+            VCorner.CornerRadius = UDim.new(0, 6)
+            VCorner.Parent = VerifyBtn
+
+            local GetKeyBtn = Instance.new("TextButton")
+            GetKeyBtn.Parent = KeyGui
+            GetKeyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+            GetKeyBtn.Position = UDim2.new(0.52, 6, 0, 144)
+            GetKeyBtn.Size = UDim2.new(0.48, -10, 0, 36)
+            GetKeyBtn.Font = Enum.Font.GothamBold
+            GetKeyBtn.Text = "Dapatkan Key"
+            GetKeyBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
+            GetKeyBtn.TextSize = 12
+            GetKeyBtn.ZIndex = 501
+
+            local GCorner = Instance.new("UICorner")
+            GCorner.CornerRadius = UDim.new(0, 6)
+            GCorner.Parent = GetKeyBtn
+
+            TrackConnection(VerifyBtn.MouseButton1Click:Connect(function()
+                local entered = KeyInput.Text
+                local validKeys = keySettings.Keys or {"AETHER-FREE-11"}
+                local isValid = false
+                for _, k in ipairs(validKeys) do
+                    if entered == k then isValid = true break end
+                end
+                if isValid then
+                    uiUnlocked = true
+                    -- Simpan waktu kedaluwarsa ke file lokal executor
+                    if writefile then
+                        local expiryTime = os.time() + durationInSeconds
+                        local cacheData = game:GetService("HttpService"):JSONEncode({ExpiryTime = expiryTime})
+                        pcall(function() writefile(keyFileName, cacheData) end)
+                    end
+
+                    TweenService:Create(KeyGui, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+                    task.delay(0.3, function() KeyGui:Destroy() end)
+                else
+                    KeyInput.Text = ""
+                    KeyInput.PlaceholderText = "Key Salah! Coba lagi..."
+                end
+            end))
+
+            TrackConnection(GetKeyBtn.MouseButton1Click:Connect(function()
+                if setclipboard then
+                    setclipboard(keySettings.KeyLink or "https://github.com/TheGoodManzz10/TheGoodManzzScript")
+                    GetKeyBtn.Text = "Link Tersalin!"
+                    task.delay(1.5, function() GetKeyBtn.Text = "Dapatkan Key" end)
+                end
+            end))
+
+            while not uiUnlocked do task.wait(0.1) end
+        end
     end
 
     -------------------------------------------------------------------
