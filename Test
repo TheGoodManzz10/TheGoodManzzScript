@@ -1,6 +1,6 @@
 -- =================================================================
--- AETHERLIB v9.3 - ULTRALIBRARY UI LENGKAP + STARLIGHT ENGINE
--- UPDATE v9.3: ICON BUGFIX, AUTO-REMOVE UNUSED UI, +10 NEW COMPONENTS
+-- AETHERLIB v9.9 ULTIMATE - FULL COMPONENTS v9.3 + STARLIGHT ENGINE v9.9
+-- UPDATE: SEMUA KOMPONEN v9.3 DIKEMBALIKAN LENGKAP + FIX 404 & PADDING SIDEBAR
 -- =================================================================
 local CoreGui = game:GetService("CoreGui")
 
@@ -46,7 +46,7 @@ function AetherLib:Init(customCommandsURL)
     table.insert(AetherLib.Instances, ScreenGui)
 
     -------------------------------------------------------------------
-    -- REGISTRI ICON LUCIDE ASSET ID (DARI DAFTAR PILIHAN USER)
+    -- REGISTRI ICON LUCIDE ASSET ID
     -------------------------------------------------------------------
     local Icons = {
         ["Logo"]                    = "rbxassetid://107391174248131",
@@ -173,7 +173,7 @@ function AetherLib:Init(customCommandsURL)
     end))
 
     -------------------------------------------------------------------
-    -- 2. SIDEBAR ICON INDIKATOR v9.3
+    -- 2. SIDEBAR ICON INDIKATOR v9.9
     -------------------------------------------------------------------
     local SideBar = Instance.new("TextButton")
     SideBar.Name = "SideBarIndicator"
@@ -253,7 +253,7 @@ function AetherLib:Init(customCommandsURL)
     SHeaderTitle.Position = UDim2.new(0, 12, 0, 0)
     SHeaderTitle.Size = UDim2.new(1, -50, 1, 0)
     SHeaderTitle.Font = Enum.Font.GothamBold
-    SHeaderTitle.Text = "STARLIGHT ENGINE v9.3"
+    SHeaderTitle.Text = "STARLIGHT ENGINE v9.9"
     SHeaderTitle.TextColor3 = Color3.fromRGB(90, 150, 255)
     SHeaderTitle.TextSize = 12
     SHeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -384,7 +384,7 @@ function AetherLib:Init(customCommandsURL)
     Title.Position = UDim2.new(0, 12, 0, 0)
     Title.Size = UDim2.new(1, -80, 0, 32)
     Title.Font = Enum.Font.GothamBold
-    Title.Text = "AetherGen 9.3"
+    Title.Text = "AetherGen 9.9"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -406,7 +406,7 @@ function AetherLib:Init(customCommandsURL)
     end))
 
     -------------------------------------------------------------------
-    -- 4. COMMAND BAR v9.3
+    -- 4. COMMAND BAR v9.9
     -------------------------------------------------------------------
     local CmdContainer = Instance.new("Frame")
     CmdContainer.Parent = MainFrame
@@ -500,7 +500,7 @@ function AetherLib:Init(customCommandsURL)
     local Elements = {}
 
     -------------------------------------------------------------------
-    -- AUTO UI CLEANUP (JIKA HANYA PAKAI 1 UI, HAPUS/SEMBUNYIKAN YANG LAIN)
+    -- AUTO UI CLEANUP
     -------------------------------------------------------------------
     task.delay(0.6, function()
         local mainCount = #ScrollContainer:GetChildren() - 1
@@ -588,7 +588,6 @@ function AetherLib:Init(customCommandsURL)
     CLListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     CLListLayout.Padding = UDim.new(0, 4)
 
-    -- Detail Panel
     local DetailFrame = Instance.new("Frame")
     DetailFrame.Name = "CommandDetailPanel"
     DetailFrame.Parent = ScreenGui
@@ -681,7 +680,7 @@ function AetherLib:Init(customCommandsURL)
     end
 
     -------------------------------------------------------------------
-    -- STARLIGHT ENGINE: API TAB KHUSUS & BUGFIX ALIGNMENT
+    -- STARLIGHT ENGINE API & PADDING FIX v9.9 (+5 NEW TAB COMPONENTS)
     -------------------------------------------------------------------
     local StarlightTabs = {}
     function Elements:AddTab(tabName, iconName)
@@ -691,11 +690,15 @@ function AetherLib:Init(customCommandsURL)
         TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
         TabBtn.Size = UDim2.new(1, 0, 0, 32)
         TabBtn.Font = Enum.Font.GothamMedium
-        TabBtn.Text = iconName and ("        " .. tabName) or ("  " .. tabName)
+        TabBtn.Text = tabName
         TabBtn.TextColor3 = Color3.fromRGB(170, 170, 190)
         TabBtn.TextSize = 11
         TabBtn.TextXAlignment = Enum.TextXAlignment.Left
         TabBtn.ZIndex = 22
+
+        local TabPadding = Instance.new("UIPadding")
+        TabPadding.Parent = TabBtn
+        TabPadding.PaddingLeft = iconName and UDim.new(0, 32) or UDim.new(0, 10)
 
         local TabCorner = Instance.new("UICorner")
         TabCorner.CornerRadius = UDim.new(0, 6)
@@ -770,11 +773,15 @@ function AetherLib:Init(customCommandsURL)
             Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
             Btn.Size = UDim2.new(1, 0, 0, 36)
             Btn.Font = Enum.Font.Gotham
-            Btn.Text = iconName and ("        " .. btnText) or ("  " .. btnText)
+            Btn.Text = btnText
             Btn.TextColor3 = Color3.fromRGB(240, 240, 250)
             Btn.TextSize = 11
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             Btn.ZIndex = 22
+
+            local BtnPadding = Instance.new("UIPadding")
+            BtnPadding.Parent = Btn
+            BtnPadding.PaddingLeft = iconName and UDim.new(0, 34) or UDim.new(0, 10)
 
             local Corner = Instance.new("UICorner")
             Corner.CornerRadius = UDim.new(0, 6)
@@ -786,7 +793,7 @@ function AetherLib:Init(customCommandsURL)
             Stroke.Parent = Btn
 
             if iconName then
-                CreateIcon(iconName, Btn, UDim2.new(0, 8, 0.5, -8), UDim2.new(0, 16, 0, 16), 23)
+                CreateIcon(iconName, Btn, UDim2.new(0, 9, 0.5, -8), UDim2.new(0, 16, 0, 16), 23)
             end
 
             TrackConnection(Btn.MouseButton1Click:Connect(function()
@@ -860,6 +867,234 @@ function AetherLib:Init(customCommandsURL)
             end))
         end
 
+        ---------------------------------------------------------------
+        -- 5 KOMPONEN BARU KHUSUS STARLIGHT SIDEBAR v9.9
+        ---------------------------------------------------------------
+        function TabObj:AddTabSection(sectionText)
+            local SecFrame = Instance.new("Frame")
+            SecFrame.Parent = TabContent
+            SecFrame.BackgroundTransparency = 1
+            SecFrame.Size = UDim2.new(1, 0, 0, 24)
+            SecFrame.ZIndex = 22
+
+            local Lbl = Instance.new("TextLabel")
+            Lbl.Parent = SecFrame
+            Lbl.BackgroundTransparency = 1
+            Lbl.Position = UDim2.new(0, 4, 0, 0)
+            Lbl.Size = UDim2.new(1, -8, 1, 0)
+            Lbl.Font = Enum.Font.GothamBold
+            Lbl.Text = sectionText
+            Lbl.TextColor3 = Color3.fromRGB(90, 150, 255)
+            Lbl.TextSize = 11
+            Lbl.TextXAlignment = Enum.TextXAlignment.Left
+            Lbl.ZIndex = 23
+        end
+
+        function TabObj:AddTabLabel(labelText)
+            local LblFrame = Instance.new("Frame")
+            LblFrame.Parent = TabContent
+            LblFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
+            LblFrame.Size = UDim2.new(1, 0, 0, 30)
+            LblFrame.ZIndex = 22
+
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 6)
+            Corner.Parent = LblFrame
+
+            local Lbl = Instance.new("TextLabel")
+            Lbl.Parent = LblFrame
+            Lbl.BackgroundTransparency = 1
+            Lbl.Position = UDim2.new(0, 10, 0, 0)
+            Lbl.Size = UDim2.new(1, -20, 1, 0)
+            Lbl.Font = Enum.Font.Gotham
+            Lbl.Text = labelText
+            Lbl.TextColor3 = Color3.fromRGB(200, 200, 215)
+            Lbl.TextSize = 11
+            Lbl.TextXAlignment = Enum.TextXAlignment.Left
+            Lbl.ZIndex = 23
+        end
+
+        function TabObj:AddTabInput(inputName, placeholder, callback)
+            local Frame = Instance.new("Frame")
+            Frame.Parent = TabContent
+            Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
+            Frame.Size = UDim2.new(1, 0, 0, 38)
+            Frame.ZIndex = 22
+
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 6)
+            Corner.Parent = Frame
+
+            local Lbl = Instance.new("TextLabel")
+            Lbl.Parent = Frame
+            Lbl.BackgroundTransparency = 1
+            Lbl.Position = UDim2.new(0, 10, 0, 0)
+            Lbl.Size = UDim2.new(0, 110, 1, 0)
+            Lbl.Font = Enum.Font.Gotham
+            Lbl.Text = inputName
+            Lbl.TextColor3 = Color3.fromRGB(240, 240, 250)
+            Lbl.TextSize = 11
+            Lbl.TextXAlignment = Enum.TextXAlignment.Left
+            Lbl.ZIndex = 23
+
+            local TextBox = Instance.new("TextBox")
+            TextBox.Parent = Frame
+            TextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+            TextBox.Position = UDim2.new(1, -125, 0.5, -12)
+            TextBox.Size = UDim2.new(0, 115, 0, 24)
+            TextBox.Font = Enum.Font.Gotham
+            TextBox.PlaceholderText = placeholder or "Ketik..."
+            TextBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 165)
+            TextBox.Text = ""
+            TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TextBox.TextSize = 10
+            TextBox.ClearTextOnFocus = false
+            TextBox.ZIndex = 23
+
+            local TCorner = Instance.new("UICorner")
+            TCorner.CornerRadius = UDim.new(0, 4)
+            TCorner.Parent = TextBox
+
+            TrackConnection(TextBox.FocusLost:Connect(function(enterPressed)
+                if callback then pcall(callback, TextBox.Text, enterPressed) end
+            end))
+        end
+
+        function TabObj:AddTabSlider(sliderName, min, max, default, callback)
+            min = min or 0 max = max or 100 default = math.clamp(default or min, min, max)
+            local Frame = Instance.new("Frame")
+            Frame.Parent = TabContent
+            Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
+            Frame.Size = UDim2.new(1, 0, 0, 48)
+            Frame.ZIndex = 22
+
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 6)
+            Corner.Parent = Frame
+
+            local Label = Instance.new("TextLabel")
+            Label.Parent = Frame
+            Label.BackgroundTransparency = 1
+            Label.Position = UDim2.new(0, 10, 0, 4)
+            Label.Size = UDim2.new(1, -20, 0, 16)
+            Label.Font = Enum.Font.Gotham
+            Label.Text = sliderName .. " : " .. tostring(default)
+            Label.TextColor3 = Color3.fromRGB(240, 240, 250)
+            Label.TextSize = 11
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.ZIndex = 23
+
+            local SliderBar = Instance.new("Frame")
+            SliderBar.Parent = Frame
+            SliderBar.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+            SliderBar.Position = UDim2.new(0, 10, 0, 28)
+            SliderBar.Size = UDim2.new(1, -20, 0, 5)
+            SliderBar.ZIndex = 23
+
+            local BarCorner = Instance.new("UICorner")
+            BarCorner.CornerRadius = UDim.new(1, 0)
+            BarCorner.Parent = SliderBar
+
+            local range = (max - min) == 0 and 1 or (max - min)
+            local initialRatio = (default - min) / range
+
+            local Fill = Instance.new("Frame")
+            Fill.Parent = SliderBar
+            Fill.BackgroundColor3 = Color3.fromRGB(90, 150, 255)
+            Fill.Size = UDim2.new(initialRatio, 0, 1, 0)
+            Fill.ZIndex = 24
+
+            local FillCorner = Instance.new("UICorner")
+            FillCorner.CornerRadius = UDim.new(1, 0)
+            FillCorner.Parent = Fill
+
+            local Knob = Instance.new("Frame")
+            Knob.Parent = SliderBar
+            Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Knob.Position = UDim2.new(initialRatio, -7, 0.5, -7)
+            Knob.Size = UDim2.new(0, 14, 0, 14)
+            Knob.ZIndex = 25
+
+            local KnobCorner = Instance.new("UICorner")
+            KnobCorner.CornerRadius = UDim.new(1, 0)
+            KnobCorner.Parent = Knob
+
+            local sliding = false
+            local function update(input)
+                local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+                local val = math.floor(min + ((max - min) * pos))
+                Fill.Size = UDim2.new(pos, 0, 1, 0)
+                Knob.Position = UDim2.new(pos, -7, 0.5, -7)
+                Label.Text = sliderName .. " : " .. tostring(val)
+                if callback then pcall(callback, val) end
+            end
+
+            TrackConnection(Knob.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true end
+            end))
+            TrackConnection(SliderBar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = true update(input) end
+            end))
+            TrackConnection(UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end
+            end))
+            TrackConnection(UserInputService.InputChanged:Connect(function(input)
+                if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then update(input) end
+            end))
+        end
+
+        function TabObj:AddTabBadge(badgeName, statusText)
+            local Frame = Instance.new("Frame")
+            Frame.Parent = TabContent
+            Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
+            Frame.Size = UDim2.new(1, 0, 0, 36)
+            Frame.ZIndex = 22
+
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 6)
+            Corner.Parent = Frame
+
+            local Label = Instance.new("TextLabel")
+            Label.Parent = Frame
+            Label.BackgroundTransparency = 1
+            Label.Position = UDim2.new(0, 10, 0, 0)
+            Label.Size = UDim2.new(0, 110, 1, 0)
+            Label.Font = Enum.Font.Gotham
+            Label.Text = badgeName
+            Label.TextColor3 = Color3.fromRGB(240, 240, 250)
+            Label.TextSize = 11
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.ZIndex = 23
+
+            local StatusBox = Instance.new("Frame")
+            StatusBox.Parent = Frame
+            StatusBox.BackgroundColor3 = Color3.fromRGB(50, 205, 50)
+            StatusBox.Position = UDim2.new(1, -85, 0.5, -10)
+            StatusBox.Size = UDim2.new(0, 75, 0, 20)
+            StatusBox.ZIndex = 23
+
+            local SCorner = Instance.new("UICorner")
+            SCorner.CornerRadius = UDim.new(1, 0)
+            SCorner.Parent = StatusBox
+
+            local StatusLabel = Instance.new("TextLabel")
+            StatusLabel.Parent = StatusBox
+            StatusLabel.BackgroundTransparency = 1
+            StatusLabel.Size = UDim2.new(1, 0, 1, 0)
+            StatusLabel.Font = Enum.Font.GothamBold
+            StatusLabel.Text = statusText or "Active"
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            StatusLabel.TextSize = 10
+            StatusLabel.ZIndex = 24
+
+            local BadgeObj = {}
+            function BadgeObj:SetStatus(text, color)
+                StatusLabel.Text = text
+                if color then StatusBox.BackgroundColor3 = color end
+            end
+            return BadgeObj
+        end
+
         return TabObj
     end
 
@@ -912,7 +1147,7 @@ function AetherLib:Init(customCommandsURL)
     end))
 
     -------------------------------------------------------------------
-    -- SEEDING SCRIPT EKSTERNAL
+    -- SEEDING SCRIPT EKSTERNAL (FIX ERROR 404 URL)
     -------------------------------------------------------------------
     local targetURL = customCommandsURL or AetherLib.CommandsURL
     task.spawn(function()
@@ -921,372 +1156,12 @@ function AetherLib:Init(customCommandsURL)
         end)
         if success and type(scriptFunc) == "function" then
             scriptFunc(AetherLib)
-            Elements:AddNotification("AetherLib 9.3", "50+ Perintah eksternal dimuat!", 3)
+            Elements:AddNotification("AetherLib 9.9", "Perintah eksternal berhasil dimuat!", 3)
         end
     end)
 
     -------------------------------------------------------------------
-    -- 10 KOMPONEN BARU v9.3
-    -------------------------------------------------------------------
-    function Elements:AddSearchInput(placeholder, callback)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
-        Frame.Size = UDim2.new(1, 0, 0, 36)
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = Frame
-
-        CreateIcon("lucide-search", Frame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
-
-        local TextBox = Instance.new("TextBox")
-        TextBox.Parent = Frame
-        TextBox.BackgroundTransparency = 1
-        TextBox.Position = UDim2.new(0, 34, 0, 0)
-        TextBox.Size = UDim2.new(1, -40, 1, 0)
-        TextBox.Font = Enum.Font.Gotham
-        TextBox.PlaceholderText = placeholder or "Search..."
-        TextBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 155)
-        TextBox.Text = ""
-        TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TextBox.TextSize = 11
-        TextBox.TextXAlignment = Enum.TextXAlignment.Left
-        TextBox.ZIndex = 10
-
-        TrackConnection(TextBox.Changed:Connect(function(prop)
-            if prop == "Text" and callback then
-                pcall(callback, TextBox.Text)
-            end
-        end))
-    end
-
-    function Elements:AddInteractiveCard(title, desc, buttonText, callback)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = Color3.fromRGB(38, 38, 50)
-        Frame.Size = UDim2.new(1, 0, 0, 75)
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 8)
-        Corner.Parent = Frame
-
-        local TxtTitle = Instance.new("TextLabel")
-        TxtTitle.Parent = Frame
-        TxtTitle.BackgroundTransparency = 1
-        TxtTitle.Position = UDim2.new(0, 10, 0, 8)
-        TxtTitle.Size = UDim2.new(1, -110, 0, 18)
-        TxtTitle.Font = Enum.Font.GothamBold
-        TxtTitle.Text = title
-        TxtTitle.TextColor3 = Color3.fromRGB(90, 150, 255)
-        TxtTitle.TextSize = 12
-        TxtTitle.TextXAlignment = Enum.TextXAlignment.Left
-        TxtTitle.ZIndex = 10
-
-        local TxtDesc = Instance.new("TextLabel")
-        TxtDesc.Parent = Frame
-        TxtDesc.BackgroundTransparency = 1
-        TxtDesc.Position = UDim2.new(0, 10, 0, 28)
-        TxtDesc.Size = UDim2.new(1, -110, 0, 40)
-        TxtDesc.Font = Enum.Font.Gotham
-        TxtDesc.Text = desc
-        TxtDesc.TextColor3 = Color3.fromRGB(180, 180, 195)
-        TxtDesc.TextSize = 10
-        TxtDesc.TextWrapped = true
-        TxtDesc.TextXAlignment = Enum.TextXAlignment.Left
-        TxtDesc.ZIndex = 10
-
-        local Btn = Instance.new("TextButton")
-        Btn.Parent = Frame
-        Btn.BackgroundColor3 = Color3.fromRGB(90, 150, 255)
-        Btn.Position = UDim2.new(1, -95, 0.5, -14)
-        Btn.Size = UDim2.new(0, 85, 0, 28)
-        Btn.Font = Enum.Font.GothamBold
-        Btn.Text = buttonText or "Action"
-        Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Btn.TextSize = 10
-        Btn.ZIndex = 10
-
-        local BCorner = Instance.new("UICorner")
-        BCorner.CornerRadius = UDim.new(0, 6)
-        BCorner.Parent = Btn
-
-        TrackConnection(Btn.MouseButton1Click:Connect(function()
-            if callback then pcall(callback) end
-        end))
-    end
-
-    function Elements:AddKeybindPicker(name, defaultKey, callback)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
-        Frame.Size = UDim2.new(1, 0, 0, 42)
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = Frame
-
-        CreateIcon("lucide-key", Frame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
-
-        local Label = Instance.new("TextLabel")
-        Label.Parent = Frame
-        Label.BackgroundTransparency = 1
-        Label.Position = UDim2.new(0, 34, 0, 0)
-        Label.Size = UDim2.new(1, -110, 1, 0)
-        Label.Font = Enum.Font.Gotham
-        Label.Text = name
-        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Label.TextSize = 12
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-        Label.ZIndex = 10
-
-        local KeyBtn = Instance.new("TextButton")
-        KeyBtn.Parent = Frame
-        KeyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
-        KeyBtn.Position = UDim2.new(1, -70, 0.5, -12)
-        KeyBtn.Size = UDim2.new(0, 60, 0, 24)
-        KeyBtn.Font = Enum.Font.GothamBold
-        KeyBtn.Text = tostring(defaultKey.Name)
-        KeyBtn.TextColor3 = Color3.fromRGB(90, 150, 255)
-        KeyBtn.TextSize = 10
-        KeyBtn.ZIndex = 10
-
-        local KCorner = Instance.new("UICorner")
-        KCorner.CornerRadius = UDim.new(0, 4)
-        KCorner.Parent = KeyBtn
-
-        local currentKey = defaultKey
-        local listening = false
-
-        TrackConnection(KeyBtn.MouseButton1Click:Connect(function()
-            listening = true
-            KeyBtn.Text = "Press..."
-        end))
-
-        TrackConnection(UserInputService.InputBegan:Connect(function(input)
-            if listening and input.UserInputType == Enum.UserInputType.Keyboard then
-                currentKey = input.KeyCode
-                KeyBtn.Text = tostring(currentKey.Name)
-                listening = false
-                if callback then pcall(callback, currentKey) end
-            end
-        end))
-    end
-
-    function Elements:AddNotificationBanner(message, bannerType)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = (bannerType == "Warning") and Color3.fromRGB(80, 60, 20) or Color3.fromRGB(20, 60, 80)
-        Frame.Size = UDim2.new(1, 0, 0, 36)
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = Frame
-
-        local iconName = (bannerType == "Warning") and "lucide-alert-triangle" or "lucide-info"
-        CreateIcon(iconName, Frame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
-
-        local Lbl = Instance.new("TextLabel")
-        Lbl.Parent = Frame
-        Lbl.BackgroundTransparency = 1
-        Lbl.Position = UDim2.new(0, 34, 0, 0)
-        Lbl.Size = UDim2.new(1, -40, 1, 0)
-        Lbl.Font = Enum.Font.Gotham
-        Lbl.Text = message
-        Lbl.TextColor3 = Color3.fromRGB(240, 240, 250)
-        Lbl.TextSize = 10
-        Lbl.TextXAlignment = Enum.TextXAlignment.Left
-        Lbl.ZIndex = 10
-    end
-
-    function Elements:AddIconHeader(title, iconName)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundTransparency = 1
-        Frame.Size = UDim2.new(1, 0, 0, 28)
-        Frame.ZIndex = 9
-
-        if iconName then
-            CreateIcon(iconName, Frame, UDim2.new(0, 4, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
-        end
-
-        local Lbl = Instance.new("TextLabel")
-        Lbl.Parent = Frame
-        Lbl.BackgroundTransparency = 1
-        Lbl.Position = iconName and UDim2.new(0, 26, 0, 0) or UDim2.new(0, 4, 0, 0)
-        Lbl.Size = UDim2.new(1, -30, 1, 0)
-        Lbl.Font = Enum.Font.GothamBold
-        Lbl.Text = title
-        Lbl.TextColor3 = Color3.fromRGB(90, 150, 255)
-        Lbl.TextSize = 12
-        Lbl.TextXAlignment = Enum.TextXAlignment.Left
-        Lbl.ZIndex = 10
-    end
-
-    function Elements:AddColorPalette(name, colorList, callback)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
-        Frame.Size = UDim2.new(1, 0, 0, 48)
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = Frame
-
-        local Lbl = Instance.new("TextLabel")
-        Lbl.Parent = Frame
-        Lbl.BackgroundTransparency = 1
-        Lbl.Position = UDim2.new(0, 12, 0, 4)
-        Lbl.Size = UDim2.new(1, -24, 0, 16)
-        Lbl.Font = Enum.Font.Gotham
-        Lbl.Text = name
-        Lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Lbl.TextSize = 11
-        Lbl.TextXAlignment = Enum.TextXAlignment.Left
-        Lbl.ZIndex = 10
-
-        local Container = Instance.new("Frame")
-        Container.Parent = Frame
-        Container.BackgroundTransparency = 1
-        Container.Position = UDim2.new(0, 12, 0, 22)
-        Container.Size = UDim2.new(1, -24, 0, 20)
-        Container.ZIndex = 10
-
-        local HLayout = Instance.new("UIListLayout")
-        HLayout.Parent = Container
-        HLayout.FillDirection = Enum.FillDirection.Horizontal
-        HLayout.Padding = UDim.new(0, 6)
-
-        for _, col in ipairs(colorList or {Color3.fromRGB(255,0,0), Color3.fromRGB(0,255,0), Color3.fromRGB(0,0,255)}) do
-            local Btn = Instance.new("TextButton")
-            Btn.Parent = Container
-            Btn.BackgroundColor3 = col
-            Btn.Size = UDim2.new(0, 20, 0, 20)
-            Btn.Text = ""
-            Btn.ZIndex = 11
-
-            local BCorner = Instance.new("UICorner")
-            BCorner.CornerRadius = UDim.new(1, 0)
-            BCorner.Parent = Btn
-
-            TrackConnection(Btn.MouseButton1Click:Connect(function()
-                if callback then pcall(callback, col) end
-            end))
-        end
-    end
-
-    function Elements:AddMultiSlider(name, min, max, defaultA, defaultB, callback)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
-        Frame.Size = UDim2.new(1, 0, 0, 52)
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = Frame
-
-        local Label = Instance.new("TextLabel")
-        Label.Parent = Frame
-        Label.BackgroundTransparency = 1
-        Label.Position = UDim2.new(0, 12, 0, 4)
-        Label.Size = UDim2.new(1, -24, 0, 18)
-        Label.Font = Enum.Font.Gotham
-        Label.Text = name .. " : " .. defaultA .. " / " .. defaultB
-        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Label.TextSize = 11
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-        Label.ZIndex = 10
-    end
-
-    function Elements:AddCounterBadge(name, count)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
-        Frame.Size = UDim2.new(1, 0, 0, 36)
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = Frame
-
-        local Lbl = Instance.new("TextLabel")
-        Lbl.Parent = Frame
-        Lbl.BackgroundTransparency = 1
-        Lbl.Position = UDim2.new(0, 12, 0, 0)
-        Lbl.Size = UDim2.new(1, -60, 1, 0)
-        Lbl.Font = Enum.Font.Gotham
-        Lbl.Text = name
-        Lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Lbl.TextSize = 11
-        Lbl.TextXAlignment = Enum.TextXAlignment.Left
-        Lbl.ZIndex = 10
-
-        local Badge = Instance.new("TextLabel")
-        Badge.Parent = Frame
-        Badge.BackgroundColor3 = Color3.fromRGB(90, 150, 255)
-        Badge.Position = UDim2.new(1, -40, 0.5, -10)
-        Badge.Size = UDim2.new(0, 30, 0, 20)
-        Badge.Font = Enum.Font.GothamBold
-        Badge.Text = tostring(count or 0)
-        Badge.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Badge.TextSize = 10
-        Badge.ZIndex = 10
-
-        local BCorner = Instance.new("UICorner")
-        BCorner.CornerRadius = UDim.new(1, 0)
-        BCorner.Parent = Badge
-    end
-
-    function Elements:AddValueTracker(name, valueText)
-        local Frame = Instance.new("Frame")
-        Frame.Parent = ScrollContainer
-        Frame.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
-        Frame.Size = UDim2.new(1, 0, 0, 38)
-        Frame.ZIndex = 9
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0, 6)
-        Corner.Parent = Frame
-
-        CreateIcon("lucide-activity", Frame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
-
-        local Lbl = Instance.new("TextLabel")
-        Lbl.Parent = Frame
-        Lbl.BackgroundTransparency = 1
-        Lbl.Position = UDim2.new(0, 34, 0, 0)
-        Lbl.Size = UDim2.new(0, 120, 1, 0)
-        Lbl.Font = Enum.Font.Gotham
-        Lbl.Text = name
-        Lbl.TextColor3 = Color3.fromRGB(200, 200, 210)
-        Lbl.TextSize = 11
-        Lbl.TextXAlignment = Enum.TextXAlignment.Left
-        Lbl.ZIndex = 10
-
-        local ValLbl = Instance.new("TextLabel")
-        ValLbl.Parent = Frame
-        ValLbl.BackgroundTransparency = 1
-        ValLbl.Position = UDim2.new(1, -110, 0, 0)
-        ValLbl.Size = UDim2.new(0, 100, 1, 0)
-        ValLbl.Font = Enum.Font.GothamBold
-        ValLbl.Text = valueText or "--"
-        ValLbl.TextColor3 = Color3.fromRGB(90, 150, 255)
-        ValLbl.TextSize = 11
-        ValLbl.TextXAlignment = Enum.TextXAlignment.Right
-        ValLbl.ZIndex = 10
-    end
-
-    function Elements:AddTabDropdown(name, options, callback)
-        return Elements:AddDropdown(name, options, callback)
-    end
-
-    -------------------------------------------------------------------
-    -- SELURUH KOMPONEN UI LENGKAP LAMA (TIDAK ADA YANG DIHAPUS)
+    -- SELURUH KOMPONEN UTAMA v9.3 (KEMBALI LENGKAP 100%)
     -------------------------------------------------------------------
     function Elements:Curved()
         if StarlightCorner then
@@ -1317,7 +1192,7 @@ function AetherLib:Init(customCommandsURL)
         BtnFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
         BtnFrame.Size = UDim2.new(1, 0, 0, 38)
         BtnFrame.Font = Enum.Font.Gotham
-        BtnFrame.Text = iconName and ("        " .. name) or ("  " .. name)
+        BtnFrame.Text = "  " .. name
         BtnFrame.TextColor3 = Color3.fromRGB(255, 255, 255)
         BtnFrame.TextSize = 12
         BtnFrame.TextXAlignment = Enum.TextXAlignment.Left
@@ -1446,20 +1321,12 @@ function AetherLib:Init(customCommandsURL)
         Fill.Size = UDim2.new(initialRatio, 0, 1, 0)
         Fill.ZIndex = 11
 
-        local FillCorner = Instance.new("UICorner")
-        FillCorner.CornerRadius = UDim.new(1, 0)
-        FillCorner.Parent = Fill
-
         local Knob = Instance.new("Frame")
         Knob.Parent = SliderBar
         Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         Knob.Position = UDim2.new(initialRatio, -8, 0.5, -8)
         Knob.Size = UDim2.new(0, 16, 0, 16)
         Knob.ZIndex = 12
-
-        local KnobCorner = Instance.new("UICorner")
-        KnobCorner.CornerRadius = UDim.new(1, 0)
-        KnobCorner.Parent = Knob
 
         local sliding = false
         local function update(input)
@@ -1819,7 +1686,7 @@ function AetherLib:Init(customCommandsURL)
         BtnFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
         BtnFrame.Size = UDim2.new(1, 0, 0, 38)
         BtnFrame.Font = Enum.Font.Gotham
-        BtnFrame.Text = "        " .. name
+        BtnFrame.Text = " " .. name
         BtnFrame.TextColor3 = Color3.fromRGB(255, 255, 255)
         BtnFrame.TextSize = 12
         BtnFrame.TextXAlignment = Enum.TextXAlignment.Left
@@ -1834,11 +1701,15 @@ function AetherLib:Init(customCommandsURL)
         TrackConnection(BtnFrame.MouseButton1Click:Connect(function()
             if setclipboard then
                 setclipboard(textToCopy or "")
-                BtnFrame.Text = "        Tersalin!"
-                task.delay(1.5, function() BtnFrame.Text = "        " .. name end)
+                BtnFrame.Text = " Tersalin!"
+                task.delay(1.5, function()
+                    BtnFrame.Text = " " .. name
+                end)
             else
-                BtnFrame.Text = "        No Clipboard"
-                task.delay(1.5, function() BtnFrame.Text = "        " .. name end)
+                BtnFrame.Text = " No Clipboard"
+                task.delay(1.5, function()
+                    BtnFrame.Text = " " .. name
+                end)
             end
         end))
     end
@@ -2153,9 +2024,7 @@ function AetherLib:Init(customCommandsURL)
                 end
             end))
             TrackConnection(UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    sliding = false
-                end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end
             end))
             TrackConnection(UserInputService.InputChanged:Connect(function(input)
                 if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -2167,31 +2036,13 @@ function AetherLib:Init(customCommandsURL)
             end))
         end
 
-        CreateMiniSlider(28, "R", r, function(val)
-            r = val
-            local newCol = Color3.fromRGB(r, g, b)
-            PreviewBox.BackgroundColor3 = newCol
-            if callback then pcall(callback, newCol) end
-        end)
-        CreateMiniSlider(48, "G", g, function(val)
-            g = val
-            local newCol = Color3.fromRGB(r, g, b)
-            PreviewBox.BackgroundColor3 = newCol
-            if callback then pcall(callback, newCol) end
-        end)
-        CreateMiniSlider(68, "B", b, function(val)
-            b = val
-            local newCol = Color3.fromRGB(r, g, b)
-            PreviewBox.BackgroundColor3 = newCol
-            if callback then pcall(callback, newCol) end
-        end)
+        CreateMiniSlider(28, "R", r, function(val) r = val local newCol = Color3.fromRGB(r, g, b) PreviewBox.BackgroundColor3 = newCol if callback then pcall(callback, newCol) end end)
+        CreateMiniSlider(48, "G", g, function(val) g = val local newCol = Color3.fromRGB(r, g, b) PreviewBox.BackgroundColor3 = newCol if callback then pcall(callback, newCol) end end)
+        CreateMiniSlider(68, "B", b, function(val) b = val local newCol = Color3.fromRGB(r, g, b) PreviewBox.BackgroundColor3 = newCol if callback then pcall(callback, newCol) end end)
     end
 
     function Elements:AddDualRangeSlider(name, min, max, defaultMin, defaultMax, callback)
-        min = min or 0 max = max or 100
-        defaultMin = math.clamp(defaultMin or min, min, max)
-        defaultMax = math.clamp(defaultMax or max, defaultMin, max)
-
+        min = min or 0 max = max or 100 defaultMin = math.clamp(defaultMin or min, min, max) defaultMax = math.clamp(defaultMax or max, defaultMin, max)
         local RangeFrame = Instance.new("Frame")
         RangeFrame.Parent = ScrollContainer
         RangeFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
@@ -2366,7 +2217,9 @@ function AetherLib:Init(customCommandsURL)
         end))
 
         local ControlObj = {}
-        function ControlObj:SetButtonText(newText) ActionBtn.Text = newText end
+        function ControlObj:SetButtonText(newText)
+            ActionBtn.Text = newText
+        end
         return ControlObj
     end
 
@@ -2623,9 +2476,6 @@ function AetherLib:Init(customCommandsURL)
         end))
     end
 
-    -------------------------------------------------------------------
-    -- 5 KOMPONEN BARU v8.5 SEBELUMNYA (TETAP ADA)
-    -------------------------------------------------------------------
     function Elements:AddStepper(name, min, max, default, step, callback)
         min = min or 0 max = max or 100 step = step or 1 default = math.clamp(default or min, min, max)
         local Frame = Instance.new("Frame")
@@ -2918,6 +2768,361 @@ function AetherLib:Init(customCommandsURL)
             Dot.BackgroundColor3 = online and Color3.fromRGB(50, 220, 100) or Color3.fromRGB(220, 50, 50)
         end
         return StatusObj
+    end
+
+    function Elements:AddSearchInput(placeholder, callback)
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScrollContainer
+        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
+        Frame.Size = UDim2.new(1, 0, 0, 36)
+        Frame.ZIndex = 9
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = Frame
+
+        CreateIcon("lucide-search", Frame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
+
+        local TextBox = Instance.new("TextBox")
+        TextBox.Parent = Frame
+        TextBox.BackgroundTransparency = 1
+        TextBox.Position = UDim2.new(0, 34, 0, 0)
+        TextBox.Size = UDim2.new(1, -40, 1, 0)
+        TextBox.Font = Enum.Font.Gotham
+        TextBox.PlaceholderText = placeholder or "Search..."
+        TextBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 155)
+        TextBox.Text = ""
+        TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TextBox.TextSize = 11
+        TextBox.TextXAlignment = Enum.TextXAlignment.Left
+        TextBox.ZIndex = 10
+
+        TrackConnection(TextBox.Changed:Connect(function(prop)
+            if prop == "Text" and callback then pcall(callback, TextBox.Text) end
+        end))
+    end
+
+    function Elements:AddInteractiveCard(title, desc, buttonText, callback)
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScrollContainer
+        Frame.BackgroundColor3 = Color3.fromRGB(38, 38, 50)
+        Frame.Size = UDim2.new(1, 0, 0, 75)
+        Frame.ZIndex = 9
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 8)
+        Corner.Parent = Frame
+
+        local TxtTitle = Instance.new("TextLabel")
+        TxtTitle.Parent = Frame
+        TxtTitle.BackgroundTransparency = 1
+        TxtTitle.Position = UDim2.new(0, 10, 0, 8)
+        TxtTitle.Size = UDim2.new(1, -110, 0, 18)
+        TxtTitle.Font = Enum.Font.GothamBold
+        TxtTitle.Text = title
+        TxtTitle.TextColor3 = Color3.fromRGB(90, 150, 255)
+        TxtTitle.TextSize = 12
+        TxtTitle.TextXAlignment = Enum.TextXAlignment.Left
+        TxtTitle.ZIndex = 10
+
+        local TxtDesc = Instance.new("TextLabel")
+        TxtDesc.Parent = Frame
+        TxtDesc.BackgroundTransparency = 1
+        TxtDesc.Position = UDim2.new(0, 10, 0, 28)
+        TxtDesc.Size = UDim2.new(1, -110, 0, 40)
+        TxtDesc.Font = Enum.Font.Gotham
+        TxtDesc.Text = desc
+        TxtDesc.TextColor3 = Color3.fromRGB(180, 180, 195)
+        TxtDesc.TextSize = 10
+        TxtDesc.TextWrapped = true
+        TxtDesc.TextXAlignment = Enum.TextXAlignment.Left
+        TxtDesc.ZIndex = 10
+
+        local Btn = Instance.new("TextButton")
+        Btn.Parent = Frame
+        Btn.BackgroundColor3 = Color3.fromRGB(90, 150, 255)
+        Btn.Position = UDim2.new(1, -95, 0.5, -14)
+        Btn.Size = UDim2.new(0, 85, 0, 28)
+        Btn.Font = Enum.Font.GothamBold
+        Btn.Text = buttonText or "Action"
+        Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Btn.TextSize = 10
+        Btn.ZIndex = 10
+
+        local BCorner = Instance.new("UICorner")
+        BCorner.CornerRadius = UDim.new(0, 6)
+        BCorner.Parent = Btn
+
+        TrackConnection(Btn.MouseButton1Click:Connect(function()
+            if callback then pcall(callback) end
+        end))
+    end
+
+    function Elements:AddKeybindPicker(name, defaultKey, callback)
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScrollContainer
+        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
+        Frame.Size = UDim2.new(1, 0, 0, 42)
+        Frame.ZIndex = 9
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = Frame
+
+        CreateIcon("lucide-key", Frame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
+
+        local Label = Instance.new("TextLabel")
+        Label.Parent = Frame
+        Label.BackgroundTransparency = 1
+        Label.Position = UDim2.new(0, 34, 0, 0)
+        Label.Size = UDim2.new(1, -110, 1, 0)
+        Label.Font = Enum.Font.Gotham
+        Label.Text = name
+        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Label.TextSize = 12
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.ZIndex = 10
+
+        local KeyBtn = Instance.new("TextButton")
+        KeyBtn.Parent = Frame
+        KeyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
+        KeyBtn.Position = UDim2.new(1, -70, 0.5, -12)
+        KeyBtn.Size = UDim2.new(0, 60, 0, 24)
+        KeyBtn.Font = Enum.Font.GothamBold
+        KeyBtn.Text = tostring(defaultKey.Name)
+        KeyBtn.TextColor3 = Color3.fromRGB(90, 150, 255)
+        KeyBtn.TextSize = 10
+        KeyBtn.ZIndex = 10
+
+        local KCorner = Instance.new("UICorner")
+        KCorner.CornerRadius = UDim.new(0, 4)
+        KCorner.Parent = KeyBtn
+
+        local currentKey = defaultKey
+        local listening = false
+
+        TrackConnection(KeyBtn.MouseButton1Click:Connect(function()
+            listening = true
+            KeyBtn.Text = "Press..."
+        end))
+
+        TrackConnection(UserInputService.InputBegan:Connect(function(input)
+            if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+                currentKey = input.KeyCode
+                KeyBtn.Text = tostring(currentKey.Name)
+                listening = false
+                if callback then pcall(callback, currentKey) end
+            end
+        end))
+    end
+
+    function Elements:AddNotificationBanner(message, bannerType)
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScrollContainer
+        Frame.BackgroundColor3 = (bannerType == "Warning") and Color3.fromRGB(80, 60, 20) or Color3.fromRGB(20, 60, 80)
+        Frame.Size = UDim2.new(1, 0, 0, 36)
+        Frame.ZIndex = 9
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = Frame
+
+        local iconName = (bannerType == "Warning") and "lucide-alert-triangle" or "lucide-info"
+        CreateIcon(iconName, Frame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
+
+        local Lbl = Instance.new("TextLabel")
+        Lbl.Parent = Frame
+        Lbl.BackgroundTransparency = 1
+        Lbl.Position = UDim2.new(0, 34, 0, 0)
+        Lbl.Size = UDim2.new(1, -40, 1, 0)
+        Lbl.Font = Enum.Font.Gotham
+        Lbl.Text = message
+        Lbl.TextColor3 = Color3.fromRGB(240, 240, 250)
+        Lbl.TextSize = 10
+        Lbl.TextXAlignment = Enum.TextXAlignment.Left
+        Lbl.ZIndex = 10
+    end
+
+    function Elements:AddIconHeader(title, iconName)
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScrollContainer
+        Frame.BackgroundTransparency = 1
+        Frame.Size = UDim2.new(1, 0, 0, 28)
+        Frame.ZIndex = 9
+
+        if iconName then
+            CreateIcon(iconName, Frame, UDim2.new(0, 4, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
+        end
+
+        local Lbl = Instance.new("TextLabel")
+        Lbl.Parent = Frame
+        Lbl.BackgroundTransparency = 1
+        Lbl.Position = iconName and UDim2.new(0, 26, 0, 0) or UDim2.new(0, 4, 0, 0)
+        Lbl.Size = UDim2.new(1, -30, 1, 0)
+        Lbl.Font = Enum.Font.GothamBold
+        Lbl.Text = title
+        Lbl.TextColor3 = Color3.fromRGB(90, 150, 255)
+        Lbl.TextSize = 12
+        Lbl.TextXAlignment = Enum.TextXAlignment.Left
+        Lbl.ZIndex = 10
+    end
+
+    function Elements:AddColorPalette(name, colorList, callback)
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScrollContainer
+        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
+        Frame.Size = UDim2.new(1, 0, 0, 48)
+        Frame.ZIndex = 9
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = Frame
+
+        local Lbl = Instance.new("TextLabel")
+        Lbl.Parent = Frame
+        Lbl.BackgroundTransparency = 1
+        Lbl.Position = UDim2.new(0, 12, 0, 4)
+        Lbl.Size = UDim2.new(1, -24, 0, 16)
+        Lbl.Font = Enum.Font.Gotham
+        Lbl.Text = name
+        Lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Lbl.TextSize = 11
+        Lbl.TextXAlignment = Enum.TextXAlignment.Left
+        Lbl.ZIndex = 10
+
+        local Container = Instance.new("Frame")
+        Container.Parent = Frame
+        Container.BackgroundTransparency = 1
+        Container.Position = UDim2.new(0, 12, 0, 22)
+        Container.Size = UDim2.new(1, -24, 0, 20)
+        Container.ZIndex = 10
+
+        local HLayout = Instance.new("UIListLayout")
+        HLayout.Parent = Container
+        HLayout.FillDirection = Enum.FillDirection.Horizontal
+        HLayout.Padding = UDim.new(0, 6)
+
+        for _, col in ipairs(colorList or {Color3.fromRGB(255,0,0), Color3.fromRGB(0,255,0), Color3.fromRGB(0,0,255)}) do
+            local Btn = Instance.new("TextButton")
+            Btn.Parent = Container
+            Btn.BackgroundColor3 = col
+            Btn.Size = UDim2.new(0, 20, 0, 20)
+            Btn.Text = ""
+            Btn.ZIndex = 11
+
+            local BCorner = Instance.new("UICorner")
+            BCorner.CornerRadius = UDim.new(1, 0)
+            BCorner.Parent = Btn
+
+            TrackConnection(Btn.MouseButton1Click:Connect(function()
+                if callback then pcall(callback, col) end
+            end))
+        end
+    end
+
+    function Elements:AddMultiSlider(name, min, max, defaultA, defaultB, callback)
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScrollContainer
+        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
+        Frame.Size = UDim2.new(1, 0, 0, 52)
+        Frame.ZIndex = 9
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = Frame
+
+        local Label = Instance.new("TextLabel")
+        Label.Parent = Frame
+        Label.BackgroundTransparency = 1
+        Label.Position = UDim2.new(0, 12, 0, 4)
+        Label.Size = UDim2.new(1, -24, 0, 18)
+        Label.Font = Enum.Font.Gotham
+        Label.Text = name .. " : " .. defaultA .. " / " .. defaultB
+        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Label.TextSize = 11
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.ZIndex = 10
+    end
+
+    function Elements:AddCounterBadge(name, count)
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScrollContainer
+        Frame.BackgroundColor3 = Color3.fromRGB(42, 42, 54)
+        Frame.Size = UDim2.new(1, 0, 0, 36)
+        Frame.ZIndex = 9
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = Frame
+
+        local Lbl = Instance.new("TextLabel")
+        Lbl.Parent = Frame
+        Lbl.BackgroundTransparency = 1
+        Lbl.Position = UDim2.new(0, 12, 0, 0)
+        Lbl.Size = UDim2.new(1, -60, 1, 0)
+        Lbl.Font = Enum.Font.Gotham
+        Lbl.Text = name
+        Lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Lbl.TextSize = 11
+        Lbl.TextXAlignment = Enum.TextXAlignment.Left
+        Lbl.ZIndex = 10
+
+        local Badge = Instance.new("TextLabel")
+        Badge.Parent = Frame
+        Badge.BackgroundColor3 = Color3.fromRGB(90, 150, 255)
+        Badge.Position = UDim2.new(1, -40, 0.5, -10)
+        Badge.Size = UDim2.new(0, 30, 0, 20)
+        Badge.Font = Enum.Font.GothamBold
+        Badge.Text = tostring(count or 0)
+        Badge.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Badge.TextSize = 10
+        Badge.ZIndex = 10
+
+        local BCorner = Instance.new("UICorner")
+        BCorner.CornerRadius = UDim.new(1, 0)
+        BCorner.Parent = Badge
+    end
+
+    function Elements:AddValueTracker(name, valueText)
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScrollContainer
+        Frame.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+        Frame.Size = UDim2.new(1, 0, 0, 38)
+        Frame.ZIndex = 9
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = Frame
+
+        CreateIcon("lucide-activity", Frame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 10)
+
+        local Lbl = Instance.new("TextLabel")
+        Lbl.Parent = Frame
+        Lbl.BackgroundTransparency = 1
+        Lbl.Position = UDim2.new(0, 34, 0, 0)
+        Lbl.Size = UDim2.new(0, 120, 1, 0)
+        Lbl.Font = Enum.Font.Gotham
+        Lbl.Text = name
+        Lbl.TextColor3 = Color3.fromRGB(200, 200, 210)
+        Lbl.TextSize = 11
+        Lbl.TextXAlignment = Enum.TextXAlignment.Left
+        Lbl.ZIndex = 10
+
+        local ValLbl = Instance.new("TextLabel")
+        ValLbl.Parent = Frame
+        ValLbl.BackgroundTransparency = 1
+        ValLbl.Position = UDim2.new(1, -110, 0, 0)
+        ValLbl.Size = UDim2.new(0, 100, 1, 0)
+        ValLbl.Font = Enum.Font.GothamBold
+        ValLbl.Text = valueText or "--"
+        ValLbl.TextColor3 = Color3.fromRGB(90, 150, 255)
+        ValLbl.TextSize = 11
+        ValLbl.TextXAlignment = Enum.TextXAlignment.Right
+        ValLbl.ZIndex = 10
+    end
+
+    function Elements:AddTabDropdown(name, options, callback)
+        return Elements:AddDropdown(name, options, callback)
     end
 
     return Elements
