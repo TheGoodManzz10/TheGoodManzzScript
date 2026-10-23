@@ -1,6 +1,6 @@
 -- ================================================================= --
 -- AETHERLIB v14.0 ULTIMATE - STARLIGHT ENGINE v14.0 (FULL COMPONENTS)
--- UPDATE: REMOVED UI CONTENT VALIDITY RULES + 25 BG COLORS + 10 TEXT COLORS
+-- UPDATE: FIXED TAB OVERLAP BUG + 15 ACCENT THEMES + 15 TEXT COLORS
 -- ================================================================= --
 local CoreGui = game:GetService("CoreGui")
 
@@ -134,7 +134,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
     end
 
     -------------------------------------------------------------------
-    -- KEY SYSTEM (UPGRADED: DURASI SPESIFIK KEY & TEKS LOOP KIRI-KANAN)
+    -- KEY SYSTEM
     -------------------------------------------------------------------
     local uiUnlocked = true
     local keyFileName = "AetherLib_KeyCache.json"
@@ -186,7 +186,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
             KTitle.TextXAlignment = Enum.TextXAlignment.Left
             KTitle.ZIndex = 501
 
-            -- Teks Berjalan (Loop Kiri ke Kanan)
             local MarqueeContainer = Instance.new("Frame")
             MarqueeContainer.Parent = KeyGui
             MarqueeContainer.BackgroundTransparency = 1
@@ -237,7 +236,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
             KeyInput.Position = UDim2.new(0, 16, 0, 106)
             KeyInput.Size = UDim2.new(1, -32, 0, 36)
             KeyInput.Font = Enum.Font.Gotham
-            KeyInput.PlaceholderText = "Ketik key di sini (contoh: Key1 atau Key2)..."
+            KeyInput.PlaceholderText = "Ketik key di sini..."
             KeyInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 150)
             KeyInput.Text = ""
             KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -283,7 +282,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
                 local entered = KeyInput.Text
                 local keysConfig = keySettings.Keys or { ["Key1"] = 1, ["Key2"] = 2 }
                 local isValid = false
-                local assignedDurationSec = 86400 -- Default 1 hari
+                local assignedDurationSec = 86400
 
                 if type(keysConfig) == "table" then
                     if keysConfig[entered] then
@@ -330,7 +329,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
     end
 
     -------------------------------------------------------------------
-    -- 1. FLOATING BUTTON ("AG") - Draggable
+    -- 1. FLOATING BUTTON ("AG")
     -------------------------------------------------------------------
     local FloatButton = Instance.new("TextButton")
     FloatButton.Name = "FloatButton"
@@ -489,13 +488,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
     SSidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     SSidebarLayout.Padding = UDim.new(0, 6)
 
-    -------------------------------------------------------------------
-    -- ATURAN VALIDASI DIHAPUS: UI SELALU MUNCUL & BISA DIBUKA
-    -------------------------------------------------------------------
-    local function CheckUIContentValidity()
-        -- Dinonaktifkan agar UI selalu aktif walau tanpa fitur tambahan
-    end
-
     local isAnimating = false
     local function ToggleUI(state)
         if isAnimating or not MainFrame or not MainFrame.Parent then return end
@@ -597,7 +589,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
     TrackConnection(CloseBtn.MouseButton1Click:Connect(function() ToggleUI(false) end))
 
     -------------------------------------------------------------------
-    -- SETTINGS PANEL & BUTTON (UI BIASA & UI SIDEBAR)
+    -- SETTINGS PANEL & BUTTON
     -------------------------------------------------------------------
     local NormalSettingsPanel = Instance.new("Frame")
     NormalSettingsPanel.Name = "NormalSettingsPanel"
@@ -674,16 +666,18 @@ function AetherLib:Init(customCommandsURL, keySettings)
     end))
 
     -------------------------------------------------------------------
-    -- BUILD SETTINGS CONTENT (10 Warna Teks & 25 Warna Background + RGB)
+    -- BUILD SETTINGS CONTENT (15 Warna Teks & 15 Tema Aksen + RGB)
     -------------------------------------------------------------------
+    local Elements = {}
+
     local function BuildSettingsContent(container)
-        -- Label Warna Teks (10 Pilihan)
+        -- Label Warna Teks (15 Pilihan)
         local Lbl1 = Instance.new("TextLabel")
         Lbl1.Parent = container
         Lbl1.BackgroundTransparency = 1
         Lbl1.Size = UDim2.new(1, 0, 0, 20)
         Lbl1.Font = Enum.Font.GothamBold
-        Lbl1.Text = "Pilih Warna Teks & Icon (10 Pilihan):"
+        Lbl1.Text = "Pilih Warna Teks & Icon (15 Pilihan):"
         Lbl1.TextColor3 = Color3.fromRGB(255, 255, 255)
         Lbl1.TextSize = 11
         Lbl1.TextXAlignment = Enum.TextXAlignment.Left
@@ -692,7 +686,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
         local ColorRow = Instance.new("Frame")
         ColorRow.Parent = container
         ColorRow.BackgroundTransparency = 1
-        ColorRow.Size = UDim2.new(1, 0, 0, 56)
+        ColorRow.Size = UDim2.new(1, 0, 0, 85)
         ColorRow.ZIndex = 402
 
         local CRLayout = Instance.new("UIGridLayout")
@@ -710,7 +704,12 @@ function AetherLib:Init(customCommandsURL, keySettings)
             {Name = "Cyan", Color = Color3.fromRGB(50, 220, 220)},
             {Name = "Orange", Color = Color3.fromRGB(255, 140, 0)},
             {Name = "Pink", Color = Color3.fromRGB(255, 105, 180)},
-            {Name = "Lime", Color = Color3.fromRGB(150, 255, 50)}
+            {Name = "Lime", Color = Color3.fromRGB(150, 255, 50)},
+            {Name = "Teal", Color = Color3.fromRGB(0, 200, 180)},
+            {Name = "Magenta", Color = Color3.fromRGB(255, 0, 128)},
+            {Name = "Gold", Color = Color3.fromRGB(218, 165, 32)},
+            {Name = "Lavender", Color = Color3.fromRGB(230, 230, 250)},
+            {Name = "Coral", Color = Color3.fromRGB(255, 127, 80)}
         }
 
         for _, tc in ipairs(textColors) do
@@ -732,17 +731,17 @@ function AetherLib:Init(customCommandsURL, keySettings)
                         icon.ImageColor3 = currentTextThemeColor
                     end
                 end
-                Elements:AddNotification("Theme", "Warna teks/icon diubah ke " .. tc.Name, 2)
+                Elements:AddNotification("Theme", "Warna teks diubah ke " .. tc.Name, 2)
             end))
         end
 
-        -- Label Background Aksen (25 Pilihan)
+        -- Label Tema Aksen Background (15 Pilihan)
         local Lbl2 = Instance.new("TextLabel")
         Lbl2.Parent = container
         Lbl2.BackgroundTransparency = 1
         Lbl2.Size = UDim2.new(1, 0, 0, 20)
         Lbl2.Font = Enum.Font.GothamBold
-        Lbl2.Text = "Aksen Background (25 Pilihan + RGB):"
+        Lbl2.Text = "Tema Aksen Background (15 Pilihan + RGB):"
         Lbl2.TextColor3 = Color3.fromRGB(255, 255, 255)
         Lbl2.TextSize = 11
         Lbl2.TextXAlignment = Enum.TextXAlignment.Left
@@ -751,7 +750,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
         local BgGrid = Instance.new("Frame")
         BgGrid.Parent = container
         BgGrid.BackgroundTransparency = 1
-        BgGrid.Size = UDim2.new(1, 0, 0, 175)
+        BgGrid.Size = UDim2.new(1, 0, 0, 110)
         BgGrid.ZIndex = 402
 
         local BGLayout = Instance.new("UIGridLayout")
@@ -759,19 +758,25 @@ function AetherLib:Init(customCommandsURL, keySettings)
         BGLayout.CellSize = UDim2.new(0, 28, 0, 28)
         BGLayout.CellPadding = UDim2.new(0, 6, 0, 6)
 
-        local bgColors = {
-            Color3.fromRGB(18, 18, 26), Color3.fromRGB(28, 28, 36), Color3.fromRGB(35, 25, 45),
-            Color3.fromRGB(20, 35, 45), Color3.fromRGB(45, 25, 25), Color3.fromRGB(25, 45, 35),
-            Color3.fromRGB(45, 40, 20), Color3.fromRGB(30, 30, 30), Color3.fromRGB(15, 25, 35),
-            Color3.fromRGB(40, 20, 40), Color3.fromRGB(20, 40, 40), Color3.fromRGB(50, 30, 20),
-            Color3.fromRGB(25, 20, 45), Color3.fromRGB(35, 45, 20), Color3.fromRGB(10, 10, 15),
-            Color3.fromRGB(45, 20, 20), Color3.fromRGB(20, 45, 20), Color3.fromRGB(20, 20, 45),
-            Color3.fromRGB(40, 40, 40), Color3.fromRGB(35, 20, 35), Color3.fromRGB(20, 35, 35),
-            Color3.fromRGB(45, 35, 20), Color3.fromRGB(12, 18, 28), Color3.fromRGB(28, 12, 18),
-            Color3.fromRGB(18, 28, 12)
+        local accentThemes = {
+            Color3.fromRGB(18, 18, 26),
+            Color3.fromRGB(28, 28, 36),
+            Color3.fromRGB(35, 25, 45),
+            Color3.fromRGB(20, 35, 45),
+            Color3.fromRGB(45, 25, 25),
+            Color3.fromRGB(25, 45, 35),
+            Color3.fromRGB(30, 30, 30),
+            Color3.fromRGB(15, 15, 20),
+            Color3.fromRGB(15, 35, 35),
+            Color3.fromRGB(25, 20, 45),
+            Color3.fromRGB(45, 35, 20),
+            Color3.fromRGB(40, 40, 50),
+            Color3.fromRGB(45, 20, 35),
+            Color3.fromRGB(20, 40, 30),
+            Color3.fromRGB(20, 25, 45)
         }
 
-        for _, bgCol in ipairs(bgColors) do
+        for _, bgCol in ipairs(accentThemes) do
             local BgBtn = Instance.new("TextButton")
             BgBtn.Parent = BgGrid
             BgBtn.BackgroundColor3 = bgCol
@@ -787,7 +792,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
                 isRgbActive = false
                 MainFrame.BackgroundColor3 = currentBgAccentColor
                 StarlightFrame.BackgroundColor3 = currentBgAccentColor
-                Elements:AddNotification("Theme", "Background aksen diperbarui", 2)
+                Elements:AddNotification("Theme", "Tema aksen background diperbarui", 2)
             end))
         end
 
@@ -919,8 +924,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
     UIListLayout.Parent = ScrollContainer
     UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     UIListLayout.Padding = UDim.new(0, 8)
-
-    local Elements = {}
 
     function Elements:EnableCommandBar()
         CmdContainer.Visible = true
@@ -1085,9 +1088,17 @@ function AetherLib:Init(customCommandsURL, keySettings)
     end
 
     -------------------------------------------------------------------
-    -- STARLIGHT ENGINE API
+    -- STARLIGHT ENGINE API & TAB MANAGEMENT
     -------------------------------------------------------------------
     local StarlightTabs = {}
+    local SSetContent
+
+    local function HideAllStarlightContent()
+        if SSetContent and SSetContent.Parent then SSetContent.Visible = false end
+        for _, t in pairs(StarlightTabs) do
+            if t.Frame and t.Frame.Parent then t.Frame.Visible = false end
+        end
+    end
 
     local function SetupStarlightSettingsTab()
         local SSetTabBtn = Instance.new("TextButton")
@@ -1127,7 +1138,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
         TabLbl.TextXAlignment = Enum.TextXAlignment.Left
         TabLbl.ZIndex = 23
 
-        local SSetContent = Instance.new("ScrollingFrame")
+        SSetContent = Instance.new("ScrollingFrame")
         SSetContent.Name = "Settings_Content"
         SSetContent.Parent = StarlightFrame
         SSetContent.BackgroundTransparency = 1
@@ -1146,7 +1157,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
         SSetLayout.Padding = UDim.new(0, 6)
 
         TrackConnection(SSetTabBtn.MouseButton1Click:Connect(function()
-            for _, t in pairs(StarlightTabs) do t.Frame.Visible = false end
+            HideAllStarlightContent()
             SSetContent.Visible = true
             for _, child in ipairs(StarlightSidebar:GetChildren()) do
                 if child:IsA("TextButton") then
@@ -1156,7 +1167,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
                 end
             end
             TweenService:Create(SSetTabBtn, TweenInfo.new(0.2), { BackgroundColor3 = Color3.fromRGB(38, 38, 55) }):Play()
-            TweenService:Create(TabLbl, TweenInfo.new(0.2), { TextColor3 = Color3.fromRGB(90, 150, 255) }):Play()
+            local sLbl = SSetTabBtn:FindFirstChild("TabLabel")
+            if sLbl then TweenService:Create(sLbl, TweenInfo.new(0.2), { TextColor3 = currentTextThemeColor }):Play() end
         end))
 
         BuildSettingsContent(SSetContent)
@@ -1228,7 +1240,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
         local TabObj = { Frame = TabContent }
 
         TrackConnection(TabBtn.MouseButton1Click:Connect(function()
-            for _, t in pairs(StarlightTabs) do t.Frame.Visible = false end
+            HideAllStarlightContent()
             TabContent.Visible = true
             for _, child in ipairs(StarlightSidebar:GetChildren()) do
                 if child:IsA("TextButton") then
@@ -1238,13 +1250,13 @@ function AetherLib:Init(customCommandsURL, keySettings)
                 end
             end
             TweenService:Create(TabBtn, TweenInfo.new(0.2), { BackgroundColor3 = Color3.fromRGB(38, 38, 55) }):Play()
-            TweenService:Create(TabLbl, TweenInfo.new(0.2), { TextColor3 = Color3.fromRGB(90, 150, 255) }):Play()
+            TweenService:Create(TabLbl, TweenInfo.new(0.2), { TextColor3 = currentTextThemeColor }):Play()
         end))
 
         if #StarlightSidebar:GetChildren() == 2 then
             TabContent.Visible = true
             TabBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 55)
-            TabLbl.TextColor3 = Color3.fromRGB(90, 150, 255)
+            TabLbl.TextColor3 = currentTextThemeColor
         end
 
         table.insert(StarlightTabs, TabObj)
@@ -1498,10 +1510,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
             Knob.Position = UDim2.new(initialRatio, -7, 0.5, -7)
             Knob.Size = UDim2.new(0, 14, 0, 14)
             Knob.ZIndex = 25
-
-            local KnobCorner = Instance.new("UICorner")
-            KnobCorner.CornerRadius = UDim.new(1, 0)
-            KnobCorner.Parent = Knob
 
             local sliding = false
             local function update(input)
@@ -3717,7 +3725,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
     end
 
     -------------------------------------------------------------------
-    -- 25 KOMPONEN / FITUR TAMBAHAN
+    -- KOMPONEN TAMBAHAN / MOCKUP
     -------------------------------------------------------------------
     function Elements:AddCodeBox(codeString)
         local Frame = Instance.new("Frame") Frame.Parent = ScrollContainer Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 26) Frame.Size = UDim2.new(1, 0, 0, 70) Frame.ZIndex = 9
@@ -3812,7 +3820,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
         local Val = Instance.new("TextLabel") Val.Parent = Frame Val.BackgroundTransparency = 1 Val.Position = UDim2.new(0, 12, 0, 22) Val.Size = UDim2.new(1, -24, 0, 22) Val.Font = Enum.Font.GothamBold Val.Text = tostring(value) Val.TextColor3 = currentTextThemeColor Val.TextSize = 14 Val.TextXAlignment = Enum.TextXAlignment.Left Val.ZIndex = 10
     end
 
-    -- Sisa komponen tambahan
     function Elements:AddAvatarBadge(username) Elements:AddStatusIndicator(username, "Online", true) end
     function Elements:AddTimelineEvent(timeStr, eventDesc) Elements:AddParagraph(timeStr, eventDesc) end
     function Elements:AddAudioPlayerMock(trackName) Elements:AddButton("Play Audio: " .. trackName, "lucide-play", function() end) end
