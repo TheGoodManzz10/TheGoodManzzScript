@@ -1,14 +1,12 @@
 -- =================================================================
--- AETHERLIB v15.0 ULTIMATE - STARLIGHT & RAYFIELD ENGINE v15.0
--- UPDATE v15.0:
--- 1. 2x Klik Sidebar Kanan -> Memanjang ke Kiri (Rayfield UI Mode)
--- 2. 10 Pilihan Gaya Teks (Font) di Menu Settings
--- 3. 25 Pilihan Tema Aksen Terang & 25 Pilihan Warna Teks Terpisah
--- 4. Komponen On/Off Centang (Checkbox), MultiDropdown1 (Swipe), MultiDropdown2 (Centang)
--- 5. Efek Cahaya Matahari / Sunlight Glow Aksen pada Background (Tidak Menutup Full)
--- 6. Custom Background Gambar (PNG / Asset ID Roblox) + Slider Transparansi
--- 7. Custom Nama Kecil (Subtitle) di Bawah Teks AetherGen (via Settings & API)
--- 8. Kedua UI Utama Terkunci (Non-Draggable) + Animasi Lebih Smooth & Lambat
+-- AETHERLIB v15.5 ULTIMATE - STARLIGHT & AETHER NOVA ENGINE v15.5
+-- UPDATE v15.5:
+-- 1. Perbaikan Total Crash Init & Sinkronisasi Komponen Eksternal di Semua 3 Mode UI
+-- 2. Dihapus Fitur Background Gambar PNG/ID Roblox & Dihapus Kotak Bayangan Pojok
+-- 3. UI Ke-3 Bernama "AETHER NOVA v15.5" (Gaya Rayfield dengan Tab Horizontal di Atas)
+-- 4. Tab Settings Terintegrasi di Sidebar Kiri (UI 2) & di Bar Tab Atas (UI 3 Aether Nova)
+-- 5. Efek Sunlight Glow Murni (UIGradient Halus Tanpa Kotak) + 25 Aksen Terang + 25 Warna Teks
+-- 6. 10 Pilihan Gaya Teks (Font) Aman + Checkbox + MultiDropdown1 (Swipe) + MultiDropdown2 (Centang)
 -- =================================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -56,7 +54,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	table.insert(AetherLib.Instances, ScreenGui)
 
 	-------------------------------------------------------------------
-	-- GLOBAL THEME, ACCENT, FONT & BACKGROUND STATE (v15.0)
+	-- GLOBAL THEME, ACCENT, & SAFE FONT STATE (v15.5)
 	-------------------------------------------------------------------
 	local currentTextThemeColor = Color3.fromRGB(240, 240, 250)
 	local currentAccentColor = Color3.fromRGB(59, 130, 246)
@@ -70,11 +68,20 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	local TextColorCallbacks = {}
 	local RgbToggleButtons = {}
 
+	local function SafeGetFont(fontName, fallback)
+		local ok, res = pcall(function()
+			return Enum.Font[fontName]
+		end)
+		if ok and res then
+			return res
+		end
+		return fallback or Enum.Font.Gotham
+	end
+
 	local function OnAccentChanged(fn)
 		table.insert(AccentCallbacks, fn)
 	end
 
-	-- Kompatibilitas dengan callback tema
 	local OnThemeChanged = OnAccentChanged
 
 	local function OnTextColorChanged(fn)
@@ -109,8 +116,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	local function ApplyFontStyle(regularFont, boldFont)
-		currentFontRegular = regularFont
-		currentFontBold = boldFont or regularFont
+		currentFontRegular = regularFont or Enum.Font.Gotham
+		currentFontBold = boldFont or currentFontRegular
 		for _, desc in ipairs(ScreenGui:GetDescendants()) do
 			if desc:IsA("TextLabel") or desc:IsA("TextButton") or desc:IsA("TextBox") then
 				if desc:GetAttribute("IsCodeFont") then
@@ -188,7 +195,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		["Settings"] = "rbxassetid://10734950309",
 		["SpinOuter"] = "rbxassetid://109694296016043",
 		["Block"] = "rbxassetid://10709782497",
-		["SunGlow"] = "rbxassetid://5028857084",
 		["lucide-accessibility"] = "rbxassetid://10709751939",
 		["lucide-activity"] = "rbxassetid://10709752035",
 		["lucide-alert-circle"] = "rbxassetid://10709752996",
@@ -223,6 +229,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		["lucide-layout"] = "rbxassetid://10723425376",
 		["lucide-lock"] = "rbxassetid://10723434711",
 		["lucide-map"] = "rbxassetid://10734886202",
+		["lucide-navigation"] = "rbxassetid://10734886202",
 		["lucide-palette"] = "rbxassetid://10734910430",
 		["lucide-play"] = "rbxassetid://10734923549",
 		["lucide-plus"] = "rbxassetid://10734924532",
@@ -265,100 +272,65 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	-------------------------------------------------------------------
-	-- HELPER: SUNLIGHT GLOW & CUSTOM BACKGROUND IMAGE LAYER (v15.0)
+	-- HELPER: SUNLIGHT GLOW LAYER MURNI (TANPA KOTAK BAYANGAN / GAMBAR)
 	-------------------------------------------------------------------
-	local CustomBgImages = {}
-	local currentBgImageId = ""
-	local currentBgImageTrans = 0.75
+	local function AttachSunlightGlow(targetFrame, baseZIndex)
+		-- Layer 1: Pancaran Cahaya Matahari Diagonal dari Pojok Atas
+		local SunGlowDiagonal = Instance.new("Frame")
+		SunGlowDiagonal.Name = "SunlightGlowDiagonal"
+		SunGlowDiagonal.Parent = targetFrame
+		SunGlowDiagonal.BackgroundColor3 = currentAccentColor
+		SunGlowDiagonal.BorderSizePixel = 0
+		SunGlowDiagonal.Size = UDim2.new(1, 0, 1, 0)
+		SunGlowDiagonal.Active = false
+		SunGlowDiagonal.ZIndex = baseZIndex
 
-	local function AttachSunlightAndBgLayers(targetFrame, baseZIndex)
-		-- 1. Custom Background Image Layer (PNG / Roblox ID)
-		local BgImage = Instance.new("ImageLabel")
-		BgImage.Name = "CustomBgImage"
-		BgImage.Parent = targetFrame
-		BgImage.BackgroundTransparency = 1
-		BgImage.Size = UDim2.new(1, 0, 1, 0)
-		BgImage.Position = UDim2.new(0, 0, 0, 0)
-		BgImage.ScaleType = Enum.ScaleType.Crop
-		BgImage.Image = currentBgImageId
-		BgImage.ImageTransparency = currentBgImageTrans
-		BgImage.Visible = (currentBgImageId ~= "")
-		BgImage.ZIndex = baseZIndex
-		table.insert(CustomBgImages, BgImage)
+		local SGDCorner = Instance.new("UICorner")
+		SGDCorner.CornerRadius = UDim.new(0, 10)
+		SGDCorner.Parent = SunGlowDiagonal
 
-		local BgImgCorner = Instance.new("UICorner")
-		BgImgCorner.CornerRadius = UDim.new(0, 10)
-		BgImgCorner.Parent = BgImage
-
-		-- 2. Sunlight / Ambient Glow Gradient Layer (Cahaya Matahari dari Sudut Atas, Tidak Menutup Full)
-		local SunGlowGradFrame = Instance.new("Frame")
-		SunGlowGradFrame.Name = "SunlightGlowGradient"
-		SunGlowGradFrame.Parent = targetFrame
-		SunGlowGradFrame.BackgroundColor3 = currentAccentColor
-		SunGlowGradFrame.BorderSizePixel = 0
-		SunGlowGradFrame.Size = UDim2.new(1, 0, 1, 0)
-		SunGlowGradFrame.ZIndex = baseZIndex
-
-		local SGGCorner = Instance.new("UICorner")
-		SGGCorner.CornerRadius = UDim.new(0, 10)
-		SGGCorner.Parent = SunGlowGradFrame
-
-		local SunGrad = Instance.new("UIGradient")
-		SunGrad.Rotation = 50
-		SunGrad.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.58),
-			NumberSequenceKeypoint.new(0.38, 0.85),
-			NumberSequenceKeypoint.new(0.75, 0.96),
+		local DiagGrad = Instance.new("UIGradient")
+		DiagGrad.Rotation = 42
+		DiagGrad.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.56),
+			NumberSequenceKeypoint.new(0.32, 0.82),
+			NumberSequenceKeypoint.new(0.68, 0.95),
 			NumberSequenceKeypoint.new(1, 1.0)
 		})
-		SunGrad.Parent = SunGlowGradFrame
+		DiagGrad.Parent = SunGlowDiagonal
 
-		-- 3. Radial Sunburst Flare di Pojok Kiri Atas
-		local SunFlare = Instance.new("ImageLabel")
-		SunFlare.Name = "SunFlareRadial"
-		SunFlare.Parent = targetFrame
-		SunFlare.BackgroundTransparency = 1
-		SunFlare.AnchorPoint = Vector2.new(0.3, 0.3)
-		SunFlare.Position = UDim2.new(0, 0, 0, 0)
-		SunFlare.Size = UDim2.new(0, 260, 0, 260)
-		SunFlare.Image = Icons["SunGlow"]
-		SunFlare.ImageColor3 = currentAccentColor
-		SunFlare.ImageTransparency = 0.62
-		SunFlare.ZIndex = baseZIndex
+		-- Layer 2: Cahaya Lembut dari Puncak Atas
+		local SunGlowTop = Instance.new("Frame")
+		SunGlowTop.Name = "SunlightGlowTop"
+		SunGlowTop.Parent = targetFrame
+		SunGlowTop.BackgroundColor3 = currentAccentColor
+		SunGlowTop.BorderSizePixel = 0
+		SunGlowTop.Size = UDim2.new(1, 0, 1, 0)
+		SunGlowTop.Active = false
+		SunGlowTop.ZIndex = baseZIndex
+
+		local SGTCorner = Instance.new("UICorner")
+		SGTCorner.CornerRadius = UDim.new(0, 10)
+		SGTCorner.Parent = SunGlowTop
+
+		local TopGrad = Instance.new("UIGradient")
+		TopGrad.Rotation = 90
+		TopGrad.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.68),
+			NumberSequenceKeypoint.new(0.28, 0.90),
+			NumberSequenceKeypoint.new(0.6, 0.98),
+			NumberSequenceKeypoint.new(1, 1.0)
+		})
+		TopGrad.Parent = SunGlowTop
 
 		OnAccentChanged(function(col)
-			SunGlowGradFrame.BackgroundColor3 = col
-			SunFlare.ImageColor3 = col
+			SunGlowDiagonal.BackgroundColor3 = col
+			SunGlowTop.BackgroundColor3 = col
 		end)
-
-		return BgImage, SunGlowGradFrame, SunFlare
-	end
-
-	local function UpdateAllBackgroundImages(rawId, trans)
-		if rawId ~= nil then
-			local trimmed = tostring(rawId):gsub("^%s*(.-)%s*$", "%1")
-			if trimmed == "" or trimmed == "0" then
-				currentBgImageId = ""
-			elseif trimmed:match("^%d+$") then
-				currentBgImageId = "rbxassetid://" .. trimmed
-			else
-				currentBgImageId = trimmed
-			end
-		end
-		if trans ~= nil then
-			currentBgImageTrans = math.clamp(tonumber(trans) or 0.75, 0, 1)
-		end
-		for _, img in ipairs(CustomBgImages) do
-			if img and img.Parent then
-				img.Image = currentBgImageId
-				img.ImageTransparency = currentBgImageTrans
-				img.Visible = (currentBgImageId ~= "")
-			end
-		end
 	end
 
 	-------------------------------------------------------------------
-	-- CONTAINER NOTIFIKASI (STACKING / TIDAK BERTUMPUK)
+	-- CONTAINER NOTIFIKASI (STACKING RAPI)
 	-------------------------------------------------------------------
 	local NotifHolder = Instance.new("Frame")
 	NotifHolder.Name = "NotificationHolder"
@@ -615,11 +587,10 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	FloatStroke.Transparency = 0.3
 	FloatStroke.Parent = FloatButton
 
-	-- Hanya FloatButton yang bisa digeser sesuai permintaan
 	MakeDraggable(FloatButton, FloatButton)
 
 	-------------------------------------------------------------------
-	-- 2. SIDEBAR ICON INDIKATOR (KLIK 1x = STARLIGHT, KLIK 2x = RAYFIELD)
+	-- 2. SIDEBAR ICON INDIKATOR (KLIK 1x = STARLIGHT, KLIK 2x = AETHER NOVA)
 	-------------------------------------------------------------------
 	local SideBar = Instance.new("TextButton")
 	SideBar.Name = "SideBarIndicator"
@@ -644,7 +615,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	CreateIcon("lucide-command", SideBar, UDim2.new(0, 6, 0.5, -8), UDim2.new(0, 16, 0, 16), 36)
 
 	-------------------------------------------------------------------
-	-- 3. MAIN FRAME & STARLIGHT / RAYFIELD ENGINE FRAME (NON-DRAGGABLE)
+	-- 3. MAIN FRAME, STARLIGHT (UI 2), & AETHER NOVA ENGINE (UI 3)
 	-------------------------------------------------------------------
 	local MainFrame = Instance.new("Frame")
 	MainFrame.Name = "MainFrame"
@@ -667,11 +638,10 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	MainStroke.Color = currentAccentColor
 	MainStroke.Thickness = 1.5
 
-	-- Pasang Sunlight Glow & Background Image pada MainFrame
-	AttachSunlightAndBgLayers(MainFrame, 8)
+	AttachSunlightGlow(MainFrame, 8)
 
 	local StarlightFrame = Instance.new("Frame")
-	StarlightFrame.Name = "StarlightEngineFrame"
+	StarlightFrame.Name = "StarlightAndNovaFrame"
 	StarlightFrame.Parent = ScreenGui
 	StarlightFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 	StarlightFrame.BorderSizePixel = 0
@@ -691,8 +661,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	StarlightStroke.Thickness = 1.5
 	StarlightStroke.Parent = StarlightFrame
 
-	-- Pasang Sunlight Glow & Background Image pada StarlightFrame
-	AttachSunlightAndBgLayers(StarlightFrame, 20)
+	AttachSunlightGlow(StarlightFrame, 20)
 
 	local StarlightHeader = Instance.new("Frame")
 	StarlightHeader.Parent = StarlightFrame
@@ -702,63 +671,61 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	StarlightHeader.Size = UDim2.new(1, 0, 0, 44)
 	StarlightHeader.ZIndex = 22
 
-	-- StarlightHeader TIDAK diberi MakeDraggable agar UI terkunci
-
 	local SHeaderTitle = Instance.new("TextLabel")
 	SHeaderTitle.Parent = StarlightHeader
 	SHeaderTitle.BackgroundTransparency = 1
 	SHeaderTitle.Position = UDim2.new(0, 14, 0, 4)
-	SHeaderTitle.Size = UDim2.new(1, -120, 0, 20)
+	SHeaderTitle.Size = UDim2.new(1, -180, 0, 20)
 	SHeaderTitle.Font = Enum.Font.GothamBold
 	SHeaderTitle:SetAttribute("IsBoldFont", true)
 	SHeaderTitle:SetAttribute("IgnoreTextColor", true)
-	SHeaderTitle.Text = "STARLIGHT ENGINE v15.0"
+	SHeaderTitle.Text = "STARLIGHT ENGINE v15.5"
 	SHeaderTitle.TextColor3 = currentAccentColor
 	SHeaderTitle.TextSize = 13
 	SHeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
 	SHeaderTitle.ZIndex = 23
 
-	-- Teks Kecil (Custom Nama / Subtitle) di Bawah Judul Starlight
-	local customSubtitleString = "by " .. (LocalPlayer and LocalPlayer.DisplayName or "User")
+	local customSubtitleString = "by " .. tostring(LocalPlayer and LocalPlayer.DisplayName or "User")
 
 	local SHeaderSubTitle = Instance.new("TextLabel")
 	SHeaderSubTitle.Name = "CustomSubtitleStarlight"
 	SHeaderSubTitle.Parent = StarlightHeader
 	SHeaderSubTitle.BackgroundTransparency = 1
-	SHeaderSubTitle.Position = UDim2.new(0, 14, 0, 23)
-	SHeaderSubTitle.Size = UDim2.new(1, -120, 0, 14)
+	SHeaderSubTitle.Position = UDim2.new(0, 14, 0, 24)
+	SHeaderSubTitle.Size = UDim2.new(1, -180, 0, 14)
 	SHeaderSubTitle.Font = Enum.Font.Gotham
+	SHeaderSubTitle:SetAttribute("IgnoreTextColor", true)
 	SHeaderSubTitle.Text = customSubtitleString
-	SHeaderSubTitle.TextColor3 = Color3.fromRGB(175, 175, 195)
+	SHeaderSubTitle.TextColor3 = currentAccentColor
 	SHeaderSubTitle.TextSize = 9
 	SHeaderSubTitle.TextXAlignment = Enum.TextXAlignment.Left
 	SHeaderSubTitle.ZIndex = 23
 
-	-- Badge Indikator Mode Rayfield di Header Starlight
-	local RayfieldModeBadge = Instance.new("TextButton")
-	RayfieldModeBadge.Name = "RayfieldModeBadge"
-	RayfieldModeBadge.Parent = StarlightHeader
-	RayfieldModeBadge.BackgroundColor3 = Color3.fromRGB(36, 36, 52)
-	RayfieldModeBadge.Position = UDim2.new(1, -162, 0.5, -12)
-	RayfieldModeBadge.Size = UDim2.new(0, 86, 0, 24)
-	RayfieldModeBadge.Font = Enum.Font.GothamBold
-	RayfieldModeBadge:SetAttribute("IsBoldFont", true)
-	RayfieldModeBadge.Text = "Starlight"
-	RayfieldModeBadge.TextColor3 = currentAccentColor
-	RayfieldModeBadge.TextSize = 10
-	RayfieldModeBadge.ZIndex = 23
+	-- Tombol Switcher Mode antara UI 2 (Starlight) & UI 3 (Aether Nova)
+	local NovaModeBadge = Instance.new("TextButton")
+	NovaModeBadge.Name = "NovaModeBadge"
+	NovaModeBadge.Parent = StarlightHeader
+	NovaModeBadge.BackgroundColor3 = Color3.fromRGB(34, 34, 50)
+	NovaModeBadge.Position = UDim2.new(1, -168, 0.5, -12)
+	NovaModeBadge.Size = UDim2.new(0, 92, 0, 24)
+	NovaModeBadge.Font = Enum.Font.GothamBold
+	NovaModeBadge:SetAttribute("IsBoldFont", true)
+	NovaModeBadge:SetAttribute("IgnoreTextColor", true)
+	NovaModeBadge.Text = "Starlight UI"
+	NovaModeBadge.TextColor3 = currentAccentColor
+	NovaModeBadge.TextSize = 10
+	NovaModeBadge.ZIndex = 23
 
-	local RMBCorner = Instance.new("UICorner")
-	RMBCorner.CornerRadius = UDim.new(1, 0)
-	RMBCorner.Parent = RayfieldModeBadge
+	local NMBCorner = Instance.new("UICorner")
+	NMBCorner.CornerRadius = UDim.new(1, 0)
+	NMBCorner.Parent = NovaModeBadge
 
-	local RMBStroke = Instance.new("UIStroke")
-	RMBStroke.Color = currentAccentColor
-	RMBStroke.Thickness = 1
-	RMBStroke.Transparency = 0.4
-	RMBStroke.Parent = RayfieldModeBadge
+	local NMBStroke = Instance.new("UIStroke")
+	NMBStroke.Color = currentAccentColor
+	NMBStroke.Thickness = 1
+	NMBStroke.Transparency = 0.4
+	NMBStroke.Parent = NovaModeBadge
 
-	-- Divider Garis Bawah Header ala Rayfield
 	local SHeaderDivider = Instance.new("Frame")
 	SHeaderDivider.Parent = StarlightHeader
 	SHeaderDivider.BackgroundColor3 = currentAccentColor
@@ -780,14 +747,14 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	SCloseBtn.TextSize = 14
 	SCloseBtn.ZIndex = 23
 
-	-- Sidebar Container (Mendukung Mode Starlight & Mode Rayfield Floating Panel)
+	-- [UI 2 - STARLIGHT]: Navigasi Tab Vertikal di Kiri
 	local StarlightSidebarHolder = Instance.new("Frame")
 	StarlightSidebarHolder.Name = "StarlightSidebarHolder"
 	StarlightSidebarHolder.Parent = StarlightFrame
 	StarlightSidebarHolder.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
 	StarlightSidebarHolder.BackgroundTransparency = 0.35
 	StarlightSidebarHolder.Position = UDim2.new(0, 8, 0, 52)
-	StarlightSidebarHolder.Size = UDim2.new(0, 125, 1, -60)
+	StarlightSidebarHolder.Size = UDim2.new(0, 126, 1, -60)
 	StarlightSidebarHolder.ZIndex = 21
 
 	local SSHCorner = Instance.new("UICorner")
@@ -816,17 +783,61 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	SSidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	SSidebarLayout.Padding = UDim.new(0, 6)
 
+	-- [UI 3 - AETHER NOVA]: Navigasi Tab Horizontal di Atas (Mirip Rayfield)
+	local NovaTopBarHolder = Instance.new("Frame")
+	NovaTopBarHolder.Name = "NovaTopTabBarHolder"
+	NovaTopBarHolder.Parent = StarlightFrame
+	NovaTopBarHolder.BackgroundColor3 = Color3.fromRGB(22, 22, 34)
+	NovaTopBarHolder.BackgroundTransparency = 0.25
+	NovaTopBarHolder.Position = UDim2.new(0, 12, 0, 50)
+	NovaTopBarHolder.Size = UDim2.new(1, -24, 0, 38)
+	NovaTopBarHolder.Visible = false
+	NovaTopBarHolder.ZIndex = 22
+
+	local NTBCorner = Instance.new("UICorner")
+	NTBCorner.CornerRadius = UDim.new(0, 8)
+	NTBCorner.Parent = NovaTopBarHolder
+
+	local NTBStroke = Instance.new("UIStroke")
+	NTBStroke.Color = currentAccentColor
+	NTBStroke.Thickness = 1
+	NTBStroke.Transparency = 0.65
+	NTBStroke.Parent = NovaTopBarHolder
+
+	local NovaTopTabScroll = Instance.new("ScrollingFrame")
+	NovaTopTabScroll.Name = "NovaTopTabScroll"
+	NovaTopTabScroll.Parent = NovaTopBarHolder
+	NovaTopTabScroll.BackgroundTransparency = 1
+	NovaTopTabScroll.Position = UDim2.new(0, 6, 0, 4)
+	NovaTopTabScroll.Size = UDim2.new(1, -12, 1, -8)
+	NovaTopTabScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+	NovaTopTabScroll.AutomaticCanvasSize = Enum.AutomaticSize.X
+	NovaTopTabScroll.ScrollingDirection = Enum.ScrollingDirection.X
+	NovaTopTabScroll.ScrollBarThickness = 2
+	NovaTopTabScroll.ScrollBarImageColor3 = currentAccentColor
+	NovaTopTabScroll.ZIndex = 23
+
+	local NovaTopLayout = Instance.new("UIListLayout")
+	NovaTopLayout.Parent = NovaTopTabScroll
+	NovaTopLayout.FillDirection = Enum.FillDirection.Horizontal
+	NovaTopLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	NovaTopLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	NovaTopLayout.Padding = UDim.new(0, 8)
+
 	OnAccentChanged(function(col)
 		FloatStroke.Color = col
 		SideStroke.Color = col
 		MainStroke.Color = col
 		StarlightStroke.Color = col
 		SHeaderTitle.TextColor3 = col
-		RayfieldModeBadge.TextColor3 = col
-		RMBStroke.Color = col
+		SHeaderSubTitle.TextColor3 = col
+		NovaModeBadge.TextColor3 = col
+		NMBStroke.Color = col
 		SHeaderDivider.BackgroundColor3 = col
 		SSHStroke.Color = col
+		NTBStroke.Color = col
 		StarlightSidebar.ScrollBarImageColor3 = col
+		NovaTopTabScroll.ScrollBarImageColor3 = col
 	end)
 
 	-------------------------------------------------------------------
@@ -844,8 +855,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	TopCorner.CornerRadius = UDim.new(0, 8)
 	TopCorner.Parent = TopBar
 
-	-- TopBar TIDAK diberi MakeDraggable agar MainFrame tidak bisa digeser
-
 	local Title = Instance.new("TextLabel")
 	Title.Parent = TopBar
 	Title.BackgroundTransparency = 1
@@ -853,7 +862,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	Title.Size = UDim2.new(1, -110, 0, 20)
 	Title.Font = Enum.Font.GothamBold
 	Title:SetAttribute("IsBoldFont", true)
-	Title.Text = "AetherGen 15.0"
+	Title.Text = "AetherGen 15.5"
 	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Title.TextSize = 14
 	Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -902,41 +911,37 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	CloseBtn.ZIndex = 10
 
 	-------------------------------------------------------------------
-	-- LOGIKA ANIMASI SMOOTH & MODE RAYFIELD (KLIK 1x vs KLIK 2x SIDEBAR)
+	-- LOGIKA ANIMASI SMOOTH & PERPINDAHAN UI 2 (STARLIGHT) <-> UI 3 (AETHER NOVA)
 	-------------------------------------------------------------------
 	local isAnimating = false
-	local starlightStage = 0 -- 0 = Tertutup, 1 = Starlight Normal (520px), 2 = Rayfield Wide Mode (680px)
+	local starlightStage = 0 -- 0 = Tutup, 1 = Starlight (Tab Kiri), 2 = Aether Nova (Tab Atas)
 	local StarlightTabs = {}
 	local SSetContent = nil
 
-	local function UpdateAllTabContentPositions(isRayfield)
-		local targetPos = isRayfield and UDim2.new(0, 166, 0, 52) or UDim2.new(0, 142, 0, 52)
-		local targetSize = isRayfield and UDim2.new(1, -176, 1, -60) or UDim2.new(1, -150, 1, -60)
+	local function UpdateAllTabContentPositions(isNovaMode)
+		-- Di Mode Starlight (UI 2): Konten di kanan sidebar kiri
+		-- Di Mode Aether Nova (UI 3): Konten memenuhi lebar di bawah Top Tab Bar!
+		local targetPos = isNovaMode and UDim2.new(0, 14, 0, 96) or UDim2.new(0, 142, 0, 52)
+		local targetSize = isNovaMode and UDim2.new(1, -28, 1, -106) or UDim2.new(1, -150, 1, -60)
+
 		if SSetContent and SSetContent.Parent then
-			TweenService:Create(SSetContent, TweenInfo.new(0.55, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				Position = targetPos,
-				Size = targetSize
-			}):Play()
+			SSetContent.Position = targetPos
+			SSetContent.Size = targetSize
 		end
 		for _, t in ipairs(StarlightTabs) do
 			if t.Frame and t.Frame.Parent then
-				TweenService:Create(t.Frame, TweenInfo.new(0.55, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-					Position = targetPos,
-					Size = targetSize
-				}):Play()
+				t.Frame.Position = targetPos
+				t.Frame.Size = targetSize
 			end
 		end
 	end
 
 	local function ApplyStarlightStage(stage)
-		if isAnimating then
-			return
-		end
 		isAnimating = true
 		starlightStage = stage
 
 		if stage == 1 then
-			-- Stage 1: Starlight Mode (Lebar 520px)
+			-- UI 2: STARLIGHT ENGINE (Tab Vertikal di Kiri)
 			if MainFrame and MainFrame.Parent and MainFrame.Visible then
 				MainFrame.Visible = false
 			end
@@ -945,18 +950,17 @@ function AetherLib:Init(customCommandsURL, keySettings)
 				StarlightFrame.Position = UDim2.new(1, -320, 0.1, 0)
 				StarlightFrame.Visible = true
 			end
-			SHeaderTitle.Text = "STARLIGHT ENGINE v15.0"
-			RayfieldModeBadge.Text = "Starlight"
-			TweenService:Create(StarlightCorner, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				CornerRadius = UDim.new(0, 10)
-			}):Play()
-			TweenService:Create(StarlightSidebarHolder, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				Size = UDim2.new(0, 125, 1, -60),
-				BackgroundColor3 = Color3.fromRGB(22, 22, 32)
-			}):Play()
+			SHeaderTitle.Text = "STARLIGHT ENGINE v15.5"
+			NovaModeBadge.Text = "Starlight UI"
+			StarlightSidebarHolder.Visible = true
+			NovaTopBarHolder.Visible = false
 			UpdateAllTabContentPositions(false)
 
-			local tweenExpand = TweenService:Create(StarlightFrame, TweenInfo.new(0.65, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+			TweenService:Create(StarlightCorner, TweenInfo.new(0.55, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				CornerRadius = UDim.new(0, 10)
+			}):Play()
+
+			local tweenExpand = TweenService:Create(StarlightFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
 				Size = UDim2.new(0, 520, 0, 420),
 				Position = UDim2.new(1, -540, 0.1, 0)
 			})
@@ -966,7 +970,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			end)
 
 		elseif stage == 2 then
-			-- Stage 2: Rayfield Mode (Memanjang Lebih Jauh ke Kiri - 680px & Tampilan Rayfield)
+			-- UI 3: AETHER NOVA v15.5 (Memanjang ke Kiri & Tab Horizontal di Atas seperti Rayfield)
 			if MainFrame and MainFrame.Parent and MainFrame.Visible then
 				MainFrame.Visible = false
 			end
@@ -975,30 +979,29 @@ function AetherLib:Init(customCommandsURL, keySettings)
 				StarlightFrame.Position = UDim2.new(1, -320, 0.1, 0)
 				StarlightFrame.Visible = true
 			end
-			SHeaderTitle.Text = "AETHERGEN  •  RAYFIELD EDITION v15.0"
-			RayfieldModeBadge.Text = "Rayfield UI"
-			TweenService:Create(StarlightCorner, TweenInfo.new(0.65, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				CornerRadius = UDim.new(0, 16)
-			}):Play()
-			TweenService:Create(StarlightSidebarHolder, TweenInfo.new(0.65, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				Size = UDim2.new(0, 148, 1, -60),
-				BackgroundColor3 = Color3.fromRGB(18, 18, 28)
-			}):Play()
+			SHeaderTitle.Text = "AETHER NOVA  •  HORIZON v15.5"
+			NovaModeBadge.Text = "Aether Nova"
+			StarlightSidebarHolder.Visible = false
+			NovaTopBarHolder.Visible = true
 			UpdateAllTabContentPositions(true)
 
-			local tweenRayfield = TweenService:Create(StarlightFrame, TweenInfo.new(0.7, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				Size = UDim2.new(0, 680, 0, 440),
-				Position = UDim2.new(1, -700, 0.08, 0)
+			TweenService:Create(StarlightCorner, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				CornerRadius = UDim.new(0, 14)
+			}):Play()
+
+			local tweenNova = TweenService:Create(StarlightFrame, TweenInfo.new(0.65, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Size = UDim2.new(0, 660, 0, 435),
+				Position = UDim2.new(1, -680, 0.08, 0)
 			})
-			tweenRayfield:Play()
-			tweenRayfield.Completed:Once(function()
+			tweenNova:Play()
+			tweenNova.Completed:Once(function()
 				isAnimating = false
 			end)
 
 		else
-			-- Stage 0: Tutup Starlight / Rayfield Frame dengan Animasi Smooth
+			-- Tutup Frame
 			starlightStage = 0
-			local tweenClose = TweenService:Create(StarlightFrame, TweenInfo.new(0.55, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+			local tweenClose = TweenService:Create(StarlightFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
 				Size = UDim2.new(0, 0, 0, 420),
 				Position = UDim2.new(1, -18, 0.1, 0)
 			})
@@ -1042,7 +1045,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		ApplyStarlightStage(0)
 	end))
 
-	TrackConnection(RayfieldModeBadge.MouseButton1Click:Connect(function()
+	TrackConnection(NovaModeBadge.MouseButton1Click:Connect(function()
 		if starlightStage == 1 then
 			ApplyStarlightStage(2)
 		else
@@ -1050,21 +1053,17 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		end
 	end))
 
-	-- Logika Klik 1x vs Klik 2x pada Tombol Sidebar Kanan Layar
 	local lastSideBarClickTime = 0
 	TrackConnection(SideBar.MouseButton1Click:Connect(function()
 		local now = os.clock()
 		local timeDiff = now - lastSideBarClickTime
 		lastSideBarClickTime = now
 
-		-- Jika diklik 2 kali cepat (< 0.45 detik), langsung buka Rayfield Mode (Stage 2)
 		if timeDiff < 0.45 then
-			isAnimating = false
 			ApplyStarlightStage(2)
 			return
 		end
 
-		-- Jika diklik bertahap: Tutup (0) -> Starlight (1) -> Rayfield Memanjang (2) -> Tutup (0)
 		if starlightStage == 0 then
 			ApplyStarlightStage(1)
 		elseif starlightStage == 1 then
@@ -1075,9 +1074,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end))
 
 	TrackConnection(FloatButton.MouseButton1Click:Connect(function()
-		if isAnimating then
-			return
-		end
 		if StarlightFrame and StarlightFrame.Parent and StarlightFrame.Visible then
 			ApplyStarlightStage(0)
 		elseif MainFrame and MainFrame.Parent then
@@ -1090,14 +1086,14 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end))
 
 	-------------------------------------------------------------------
-	-- SETTINGS PANEL & BUTTON
+	-- SETTINGS PANEL (POPUP UNTUK UI 1) & BUTTON
 	-------------------------------------------------------------------
 	local NormalSettingsPanel = Instance.new("Frame")
 	NormalSettingsPanel.Name = "NormalSettingsPanel"
 	NormalSettingsPanel.Parent = ScreenGui
 	NormalSettingsPanel.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
 	NormalSettingsPanel.Position = UDim2.new(0.5, -145, 0.4, -155)
-	NormalSettingsPanel.Size = UDim2.new(0, 290, 0, 350)
+	NormalSettingsPanel.Size = UDim2.new(0, 290, 0, 340)
 	NormalSettingsPanel.ZIndex = 400
 	NormalSettingsPanel.Visible = false
 
@@ -1123,7 +1119,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	NSPTitle.Size = UDim2.new(1, -65, 0, 22)
 	NSPTitle.Font = Enum.Font.GothamBold
 	NSPTitle:SetAttribute("IsBoldFont", true)
-	NSPTitle.Text = "Settings UI v15.0"
+	NSPTitle.Text = "Settings UI v15.5"
 	NSPTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 	NSPTitle.TextSize = 12
 	NSPTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -1178,16 +1174,14 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end))
 
 	-------------------------------------------------------------------
-	-- BUILD SETTINGS CONTENT v15.0:
+	-- BUILD SETTINGS CONTENT v15.5 (AMAN 100% DARI ERROR ENUM):
 	-- - Custom Nama di Bawah AetherGen
-	-- - Custom Background Gambar (PNG / ID Roblox)
 	-- - 10 Pilihan Gaya Teks (Font)
 	-- - 25 Pilihan Warna Teks
 	-- - 25 Pilihan Tema Aksen Terang (+ Sunlight Glow & RGB)
 	-------------------------------------------------------------------
 	local Elements = {}
 
-	-- Loop Tunggal untuk RGB Aksen & Sunlight Glow
 	task.spawn(function()
 		local hue = 0
 		while ScreenGui and ScreenGui.Parent do
@@ -1269,90 +1263,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			end
 		end))
 
-		-- 2. Custom Background Gambar (PNG / Roblox Asset ID)
-		local BgImgLbl = Instance.new("TextLabel")
-		BgImgLbl.Parent = container
-		BgImgLbl.BackgroundTransparency = 1
-		BgImgLbl.Size = UDim2.new(1, 0, 0, 18)
-		BgImgLbl.Font = Enum.Font.GothamBold
-		BgImgLbl:SetAttribute("IsBoldFont", true)
-		BgImgLbl.Text = "Background Gambar (ID Roblox / PNG):"
-		BgImgLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-		BgImgLbl.TextSize = 11
-		BgImgLbl.TextXAlignment = Enum.TextXAlignment.Left
-		BgImgLbl.ZIndex = 402
-
-		local BgImgRow = Instance.new("Frame")
-		BgImgRow.Parent = container
-		BgImgRow.BackgroundTransparency = 1
-		BgImgRow.Size = UDim2.new(1, 0, 0, 28)
-		BgImgRow.ZIndex = 402
-
-		local BgImgBox = Instance.new("TextBox")
-		BgImgBox.Parent = BgImgRow
-		BgImgBox.BackgroundColor3 = Color3.fromRGB(36, 36, 50)
-		BgImgBox.Size = UDim2.new(1, -124, 1, 0)
-		BgImgBox.Font = Enum.Font.Gotham
-		BgImgBox.PlaceholderText = "ID Roblox / rbxassetid://..."
-		BgImgBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 160)
-		BgImgBox.Text = ""
-		BgImgBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-		BgImgBox.TextSize = 10
-		BgImgBox.ClearTextOnFocus = false
-		BgImgBox.ZIndex = 403
-
-		local BgImgBoxCorner = Instance.new("UICorner")
-		BgImgBoxCorner.CornerRadius = UDim.new(0, 5)
-		BgImgBoxCorner.Parent = BgImgBox
-
-		local BgSetBtn = Instance.new("TextButton")
-		BgSetBtn.Parent = BgImgRow
-		BgSetBtn.BackgroundColor3 = currentAccentColor
-		BgSetBtn.Position = UDim2.new(1, -118, 0, 0)
-		BgSetBtn.Size = UDim2.new(0, 58, 1, 0)
-		BgSetBtn.Font = Enum.Font.GothamBold
-		BgSetBtn:SetAttribute("IsBoldFont", true)
-		BgSetBtn:SetAttribute("IgnoreTextColor", true)
-		BgSetBtn.Text = "Pasang"
-		BgSetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		BgSetBtn.TextSize = 10
-		BgSetBtn.ZIndex = 403
-
-		local BgSetCorner = Instance.new("UICorner")
-		BgSetCorner.CornerRadius = UDim.new(0, 5)
-		BgSetCorner.Parent = BgSetBtn
-
-		local BgClearBtn = Instance.new("TextButton")
-		BgClearBtn.Parent = BgImgRow
-		BgClearBtn.BackgroundColor3 = Color3.fromRGB(60, 45, 55)
-		BgClearBtn.Position = UDim2.new(1, -56, 0, 0)
-		BgClearBtn.Size = UDim2.new(0, 56, 1, 0)
-		BgClearBtn.Font = Enum.Font.GothamBold
-		BgClearBtn:SetAttribute("IsBoldFont", true)
-		BgClearBtn.Text = "Reset"
-		BgClearBtn.TextColor3 = Color3.fromRGB(255, 200, 200)
-		BgClearBtn.TextSize = 10
-		BgClearBtn.ZIndex = 403
-
-		local BgClearCorner = Instance.new("UICorner")
-		BgClearCorner.CornerRadius = UDim.new(0, 5)
-		BgClearCorner.Parent = BgClearBtn
-
-		OnAccentChanged(function(col)
-			BgSetBtn.BackgroundColor3 = col
-		end)
-
-		TrackConnection(BgSetBtn.MouseButton1Click:Connect(function()
-			UpdateAllBackgroundImages(BgImgBox.Text, currentBgImageTrans)
-			Elements:AddNotification("Background", "Gambar background diterapkan!", 2)
-		end))
-		TrackConnection(BgClearBtn.MouseButton1Click:Connect(function()
-			BgImgBox.Text = ""
-			UpdateAllBackgroundImages("", currentBgImageTrans)
-			Elements:AddNotification("Background", "Gambar background dihapus", 2)
-		end))
-
-		-- 3. Pilihan 10 Gaya Teks (Font Style)
+		-- 2. Pilihan 10 Gaya Teks (Font Style) dengan SafeGetFont
 		local FontLbl = Instance.new("TextLabel")
 		FontLbl.Parent = container
 		FontLbl.BackgroundTransparency = 1
@@ -1377,16 +1288,16 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		FGLayout.CellPadding = UDim2.new(0.04, 0, 0, 5)
 
 		local fontStyles = {
-			{ Name = "1. Gotham", Reg = Enum.Font.Gotham, Bold = Enum.Font.GothamBold },
-			{ Name = "2. BuilderSans", Reg = Enum.Font.BuilderSans, Bold = Enum.Font.BuilderSansBold },
-			{ Name = "3. Ubuntu", Reg = Enum.Font.Ubuntu, Bold = Enum.Font.Ubuntu },
-			{ Name = "4. FredokaOne", Reg = Enum.Font.FredokaOne, Bold = Enum.Font.FredokaOne },
-			{ Name = "5. Code Mono", Reg = Enum.Font.Code, Bold = Enum.Font.Code },
-			{ Name = "6. SciFi", Reg = Enum.Font.SciFi, Bold = Enum.Font.SciFi },
-			{ Name = "7. Arcade", Reg = Enum.Font.Arcade, Bold = Enum.Font.Arcade },
-			{ Name = "8. Fantasy", Reg = Enum.Font.Fantasy, Bold = Enum.Font.Fantasy },
-			{ Name = "9. JosefinSans", Reg = Enum.Font.JosefinSans, Bold = Enum.Font.JosefinSansBold },
-			{ Name = "10. SourceSans", Reg = Enum.Font.SourceSans, Bold = Enum.Font.SourceSansBold }
+			{ Name = "1. Gotham", Reg = SafeGetFont("Gotham", Enum.Font.Gotham), Bold = SafeGetFont("GothamBold", Enum.Font.GothamBold) },
+			{ Name = "2. SourceSans", Reg = SafeGetFont("SourceSans", Enum.Font.SourceSans), Bold = SafeGetFont("SourceSansBold", Enum.Font.SourceSansBold) },
+			{ Name = "3. Ubuntu", Reg = SafeGetFont("Ubuntu", Enum.Font.Gotham), Bold = SafeGetFont("Ubuntu", Enum.Font.GothamBold) },
+			{ Name = "4. FredokaOne", Reg = SafeGetFont("FredokaOne", Enum.Font.GothamBold), Bold = SafeGetFont("FredokaOne", Enum.Font.GothamBold) },
+			{ Name = "5. Code Mono", Reg = SafeGetFont("Code", Enum.Font.Code), Bold = SafeGetFont("Code", Enum.Font.Code) },
+			{ Name = "6. SciFi", Reg = SafeGetFont("SciFi", Enum.Font.Gotham), Bold = SafeGetFont("SciFi", Enum.Font.GothamBold) },
+			{ Name = "7. Arcade", Reg = SafeGetFont("Arcade", Enum.Font.Gotham), Bold = SafeGetFont("Arcade", Enum.Font.GothamBold) },
+			{ Name = "8. Fantasy", Reg = SafeGetFont("Fantasy", Enum.Font.Gotham), Bold = SafeGetFont("Fantasy", Enum.Font.GothamBold) },
+			{ Name = "9. Cartoon", Reg = SafeGetFont("Cartoon", Enum.Font.Gotham), Bold = SafeGetFont("Cartoon", Enum.Font.GothamBold) },
+			{ Name = "10. Highway", Reg = SafeGetFont("Highway", Enum.Font.Gotham), Bold = SafeGetFont("Highway", Enum.Font.GothamBold) }
 		}
 
 		for _, fs in ipairs(fontStyles) do
@@ -1412,7 +1323,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			end))
 		end
 
-		-- 4. Pilih Warna Teks (25 Pilihan Cerah)
+		-- 3. Pilih Warna Teks (25 Pilihan Cerah)
 		local Lbl1 = Instance.new("TextLabel")
 		Lbl1.Parent = container
 		Lbl1.BackgroundTransparency = 1
@@ -1482,7 +1393,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			end))
 		end
 
-		-- 5. Tema Aksen & Sunlight Glow (25 Pilihan Terang + RGB)
+		-- 4. Tema Aksen & Sunlight Glow (25 Pilihan Terang + RGB)
 		local Lbl2 = Instance.new("TextLabel")
 		Lbl2.Parent = container
 		Lbl2.BackgroundTransparency = 1
@@ -1673,9 +1584,10 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end)
 
 	-------------------------------------------------------------------
-	-- 5. SCROLL CONTAINER UTAMA
+	-- 5. SCROLL CONTAINER UTAMA (UI 1)
 	-------------------------------------------------------------------
 	local ScrollContainer = Instance.new("ScrollingFrame")
+	ScrollContainer.Name = "MainScrollContainer"
 	ScrollContainer.Parent = MainFrame
 	ScrollContainer.BackgroundTransparency = 1
 	ScrollContainer.Position = UDim2.new(0, 10, 0, 52)
@@ -1684,7 +1596,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	ScrollContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	ScrollContainer.ScrollBarThickness = 3
 	ScrollContainer.ScrollBarImageColor3 = currentAccentColor
-	ScrollContainer.ZIndex = 9
+	ScrollContainer.ZIndex = 10
 
 	OnAccentChanged(function(col)
 		ScrollContainer.ScrollBarImageColor3 = col
@@ -1709,10 +1621,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
 
 	function Elements:SetCustomName(text)
 		UpdateCustomSubtitle(text)
-	end
-
-	function Elements:SetBackgroundImage(imageId, transparency)
-		UpdateAllBackgroundImages(imageId, transparency)
 	end
 
 	-------------------------------------------------------------------
@@ -1900,33 +1808,39 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	-------------------------------------------------------------------
-	-- STARLIGHT & RAYFIELD TAB MANAGEMENT
+	-- STARLIGHT (UI 2 - TAB KIRI) & AETHER NOVA (UI 3 - TAB ATAS) MANAGEMENT
 	-------------------------------------------------------------------
-	local activeStarlightTabBtn = nil
+	local TabEntries = {} -- Menyimpan pasangan { SideBtn, TopBtn, ContentFrame }
+	local activeTabEntry = nil
 
-	local function HideAllStarlightContent()
-		if SSetContent and SSetContent.Parent then
-			SSetContent.Visible = false
-		end
-		for _, t in pairs(StarlightTabs) do
-			if t.Frame and t.Frame.Parent then
-				t.Frame.Visible = false
+	local function SelectTabEntry(entry)
+		activeTabEntry = entry
+		for _, item in ipairs(TabEntries) do
+			local isSelected = (item == entry)
+			if item.ContentFrame and item.ContentFrame.Parent then
+				item.ContentFrame.Visible = isSelected
 			end
-		end
-	end
-
-	local function ActivateTabButton(targetBtn)
-		activeStarlightTabBtn = targetBtn
-		for _, child in ipairs(StarlightSidebar:GetChildren()) do
-			if child:IsA("TextButton") then
-				local isTarget = (child == targetBtn)
-				TweenService:Create(child, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-					BackgroundColor3 = isTarget and Color3.fromRGB(38, 38, 56) or Color3.fromRGB(25, 25, 36)
+			-- Update tombol di Sidebar Kiri (Starlight UI 2)
+			if item.SideBtn and item.SideBtn.Parent then
+				TweenService:Create(item.SideBtn, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+					BackgroundColor3 = isSelected and Color3.fromRGB(38, 38, 56) or Color3.fromRGB(25, 25, 36)
 				}):Play()
-				local lbl = child:FindFirstChild("TabLabel")
-				if lbl then
-					TweenService:Create(lbl, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-						TextColor3 = isTarget and currentAccentColor or Color3.fromRGB(170, 170, 190)
+				local sLbl = item.SideBtn:FindFirstChild("TabLabel")
+				if sLbl then
+					TweenService:Create(sLbl, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+						TextColor3 = isSelected and currentAccentColor or Color3.fromRGB(170, 170, 190)
+					}):Play()
+				end
+			end
+			-- Update tombol di Top Bar Atas (Aether Nova UI 3)
+			if item.TopBtn and item.TopBtn.Parent then
+				TweenService:Create(item.TopBtn, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+					BackgroundColor3 = isSelected and currentAccentColor or Color3.fromRGB(30, 30, 44)
+				}):Play()
+				local tLbl = item.TopBtn:FindFirstChild("TabLabel")
+				if tLbl then
+					TweenService:Create(tLbl, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+						TextColor3 = isSelected and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(185, 185, 205)
 					}):Play()
 				end
 			end
@@ -1934,60 +1848,145 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	OnAccentChanged(function(col)
-		if activeStarlightTabBtn and activeStarlightTabBtn.Parent then
-			local lbl = activeStarlightTabBtn:FindFirstChild("TabLabel")
-			if lbl then
-				lbl.TextColor3 = col
+		if activeTabEntry then
+			if activeTabEntry.SideBtn and activeTabEntry.SideBtn.Parent then
+				local sLbl = activeTabEntry.SideBtn:FindFirstChild("TabLabel")
+				if sLbl then
+					sLbl.TextColor3 = col
+				end
+			end
+			if activeTabEntry.TopBtn and activeTabEntry.TopBtn.Parent then
+				activeTabEntry.TopBtn.BackgroundColor3 = col
 			end
 		end
 	end)
 
-	local function SetupStarlightSettingsTab()
-		local SSetTabBtn = Instance.new("TextButton")
-		SSetTabBtn.Name = "Settings_StarlightTab"
-		SSetTabBtn.Parent = StarlightSidebar
-		SSetTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 36)
-		SSetTabBtn.LayoutOrder = 9999
-		SSetTabBtn.Size = UDim2.new(1, 0, 0, 32)
-		SSetTabBtn.Text = ""
-		SSetTabBtn.ZIndex = 23
+	-- Fungsi pembuat pasangan tombol Tab (1 di Sidebar Kiri Starlight + 1 di Top Bar Aether Nova)
+	local function CreateDualTabButtons(tabName, iconName, layoutOrder, contentFrame)
+		-- 1. Tombol untuk Sidebar Kiri (UI 2 - Starlight)
+		local SideBtn = Instance.new("TextButton")
+		SideBtn.Name = tabName .. "_StarlightTab"
+		SideBtn.Parent = StarlightSidebar
+		SideBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 36)
+		SideBtn.LayoutOrder = layoutOrder
+		SideBtn.Size = UDim2.new(1, 0, 0, 32)
+		SideBtn.Text = ""
+		SideBtn.ZIndex = 23
 
-		local TSCorner = Instance.new("UICorner")
-		TSCorner.CornerRadius = UDim.new(0, 6)
-		TSCorner.Parent = SSetTabBtn
+		local SCorner = Instance.new("UICorner")
+		SCorner.CornerRadius = UDim.new(0, 6)
+		SCorner.Parent = SideBtn
 
-		local HLayout = Instance.new("UIListLayout")
-		HLayout.Parent = SSetTabBtn
-		HLayout.FillDirection = Enum.FillDirection.Horizontal
-		HLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-		HLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		HLayout.Padding = UDim.new(0, 8)
+		local SStroke = Instance.new("UIStroke")
+		SStroke.Color = Color3.fromRGB(45, 45, 62)
+		SStroke.Thickness = 1
+		SStroke.Parent = SideBtn
+
+		local SHLayout = Instance.new("UIListLayout")
+		SHLayout.Parent = SideBtn
+		SHLayout.FillDirection = Enum.FillDirection.Horizontal
+		SHLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		SHLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		SHLayout.Padding = UDim.new(0, 8)
+
+		local SPadding = Instance.new("UIPadding")
+		SPadding.Parent = SideBtn
+		SPadding.PaddingLeft = UDim.new(0, 8)
+
+		if iconName then
+			CreateIcon(iconName, SideBtn, UDim2.new(0, 0, 0, 0), UDim2.new(0, 15, 0, 15), 24)
+		end
+
+		local SideLbl = Instance.new("TextLabel")
+		SideLbl.Name = "TabLabel"
+		SideLbl.Parent = SideBtn
+		SideLbl.BackgroundTransparency = 1
+		SideLbl.Size = UDim2.new(1, -26, 1, 0)
+		SideLbl.Font = currentFontRegular
+		SideLbl:SetAttribute("IgnoreTextColor", true)
+		SideLbl.Text = tabName
+		SideLbl.TextColor3 = Color3.fromRGB(170, 170, 190)
+		SideLbl.TextSize = 11
+		SideLbl.TextXAlignment = Enum.TextXAlignment.Left
+		SideLbl.ZIndex = 24
+
+		-- 2. Tombol untuk Top Bar Atas (UI 3 - Aether Nova)
+		local TopBtn = Instance.new("TextButton")
+		TopBtn.Name = tabName .. "_NovaTopTab"
+		TopBtn.Parent = NovaTopTabScroll
+		TopBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 44)
+		TopBtn.LayoutOrder = layoutOrder
+		TopBtn.AutomaticSize = Enum.AutomaticSize.X
+		TopBtn.Size = UDim2.new(0, 0, 0, 28)
+		TopBtn.Text = ""
+		TopBtn.ZIndex = 24
+
+		local TCorner = Instance.new("UICorner")
+		TCorner.CornerRadius = UDim.new(1, 0)
+		TCorner.Parent = TopBtn
+
+		local TStroke = Instance.new("UIStroke")
+		TStroke.Color = Color3.fromRGB(55, 55, 75)
+		TStroke.Thickness = 1
+		TStroke.Parent = TopBtn
+
+		local THLayout = Instance.new("UIListLayout")
+		THLayout.Parent = TopBtn
+		THLayout.FillDirection = Enum.FillDirection.Horizontal
+		THLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		THLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		THLayout.Padding = UDim.new(0, 6)
 
 		local TPadding = Instance.new("UIPadding")
-		TPadding.Parent = SSetTabBtn
-		TPadding.PaddingLeft = UDim.new(0, 8)
+		TPadding.Parent = TopBtn
+		TPadding.PaddingLeft = UDim.new(0, 12)
+		TPadding.PaddingRight = UDim.new(0, 12)
 
-		CreateIcon("lucide-settings", SSetTabBtn, UDim2.new(0, 0, 0, 0), UDim2.new(0, 16, 0, 16), 24)
+		if iconName then
+			CreateIcon(iconName, TopBtn, UDim2.new(0, 0, 0, 0), UDim2.new(0, 14, 0, 14), 25)
+		end
 
-		local TabLbl = Instance.new("TextLabel")
-		TabLbl.Name = "TabLabel"
-		TabLbl.Parent = SSetTabBtn
-		TabLbl.BackgroundTransparency = 1
-		TabLbl.Size = UDim2.new(1, -28, 1, 0)
-		TabLbl.Font = currentFontRegular
-		TabLbl:SetAttribute("IgnoreTextColor", true)
-		TabLbl.Text = "Settings"
-		TabLbl.TextColor3 = Color3.fromRGB(170, 170, 190)
-		TabLbl.TextSize = 11
-		TabLbl.TextXAlignment = Enum.TextXAlignment.Left
-		TabLbl.ZIndex = 24
+		local TopLbl = Instance.new("TextLabel")
+		TopLbl.Name = "TabLabel"
+		TopLbl.Parent = TopBtn
+		TopLbl.BackgroundTransparency = 1
+		TopLbl.AutomaticSize = Enum.AutomaticSize.X
+		TopLbl.Size = UDim2.new(0, 0, 1, 0)
+		TopLbl.Font = currentFontBold
+		TopLbl:SetAttribute("IsBoldFont", true)
+		TopLbl:SetAttribute("IgnoreTextColor", true)
+		TopLbl.Text = tabName
+		TopLbl.TextColor3 = Color3.fromRGB(185, 185, 205)
+		TopLbl.TextSize = 11
+		TopLbl.TextXAlignment = Enum.TextXAlignment.Center
+		TopLbl.ZIndex = 25
 
+		local entry = {
+			Name = tabName,
+			SideBtn = SideBtn,
+			TopBtn = TopBtn,
+			ContentFrame = contentFrame
+		}
+		table.insert(TabEntries, entry)
+
+		TrackConnection(SideBtn.MouseButton1Click:Connect(function()
+			SelectTabEntry(entry)
+		end))
+		TrackConnection(TopBtn.MouseButton1Click:Connect(function()
+			SelectTabEntry(entry)
+		end))
+
+		return entry
+	end
+
+	local function SetupStarlightAndNovaSettingsTab()
+		local isNovaNow = (starlightStage == 2)
 		SSetContent = Instance.new("ScrollingFrame")
 		SSetContent.Name = "Settings_Content"
 		SSetContent.Parent = StarlightFrame
 		SSetContent.BackgroundTransparency = 1
-		SSetContent.Position = UDim2.new(0, 142, 0, 52)
-		SSetContent.Size = UDim2.new(1, -150, 1, -60)
+		SSetContent.Position = isNovaNow and UDim2.new(0, 14, 0, 96) or UDim2.new(0, 142, 0, 52)
+		SSetContent.Size = isNovaNow and UDim2.new(1, -28, 1, -106) or UDim2.new(1, -150, 1, -60)
 		SSetContent.CanvasSize = UDim2.new(0, 0, 0, 0)
 		SSetContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
 		SSetContent.ScrollBarThickness = 3
@@ -2004,17 +2003,13 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		SSetLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		SSetLayout.Padding = UDim.new(0, 8)
 
-		TrackConnection(SSetTabBtn.MouseButton1Click:Connect(function()
-			HideAllStarlightContent()
-			SSetContent.Visible = true
-			ActivateTabButton(SSetTabBtn)
-		end))
-
+		-- Tab Settings memiliki LayoutOrder = 9999 agar selalu berada di urutan terakhir di Sidebar Kiri maupun di Tab Atas UI 3
+		CreateDualTabButtons("Settings", "lucide-settings", 9999, SSetContent)
 		BuildSettingsContent(SSetContent)
 	end
 
 	-------------------------------------------------------------------
-	-- HELPER INTERNAL: MEMBUAT CHECKBOX & MULTIDROPDOWN 1 / 2
+	-- HELPER INTERNAL: KOMPONEN CHECKBOX & MULTIDROPDOWN 1 / 2
 	-------------------------------------------------------------------
 	local function CreateCheckboxComponent(parentContainer, name, iconNameArg, default, callback, zBase)
 		if type(iconNameArg) == "boolean" or type(iconNameArg) == "function" or iconNameArg == nil then
@@ -2087,7 +2082,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			end
 		end)
 
-		local function SetState(newState)
+		local function SetState(newState, triggerCb)
 			checked = newState
 			CheckBoxBtn.Text = checked and "✓" or ""
 			local goalBg = checked and currentAccentColor or Color3.fromRGB(26, 26, 36)
@@ -2098,23 +2093,22 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			TweenService:Create(CBStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
 				Color = goalStroke
 			}):Play()
-			if callback then
+			if triggerCb and callback then
 				pcall(callback, checked)
 			end
 		end
 
 		TrackConnection(CheckBoxBtn.MouseButton1Click:Connect(function()
-			SetState(not checked)
+			SetState(not checked, true)
 		end))
 
 		local CheckObj = {}
 		function CheckObj:Set(val)
-			SetState(val == true)
+			SetState(val == true, false)
 		end
 		return CheckObj
 	end
 
-	-- MultiDropdown1 (Menggunakan Tombol On/Off Swipe Switch pada Setiap Pilihan)
 	local function CreateMultiDropdownSwipe(parentContainer, name, options, callback, zBase)
 		options = options or {}
 		zBase = zBase or 9
@@ -2246,7 +2240,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		end
 	end
 
-	-- MultiDropdown2 (Menggunakan Tombol On/Off Centang / Checkbox pada Setiap Pilihan)
 	local function CreateMultiDropdownCheck(parentContainer, name, options, callback, zBase)
 		options = options or {}
 		zBase = zBase or 9
@@ -2381,62 +2374,18 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	-------------------------------------------------------------------
-	-- ELEMENTS: ADDTAB (STARLIGHT & RAYFIELD ENGINE)
+	-- ELEMENTS: ADDTAB (UNTUK UI 2 STARLIGHT & UI 3 AETHER NOVA)
 	-------------------------------------------------------------------
+	local defaultMainTabObj = nil
+
 	function Elements:AddTab(tabName, iconName)
-		local TabBtn = Instance.new("TextButton")
-		TabBtn.Name = tabName .. "_StarlightTab"
-		TabBtn.Parent = StarlightSidebar
-		TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 36)
-		TabBtn.LayoutOrder = #StarlightTabs + 1
-		TabBtn.Size = UDim2.new(1, 0, 0, 32)
-		TabBtn.Text = ""
-		TabBtn.ZIndex = 23
-
-		local TabCorner = Instance.new("UICorner")
-		TabCorner.CornerRadius = UDim.new(0, 6)
-		TabCorner.Parent = TabBtn
-
-		local TabStroke = Instance.new("UIStroke")
-		TabStroke.Color = Color3.fromRGB(45, 45, 62)
-		TabStroke.Thickness = 1
-		TabStroke.Parent = TabBtn
-
-		local HLayout = Instance.new("UIListLayout")
-		HLayout.Parent = TabBtn
-		HLayout.FillDirection = Enum.FillDirection.Horizontal
-		HLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-		HLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		HLayout.Padding = UDim.new(0, 8)
-
-		local TabPadding = Instance.new("UIPadding")
-		TabPadding.Parent = TabBtn
-		TabPadding.PaddingLeft = UDim.new(0, 8)
-
-		if iconName then
-			CreateIcon(iconName, TabBtn, UDim2.new(0, 0, 0, 0), UDim2.new(0, 16, 0, 16), 24)
-		end
-
-		local TabLbl = Instance.new("TextLabel")
-		TabLbl.Name = "TabLabel"
-		TabLbl.Parent = TabBtn
-		TabLbl.BackgroundTransparency = 1
-		TabLbl.Size = UDim2.new(1, -28, 1, 0)
-		TabLbl.Font = currentFontRegular
-		TabLbl:SetAttribute("IgnoreTextColor", true)
-		TabLbl.Text = tabName
-		TabLbl.TextColor3 = Color3.fromRGB(170, 170, 190)
-		TabLbl.TextSize = 11
-		TabLbl.TextXAlignment = Enum.TextXAlignment.Left
-		TabLbl.ZIndex = 24
-
-		local isRayfieldNow = (starlightStage == 2)
+		local isNovaNow = (starlightStage == 2)
 		local TabContent = Instance.new("ScrollingFrame")
 		TabContent.Name = tabName .. "_Content"
 		TabContent.Parent = StarlightFrame
 		TabContent.BackgroundTransparency = 1
-		TabContent.Position = isRayfieldNow and UDim2.new(0, 166, 0, 52) or UDim2.new(0, 142, 0, 52)
-		TabContent.Size = isRayfieldNow and UDim2.new(1, -176, 1, -60) or UDim2.new(1, -150, 1, -60)
+		TabContent.Position = isNovaNow and UDim2.new(0, 14, 0, 96) or UDim2.new(0, 142, 0, 52)
+		TabContent.Size = isNovaNow and UDim2.new(1, -28, 1, -106) or UDim2.new(1, -150, 1, -60)
 		TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
 		TabContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
 		TabContent.ScrollBarThickness = 3
@@ -2453,24 +2402,19 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		ContentLayout.Padding = UDim.new(0, 6)
 
-		local TabObj = { Frame = TabContent }
+		local orderIdx = #StarlightTabs + 1
+		local entry = CreateDualTabButtons(tabName, iconName or "lucide-layers", orderIdx, TabContent)
 
-		TrackConnection(TabBtn.MouseButton1Click:Connect(function()
-			HideAllStarlightContent()
-			TabContent.Visible = true
-			ActivateTabButton(TabBtn)
-		end))
+		local TabObj = { Frame = TabContent, Entry = entry }
 
 		if #StarlightTabs == 0 then
-			HideAllStarlightContent()
-			TabContent.Visible = true
-			ActivateTabButton(TabBtn)
+			SelectTabEntry(entry)
 		end
 
 		table.insert(StarlightTabs, TabObj)
 
 		---------------------------------------------------------------
-		-- STARLIGHT & RAYFIELD TAB COMPONENTS (FULL v15.0 SUPPORT)
+		-- STARLIGHT & AETHER NOVA TAB COMPONENTS
 		---------------------------------------------------------------
 		function TabObj:AddButton(btnText, iconNameArg, callback)
 			if type(iconNameArg) == "function" then
@@ -2597,7 +2541,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			end))
 		end
 
-		-- Komponen Baru v15.0 di dalam Tab: Checkbox (Centang) & MultiDropdown1 / 2
 		function TabObj:AddCheckbox(name, iconNameArg, default, callback)
 			return CreateCheckboxComponent(TabContent, name, iconNameArg, default, callback, 23)
 		end
@@ -3568,10 +3511,35 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			Lbl.ZIndex = 24
 		end
 
+		-- Alias agar semua nama fungsi standar juga bisa dipanggil di TabObj
+		TabObj.AddSlider = TabObj.AddTabSlider
+		TabObj.AddStepSlider = TabObj.AddTabStepSlider
+		TabObj.AddDropdown = TabObj.AddTabDropdown
+		TabObj.AddBadge = TabObj.AddTabBadge
+		TabObj.AddInput = TabObj.AddTabInput
+		TabObj.AddLabel = TabObj.AddTabLabel
+		TabObj.AddSection = TabObj.AddTabSection
+		TabObj.AddKeybind = TabObj.AddTabKeybind
+		TabObj.AddColorPicker = TabObj.AddTabColorPicker
+		TabObj.AddCopyButton = TabObj.AddTabCopyButton
+		TabObj.AddParagraph = TabObj.AddTabParagraph
+		TabObj.AddRadioGroup = TabObj.AddTabRadioGroup
+		TabObj.AddStatusIndicator = TabObj.AddTabStatusIndicator
+		TabObj.AddSearchInput = TabObj.AddTabSearchInput
+		TabObj.AddNotificationBanner = TabObj.AddTabNotificationBanner
+
 		return TabObj
 	end
 
-	SetupStarlightSettingsTab()
+	-- Helper untuk membuat tab "Main" otomatis di UI 2 & UI 3 saat skrip luar memanggil Elements:Add...
+	local function GetAutoMainTab()
+		if not defaultMainTabObj then
+			defaultMainTabObj = Elements:AddTab("Main", "lucide-home")
+		end
+		return defaultMainTabObj
+	end
+
+	SetupStarlightAndNovaSettingsTab()
 
 	-------------------------------------------------------------------
 	-- REGISTRASI DAN EKSEKUSI PERINTAH
@@ -3631,12 +3599,12 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		end)
 		if success and type(scriptFunc) == "function" then
 			pcall(scriptFunc, AetherLib)
-			Elements:AddNotification("AetherLib 15.0", "Perintah eksternal berhasil dimuat!", 3)
+			Elements:AddNotification("AetherLib 15.5", "Perintah eksternal berhasil dimuat!", 3)
 		end
 	end)
 
 	-------------------------------------------------------------------
-	-- SELURUH KOMPONEN UTAMA v15.0 (LENGKAP 100%)
+	-- SELURUH KOMPONEN UTAMA v15.5 (OTOMATIS MUNCUL DI UI 1, UI 2, & UI 3!)
 	-------------------------------------------------------------------
 	function Elements:Curved()
 		if StarlightCorner then
@@ -3686,6 +3654,10 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			iconName = nil
 		end
 
+		if not customParent then
+			GetAutoMainTab():AddButton(name, iconName, callback)
+		end
+
 		local BtnFrame = Instance.new("TextButton")
 		BtnFrame.Parent = customParent or ScrollContainer
 		BtnFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -3728,6 +3700,10 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			callback = default
 			default = iconName
 			iconName = nil
+		end
+
+		if not customParent then
+			GetAutoMainTab():AddToggle(name, iconName, default, callback)
 		end
 
 		local enabled = (default == true)
@@ -3800,25 +3776,36 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		end))
 	end
 
-	-- Komponen Baru v15.0: Checkbox (On/Off Model Centang)
 	function Elements:AddCheckbox(name, iconName, default, callback, customParent)
+		if not customParent then
+			GetAutoMainTab():AddCheckbox(name, iconName, default, callback)
+		end
 		return CreateCheckboxComponent(customParent or ScrollContainer, name, iconName, default, callback, 9)
 	end
 
 	function Elements:AddCheckToggle(name, iconName, default, callback, customParent)
-		return CreateCheckboxComponent(customParent or ScrollContainer, name, iconName, default, callback, 9)
+		return Elements:AddCheckbox(name, iconName, default, callback, customParent)
 	end
 
-	-- Komponen Baru v15.0: MultiDropdown1 (Swipe) & MultiDropdown2 (Centang)
 	function Elements:AddMultiDropdown1(name, options, callback, customParent)
+		if not customParent then
+			GetAutoMainTab():AddMultiDropdown1(name, options, callback)
+		end
 		return CreateMultiDropdownSwipe(customParent or ScrollContainer, name, options, callback, 9)
 	end
 
 	function Elements:AddMultiDropdown2(name, options, callback, customParent)
+		if not customParent then
+			GetAutoMainTab():AddMultiDropdown2(name, options, callback)
+		end
 		return CreateMultiDropdownCheck(customParent or ScrollContainer, name, options, callback, 9)
 	end
 
 	function Elements:AddSlider(name, min, max, default, callback, customParent)
+		if not customParent then
+			GetAutoMainTab():AddTabSlider(name, min, max, default, callback)
+		end
+
 		min = min or 0
 		max = max or 100
 		default = math.clamp(default or min, min, max)
@@ -3922,6 +3909,11 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddDropdown(name, options, callback, customParent)
+		local tabDrop = nil
+		if not customParent then
+			tabDrop = GetAutoMainTab():AddTabDropdown(name, options, callback)
+		end
+
 		local DropdownFrame = Instance.new("Frame")
 		DropdownFrame.Parent = customParent or ScrollContainer
 		DropdownFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -3939,7 +3931,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		DropBtn.BackgroundTransparency = 1
 		DropBtn.Size = UDim2.new(1, 0, 0, 42)
 		DropBtn.Font = currentFontRegular
-		DropBtn.Text = "  " .. name .. " : Select..."
+		DropBtn.Text = "  " .. name .. " : " .. ((options and options[1]) or "Select...")
 		DropBtn.TextColor3 = currentTextThemeColor
 		DropBtn.TextSize = 12
 		DropBtn.TextXAlignment = Enum.TextXAlignment.Left
@@ -3969,6 +3961,11 @@ function AetherLib:Init(customCommandsURL, keySettings)
 
 		local DropdownObj = {}
 		function DropdownObj:Refresh(newOptions)
+			if tabDrop and tabDrop.Refresh then
+				pcall(function()
+					tabDrop:Refresh(newOptions)
+				end)
+			end
 			for _, child in ipairs(OptionList:GetChildren()) do
 				if child:IsA("TextButton") then
 					child:Destroy()
@@ -4104,6 +4101,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddKeybind(name, defaultKey, callback)
+		GetAutoMainTab():AddTabKeybind(name, defaultKey, callback)
+
 		defaultKey = defaultKey or Enum.KeyCode.F
 		local Frame = Instance.new("Frame")
 		Frame.Parent = ScrollContainer
@@ -4237,6 +4236,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddBadge(name, statusText)
+		local tabBadge = GetAutoMainTab():AddTabBadge(name, statusText)
+
 		local BadgeFrame = Instance.new("Frame")
 		BadgeFrame.Parent = ScrollContainer
 		BadgeFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -4289,11 +4290,18 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			if color then
 				StatusBox.BackgroundColor3 = color
 			end
+			if tabBadge and tabBadge.SetStatus then
+				pcall(function()
+					tabBadge:SetStatus(text, color)
+				end)
+			end
 		end
 		return BadgeObj
 	end
 
 	function Elements:AddCopyButton(name, textToCopy)
+		GetAutoMainTab():AddTabCopyButton(name, textToCopy)
+
 		local BtnFrame = Instance.new("TextButton")
 		BtnFrame.Parent = ScrollContainer
 		BtnFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -4337,6 +4345,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddInput(name, placeholder, callback)
+		GetAutoMainTab():AddTabInput(name, nil, placeholder, callback)
+
 		local InputFrame = Instance.new("Frame")
 		InputFrame.Parent = ScrollContainer
 		InputFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -4386,6 +4396,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddParagraph(titleText, contentText)
+		GetAutoMainTab():AddTabParagraph(titleText, contentText)
+
 		local ParaFrame = Instance.new("Frame")
 		ParaFrame.Parent = ScrollContainer
 		ParaFrame.BackgroundColor3 = Color3.fromRGB(32, 32, 44)
@@ -4431,6 +4443,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddLabel(text)
+		GetAutoMainTab():AddTabLabel(text)
+
 		local LabelFrame = Instance.new("Frame")
 		LabelFrame.Parent = ScrollContainer
 		LabelFrame.BackgroundTransparency = 1
@@ -4612,6 +4626,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddColorPicker(name, defaultColor, callback)
+		GetAutoMainTab():AddTabColorPicker(name, defaultColor, callback)
+
 		defaultColor = defaultColor or Color3.fromRGB(90, 150, 255)
 		local PickerFrame = Instance.new("Frame")
 		PickerFrame.Parent = ScrollContainer
@@ -4959,7 +4975,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddMultiDropdown(name, options, callback)
-		return CreateMultiDropdownCheck(ScrollContainer, name, options, callback, 9)
+		return Elements:AddMultiDropdown2(name, options, callback)
 	end
 
 	function Elements:AddKeybindWithToggle(name, defaultKey, callback)
@@ -5070,6 +5086,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddStepSlider(name, min, max, step, default, callback)
+		GetAutoMainTab():AddTabStepSlider(name, min, max, step, default, callback)
+
 		step = (step and step > 0) and step or 1
 		min = min or 0
 		max = max or 100
@@ -5417,6 +5435,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddRadioGroup(name, options, defaultIndex, callback)
+		GetAutoMainTab():AddTabRadioGroup(name, options, defaultIndex, callback)
+
 		defaultIndex = defaultIndex or 1
 		options = options or {}
 
@@ -5498,6 +5518,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddStatusIndicator(name, statusText, isOnline)
+		local tabStat = GetAutoMainTab():AddTabStatusIndicator(name, statusText, isOnline)
+
 		local Frame = Instance.new("Frame")
 		Frame.Parent = ScrollContainer
 		Frame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -5549,11 +5571,18 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		function StatusObj:SetStatus(text, online)
 			StatusLbl.Text = text
 			Dot.BackgroundColor3 = online and Color3.fromRGB(50, 220, 100) or Color3.fromRGB(220, 50, 50)
+			if tabStat and tabStat.SetStatus then
+				pcall(function()
+					tabStat:SetStatus(text, online)
+				end)
+			end
 		end
 		return StatusObj
 	end
 
 	function Elements:AddSearchInput(placeholder, callback)
+		GetAutoMainTab():AddTabSearchInput(placeholder, callback)
+
 		local Frame = Instance.new("Frame")
 		Frame.Parent = ScrollContainer
 		Frame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -5657,6 +5686,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddKeybindPicker(name, defaultKey, callback)
+		GetAutoMainTab():AddTabKeybind(name, defaultKey, callback)
+
 		defaultKey = defaultKey or Enum.KeyCode.F
 		local Frame = Instance.new("Frame")
 		Frame.Parent = ScrollContainer
@@ -5725,6 +5756,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddNotificationBanner(message, bannerType)
+		GetAutoMainTab():AddTabNotificationBanner(message, bannerType)
+
 		local Frame = Instance.new("Frame")
 		Frame.Parent = ScrollContainer
 		Frame.BackgroundColor3 = (bannerType == "Warning") and Color3.fromRGB(80, 60, 20) or Color3.fromRGB(20, 60, 80)
@@ -5752,6 +5785,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	function Elements:AddIconHeader(title, iconName)
+		GetAutoMainTab():AddTabSection(title, iconName)
+
 		local Frame = Instance.new("Frame")
 		Frame.Parent = ScrollContainer
 		Frame.BackgroundTransparency = 1
@@ -5796,6 +5831,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		local Lbl = Instance.new("TextLabel")
 		Lbl.Parent = Frame
 		Lbl.BackgroundTransparency = 1
+		Label = Lbl
 		Lbl.Position = UDim2.new(0, 12, 0, 4)
 		Lbl.Size = UDim2.new(1, -24, 0, 16)
 		Lbl.Font = currentFontRegular
@@ -5803,7 +5839,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		Lbl.TextColor3 = currentTextThemeColor
 		Lbl.TextSize = 11
 		Lbl.TextXAlignment = Enum.TextXAlignment.Left
-		Label = Lbl
 		Lbl.ZIndex = 10
 
 		local Container = Instance.new("Frame")
