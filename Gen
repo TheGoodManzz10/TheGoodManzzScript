@@ -3528,6 +3528,404 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		TabObj.AddSearchInput = TabObj.AddTabSearchInput
 		TabObj.AddNotificationBanner = TabObj.AddTabNotificationBanner
 
+		-- 1. Dual Button Sejajar (Dua Tombol dalam Satu Baris)
+		function TabObj:AddNovaDualButton(btn1Text, icon1, cb1, btn2Text, icon2, cb2)
+			local Row = Instance.new("Frame")
+			Row.Parent = TabContent
+			Row.BackgroundTransparency = 1
+			Row.Size = UDim2.new(1, 0, 0, 36)
+			Row.ZIndex = 23
+
+			local function MakeHalfBtn(text, iconName, posX, cb)
+				local Btn = Instance.new("TextButton")
+				Btn.Parent = Row
+				Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 40)
+				Btn.Position = posX
+				Btn.Size = UDim2.new(0.485, 0, 1, 0)
+				Btn.Font = currentFontRegular
+				Btn.Text = text
+				Btn.TextColor3 = currentTextThemeColor
+				Btn.TextSize = 11
+				Btn.ZIndex = 24
+
+				local Corner = Instance.new("UICorner")
+				Corner.CornerRadius = UDim.new(0, 6)
+				Corner.Parent = Btn
+
+				local Stroke = Instance.new("UIStroke")
+				Stroke.Color = Color3.fromRGB(55, 55, 75)
+				Stroke.Thickness = 1
+				Stroke.Parent = Btn
+
+				if iconName then
+					CreateIcon(iconName, Btn, UDim2.new(0, 8, 0.5, -8), UDim2.new(0, 16, 0, 16), 25)
+				end
+
+				TrackConnection(Btn.MouseButton1Click:Connect(function()
+					TweenService:Create(Btn, TweenInfo.new(0.15), { BackgroundColor3 = currentAccentColor }):Play()
+					task.delay(0.15, function()
+						if Btn and Btn.Parent then
+							TweenService:Create(Btn, TweenInfo.new(0.2), { BackgroundColor3 = Color3.fromRGB(28, 28, 40) }):Play()
+						end
+					end)
+					if cb then pcall(cb) end
+				end))
+				return Btn
+			end
+
+			MakeHalfBtn(btn1Text, icon1, UDim2.new(0, 0, 0, 0), cb1)
+			MakeHalfBtn(btn2Text, icon2, UDim2.new(0.515, 0, 0, 0), cb2)
+		end
+
+		-- 2. Slider dengan Kotak Input Angka Langsung
+		function TabObj:AddNovaSliderInput(name, min, max, default, callback)
+			min = min or 0
+			max = max or 100
+			default = math.clamp(default or min, min, max)
+
+			local Frame = Instance.new("Frame")
+			Frame.Parent = TabContent
+			Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
+			Frame.BackgroundTransparency = 0.15
+			Frame.Size = UDim2.new(1, 0, 0, 48)
+			Frame.ZIndex = 23
+
+			local Corner = Instance.new("UICorner")
+			Corner.CornerRadius = UDim.new(0, 6)
+			Corner.Parent = Frame
+
+			local Label = Instance.new("TextLabel")
+			Label.Parent = Frame
+			Label.BackgroundTransparency = 1
+			Label.Position = UDim2.new(0, 12, 0, 4)
+			Label.Size = UDim2.new(1, -70, 0, 18)
+			Label.Font = currentFontRegular
+			Label.Text = name
+			Label.TextColor3 = currentTextThemeColor
+			Label.TextSize = 11
+			Label.TextXAlignment = Enum.TextXAlignment.Left
+			Label.ZIndex = 24
+
+			local ValInput = Instance.new("TextBox")
+			ValInput.Parent = Frame
+			ValInput.BackgroundColor3 = Color3.fromRGB(40, 40, 56)
+			ValInput.Position = UDim2.new(1, -54, 0, 4)
+			ValInput.Size = UDim2.new(0, 44, 0, 18)
+			ValInput.Font = currentFontBold
+			ValInput:SetAttribute("IsBoldFont", true)
+			ValInput.Text = tostring(default)
+			ValInput.TextColor3 = currentAccentColor
+			ValInput.TextSize = 10
+			ValInput.ClearTextOnFocus = false
+			ValInput.ZIndex = 24
+
+			local VICorner = Instance.new("UICorner")
+			VICorner.CornerRadius = UDim.new(0, 4)
+			VICorner.Parent = ValInput
+
+			local SliderBar = Instance.new("Frame")
+			SliderBar.Parent = Frame
+			SliderBar.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+			SliderBar.Position = UDim2.new(0, 12, 0, 30)
+			SliderBar.Size = UDim2.new(1, -24, 0, 5)
+			SliderBar.ZIndex = 24
+
+			local BarCorner = Instance.new("UICorner")
+			BarCorner.CornerRadius = UDim.new(1, 0)
+			BarCorner.Parent = SliderBar
+
+			local range = (max - min) == 0 and 1 or (max - min)
+			local initialRatio = (default - min) / range
+
+			local Fill = Instance.new("Frame")
+			Fill.Parent = SliderBar
+			Fill.BackgroundColor3 = currentAccentColor
+			Fill.Size = UDim2.new(initialRatio, 0, 1, 0)
+			Fill.ZIndex = 25
+
+			local FillCorner = Instance.new("UICorner")
+			FillCorner.CornerRadius = UDim.new(1, 0)
+			FillCorner.Parent = Fill
+
+			local Knob = Instance.new("Frame")
+			Knob.Parent = SliderBar
+			Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Knob.Position = UDim2.new(initialRatio, -7, 0.5, -7)
+			Knob.Size = UDim2.new(0, 14, 0, 14)
+			Knob.ZIndex = 26
+
+			local KnobCorner = Instance.new("UICorner")
+			KnobCorner.CornerRadius = UDim.new(1, 0)
+			KnobCorner.Parent = Knob
+
+			OnAccentChanged(function(col)
+				ValInput.TextColor3 = col
+				Fill.BackgroundColor3 = col
+			end)
+
+			local currentVal = default
+			local function SetValue(v, triggerCb)
+				currentVal = math.clamp(math.floor(v), min, max)
+				local r = (currentVal - min) / range
+				Fill.Size = UDim2.new(r, 0, 1, 0)
+				Knob.Position = UDim2.new(r, -7, 0.5, -7)
+				ValInput.Text = tostring(currentVal)
+				if triggerCb and callback then
+					pcall(callback, currentVal)
+				end
+			end
+
+			local sliding = false
+			local function updateFromPos(input)
+				local w = math.max(SliderBar.AbsoluteSize.X, 1)
+				local p = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / w, 0, 1)
+				SetValue(min + (range * p), true)
+			end
+
+			TrackConnection(Knob.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					sliding = true
+				end
+			end))
+			TrackConnection(SliderBar.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					sliding = true
+					updateFromPos(input)
+				end
+			end))
+			TrackConnection(UserInputService.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					sliding = false
+				end
+			end))
+			TrackConnection(UserInputService.InputChanged:Connect(function(input)
+				if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+					updateFromPos(input)
+				end
+			end))
+			TrackConnection(ValInput.FocusLost:Connect(function()
+				local n = tonumber(ValInput.Text)
+				if n then SetValue(n, true) else ValInput.Text = tostring(currentVal) end
+			end))
+		end
+
+		-- 3. Keybind dengan Pilihan Mode (Toggle / Hold)
+		function TabObj:AddNovaKeybindMode(name, defaultKey, callback)
+			defaultKey = defaultKey or Enum.KeyCode.F
+			local isHoldMode = false
+			local isPressed = false
+			local currentKey = defaultKey
+			local listening = false
+
+			local Frame = Instance.new("Frame")
+			Frame.Parent = TabContent
+			Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
+			Frame.BackgroundTransparency = 0.15
+			Frame.Size = UDim2.new(1, 0, 0, 38)
+			Frame.ZIndex = 23
+
+			local Corner = Instance.new("UICorner")
+			Corner.CornerRadius = UDim.new(0, 6)
+			Corner.Parent = Frame
+
+			local Lbl = Instance.new("TextLabel")
+			Lbl.Parent = Frame
+			Lbl.BackgroundTransparency = 1
+			Lbl.Position = UDim2.new(0, 12, 0, 0)
+			Lbl.Size = UDim2.new(1, -135, 1, 0)
+			Lbl.Font = currentFontRegular
+			Lbl.Text = name
+			Lbl.TextColor3 = currentTextThemeColor
+			Lbl.TextSize = 11
+			Lbl.TextXAlignment = Enum.TextXAlignment.Left
+			Lbl.ZIndex = 24
+
+			local ModeBtn = Instance.new("TextButton")
+			ModeBtn.Parent = Frame
+			ModeBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 54)
+			ModeBtn.Position = UDim2.new(1, -125, 0.5, -11)
+			ModeBtn.Size = UDim2.new(0, 56, 0, 22)
+			ModeBtn.Font = currentFontRegular
+			ModeBtn.Text = "Toggle"
+			ModeBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
+			ModeBtn.TextSize = 10
+			ModeBtn.ZIndex = 24
+
+			local MBCorner = Instance.new("UICorner")
+			MBCorner.CornerRadius = UDim.new(0, 4)
+			MBCorner.Parent = ModeBtn
+
+			local KeyBtn = Instance.new("TextButton")
+			KeyBtn.Parent = Frame
+			KeyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 62)
+			KeyBtn.Position = UDim2.new(1, -64, 0.5, -11)
+			KeyBtn.Size = UDim2.new(0, 54, 0, 22)
+			KeyBtn.Font = currentFontBold
+			KeyBtn:SetAttribute("IsBoldFont", true)
+			KeyBtn:SetAttribute("IgnoreTextColor", true)
+			KeyBtn.Text = tostring(defaultKey.Name)
+			KeyBtn.TextColor3 = currentAccentColor
+			KeyBtn.TextSize = 10
+			KeyBtn.ZIndex = 24
+
+			local KCorner = Instance.new("UICorner")
+			KCorner.CornerRadius = UDim.new(0, 4)
+			KCorner.Parent = KeyBtn
+
+			OnAccentChanged(function(col)
+				KeyBtn.TextColor3 = col
+			end)
+
+			TrackConnection(ModeBtn.MouseButton1Click:Connect(function()
+				isHoldMode = not isHoldMode
+				ModeBtn.Text = isHoldMode and "Hold" or "Toggle"
+				ModeBtn.TextColor3 = isHoldMode and currentAccentColor or Color3.fromRGB(200, 200, 220)
+			end))
+
+			TrackConnection(KeyBtn.MouseButton1Click:Connect(function()
+				listening = true
+				KeyBtn.Text = "..."
+			end))
+
+			TrackConnection(UserInputService.InputBegan:Connect(function(input, gameProcessed)
+				if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+					currentKey = input.KeyCode
+					KeyBtn.Text = tostring(currentKey.Name)
+					listening = false
+				elseif not listening and not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
+					if isHoldMode then
+						isPressed = true
+						if callback then pcall(callback, true) end
+					else
+						isPressed = not isPressed
+						if callback then pcall(callback, isPressed) end
+					end
+				end
+			end))
+
+			TrackConnection(UserInputService.InputEnded:Connect(function(input)
+				if not listening and isHoldMode and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
+					isPressed = false
+					if callback then pcall(callback, false) end
+				end
+			end))
+		end
+
+		-- 4. Search Bar Interaktif dengan Tombol Reset (✕)
+		function TabObj:AddNovaSearchBar(placeholder, onSearch)
+			local Frame = Instance.new("Frame")
+			Frame.Parent = TabContent
+			Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
+			Frame.BackgroundTransparency = 0.15
+			Frame.Size = UDim2.new(1, 0, 0, 36)
+			Frame.ZIndex = 23
+
+			local Corner = Instance.new("UICorner")
+			Corner.CornerRadius = UDim.new(0, 6)
+			Corner.Parent = Frame
+
+			local Stroke = Instance.new("UIStroke")
+			Stroke.Color = Color3.fromRGB(50, 50, 70)
+			Stroke.Thickness = 1
+			Stroke.Parent = Frame
+
+			CreateIcon("lucide-search", Frame, UDim2.new(0, 10, 0.5, -8), UDim2.new(0, 16, 0, 16), 24)
+
+			local TBox = Instance.new("TextBox")
+			TBox.Parent = Frame
+			TBox.BackgroundTransparency = 1
+			TBox.Position = UDim2.new(0, 34, 0, 0)
+			TBox.Size = UDim2.new(1, -66, 1, 0)
+			TBox.Font = currentFontRegular
+			TBox.PlaceholderText = placeholder or "Cari sesuatu..."
+			TBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 160)
+			TBox.Text = ""
+			TBox.TextColor3 = currentTextThemeColor
+			TBox.TextSize = 11
+			TBox.TextXAlignment = Enum.TextXAlignment.Left
+			TBox.ZIndex = 24
+
+			local ClearBtn = Instance.new("TextButton")
+			ClearBtn.Parent = Frame
+			ClearBtn.BackgroundTransparency = 1
+			ClearBtn.Position = UDim2.new(1, -28, 0.5, -10)
+			ClearBtn.Size = UDim2.new(0, 20, 0, 20)
+			ClearBtn.Font = Enum.Font.GothamBold
+			ClearBtn.Text = "✕"
+			ClearBtn.TextColor3 = Color3.fromRGB(150, 150, 170)
+			ClearBtn.TextSize = 11
+			ClearBtn.Visible = false
+			ClearBtn.ZIndex = 24
+
+			TrackConnection(TBox:GetPropertyChangedSignal("Text"):Connect(function()
+				ClearBtn.Visible = (TBox.Text ~= "")
+				if onSearch then pcall(onSearch, TBox.Text) end
+			end))
+
+			TrackConnection(ClearBtn.MouseButton1Click:Connect(function()
+				TBox.Text = ""
+			end))
+		end
+
+		-- 5. Banner Card Berpendar (Glow Card untuk Info/Versi/Status)
+		function TabObj:AddNovaBannerCard(title, desc, iconName)
+			local Frame = Instance.new("Frame")
+			Frame.Parent = TabContent
+			Frame.BackgroundColor3 = Color3.fromRGB(24, 24, 36)
+			Frame.BackgroundTransparency = 0.15
+			Frame.Size = UDim2.new(1, 0, 0, 54)
+			Frame.ZIndex = 23
+
+			local Corner = Instance.new("UICorner")
+			Corner.CornerRadius = UDim.new(0, 8)
+			Corner.Parent = Frame
+
+			local Stroke = Instance.new("UIStroke")
+			Stroke.Color = currentAccentColor
+			Stroke.Thickness = 1.2
+			Stroke.Transparency = 0.5
+			Stroke.Parent = Frame
+
+			OnAccentChanged(function(col)
+				Stroke.Color = col
+			end)
+
+			if iconName then
+				CreateIcon(iconName, Frame, UDim2.new(0, 12, 0.5, -12), UDim2.new(0, 24, 0, 24), 24)
+			end
+
+			local TxtTitle = Instance.new("TextLabel")
+			TxtTitle.Parent = Frame
+			TxtTitle.BackgroundTransparency = 1
+			TxtTitle.Position = iconName and UDim2.new(0, 44, 0, 8) or UDim2.new(0, 12, 0, 8)
+			TxtTitle.Size = iconName and UDim2.new(1, -56, 0, 18) or UDim2.new(1, -24, 0, 18)
+			TxtTitle.Font = currentFontBold
+			TxtTitle:SetAttribute("IsBoldFont", true)
+			TxtTitle:SetAttribute("IgnoreTextColor", true)
+			TxtTitle.Text = title
+			TxtTitle.TextColor3 = currentAccentColor
+			TxtTitle.TextSize = 12
+			TxtTitle.TextXAlignment = Enum.TextXAlignment.Left
+			TxtTitle.ZIndex = 24
+
+			OnAccentChanged(function(col)
+				TxtTitle.TextColor3 = col
+			end)
+
+			local TxtDesc = Instance.new("TextLabel")
+			TxtDesc.Parent = Frame
+			TxtDesc.BackgroundTransparency = 1
+			TxtDesc.Position = iconName and UDim2.new(0, 44, 0, 28) or UDim2.new(0, 12, 0, 28)
+			TxtDesc.Size = iconName and UDim2.new(1, -56, 0, 20) or UDim2.new(1, -24, 0, 20)
+			TxtDesc.Font = currentFontRegular
+			TxtDesc.Text = desc
+			TxtDesc.TextColor3 = currentTextThemeColor
+			TxtDesc.TextSize = 10
+			TxtDesc.TextWrapped = true
+			TxtDesc.TextXAlignment = Enum.TextXAlignment.Left
+			TxtDesc.ZIndex = 24
+		end
+
 		return TabObj
 	end
 
@@ -6418,6 +6816,21 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	function Elements:AddTabDropdown(name, options, callback)
 		return Elements:AddDropdown(name, options, callback)
 	end
+
+-- Fitur Baru v15.5: Curves (Khusus UI ke-3 Aether Nova)
+function Elements:Curves(radius)
+    radius = radius or 24
+    if StarlightCorner then
+        TweenService:Create(StarlightCorner, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            CornerRadius = UDim.new(0, radius)
+        }):Play()
+    end
+    if NTBCorner then
+        TweenService:Create(NTBCorner, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            CornerRadius = UDim.new(0, math.floor(radius * 0.5))
+        }):Play()
+    end
+end
 
 	return Elements
 end
