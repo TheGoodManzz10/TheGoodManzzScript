@@ -1,6 +1,6 @@
 -- =================================================================
--- AETHERLIB v17.0 ULTIMATE - STARLIGHT & AETHER NOVA ENGINE v17.0
--- UPDATE v17.0 FULL EDITION:
+-- AETHERLIB v18.5 ULTIMATE - STARLIGHT & AETHER NOVA ENGINE v18.5
+-- UPDATE v18.5 FULL EDITION (100% BUG-FREE & UPGRADED):
 -- 1. Universal 2-Komponen-1-Baris (AddRow): Mendukung 100% SEMUA Komponen Tanpa Batas & Tinggi Dinamis
 -- 2. Animasi Intro Eksklusif "Aether Horizon Splash" (Saat Eksekusi / Setelah Verifikasi Key)
 -- 3. 50 Pilihan Warna Tema Aksen Terang (25+25 Baru) & 50 Pilihan Warna Teks (25+25 Baru)
@@ -271,7 +271,17 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		["lucide-anchor"] = "rbxassetid://10734951847"
 	}
 
-	local function CreateIcon(iconNameOrId, parent, position, size, zIndex)
+	local function SafeDefer(fn)
+		if type(task) == "table" and type(task.defer) == "function" then
+			task.defer(fn)
+		elseif type(task) == "table" and type(task.spawn) == "function" then
+			task.spawn(fn)
+		else
+			pcall(fn)
+		end
+	end
+
+	local function CreateIcon(iconNameOrId, parent, position, size, zIndex, lockWhite)
 		local img = Instance.new("ImageLabel")
 		img.BackgroundTransparency = 1
 		img.Position = position or UDim2.new(0, 0, 0, 0)
@@ -286,9 +296,14 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			img.Image = Icons["Block"] or "rbxassetid://10709782497"
 		end
 
-		img.ImageColor3 = currentAccentColor
 		img.Parent = parent
-		table.insert(ManagedIcons, img)
+		if lockWhite then
+			img.ImageColor3 = Color3.fromRGB(255, 255, 255)
+			img:SetAttribute("LockWhiteIcon", true)
+		else
+			img.ImageColor3 = currentAccentColor
+			table.insert(ManagedIcons, img)
+		end
 		return img
 	end
 
@@ -367,7 +382,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	NotifListLayout.Padding = UDim.new(0, 6)
 
 	-------------------------------------------------------------------
-	-- KEY SYSTEM
+	-- KEY SYSTEM v18.5 ULTRA EDITION (MODERN CYBER GUARD)
 	-------------------------------------------------------------------
 	local uiUnlocked = true
 	local keyFileName = "AetherLib_KeyCache.json"
@@ -387,69 +402,135 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		end
 
 		if not uiUnlocked then
+			local KeyBackdrop = Instance.new("Frame")
+			KeyBackdrop.Name = "KeySystemBackdrop"
+			KeyBackdrop.Parent = ScreenGui
+			KeyBackdrop.BackgroundColor3 = Color3.fromRGB(6, 6, 12)
+			KeyBackdrop.BackgroundTransparency = 0.35
+			KeyBackdrop.Size = UDim2.new(1, 0, 1, 0)
+			KeyBackdrop.ZIndex = 498
+
 			local KeyGui = Instance.new("Frame")
 			KeyGui.Name = "KeySystemFrame"
 			KeyGui.Parent = ScreenGui
-			KeyGui.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+			KeyGui.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 			KeyGui.AnchorPoint = Vector2.new(0.5, 0.5)
 			KeyGui.Position = UDim2.new(0.5, 0, 0.5, 0)
-			KeyGui.Size = UDim2.new(0, 340, 0, 230)
+			KeyGui.Size = UDim2.new(0, 0, 0, 0)
 			KeyGui.ClipsDescendants = true
 			KeyGui.ZIndex = 500
 
 			AttachSunlightGlow(KeyGui, 500)
 
 			local KCorner = Instance.new("UICorner")
-			KCorner.CornerRadius = UDim.new(0, 12)
+			KCorner.CornerRadius = UDim.new(0, 14)
 			KCorner.Parent = KeyGui
 
 			local KStroke = Instance.new("UIStroke")
 			KStroke.Color = currentAccentColor
 			KStroke.Thickness = 2
+			KStroke.Transparency = 0.15
 			KStroke.Parent = KeyGui
 
-			CreateIcon("lucide-key", KeyGui, UDim2.new(0, 16, 0, 16), UDim2.new(0, 20, 0, 20), 501)
+			-- Header Bar Modern Key System
+			local KHeader = Instance.new("Frame")
+			KHeader.Parent = KeyGui
+			KHeader.BackgroundColor3 = Color3.fromRGB(22, 22, 34)
+			KHeader.BackgroundTransparency = 0.15
+			KHeader.Size = UDim2.new(1, 0, 0, 48)
+			KHeader.BorderSizePixel = 0
+			KHeader.ZIndex = 501
+
+			local KHCorner = Instance.new("UICorner")
+			KHCorner.CornerRadius = UDim.new(0, 14)
+			KHCorner.Parent = KHeader
+
+			CreateIcon("Logo", KHeader, UDim2.new(0, 14, 0.5, -11), UDim2.new(0, 22, 0, 22), 502, true)
 
 			local KTitle = Instance.new("TextLabel")
-			KTitle.Parent = KeyGui
+			KTitle.Parent = KHeader
 			KTitle.BackgroundTransparency = 1
-			KTitle.Position = UDim2.new(0, 46, 0, 14)
-			KTitle.Size = UDim2.new(1, -60, 0, 24)
+			KTitle.Position = UDim2.new(0, 44, 0, 6)
+			KTitle.Size = UDim2.new(1, -135, 0, 18)
 			KTitle.Font = Enum.Font.GothamBold
 			KTitle:SetAttribute("IsBoldFont", true)
-			KTitle.Text = keySettings.Title or "AetherLib v17.0 Key System"
+			KTitle.Text = keySettings.Title or "AETHERGEN v18.5 • KEY GUARD"
 			KTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 			KTitle.TextSize = 13
 			KTitle.TextXAlignment = Enum.TextXAlignment.Left
-			KTitle.ZIndex = 501
+			KTitle.ZIndex = 502
 
+			local KSub = Instance.new("TextLabel")
+			KSub.Parent = KHeader
+			KSub.BackgroundTransparency = 1
+			KSub.Position = UDim2.new(0, 44, 0, 24)
+			KSub.Size = UDim2.new(1, -135, 0, 14)
+			KSub.Font = Enum.Font.Gotham
+			KSub:SetAttribute("IgnoreTextColor", true)
+			KSub.Text = "Security Gateway • " .. tostring(LocalPlayer and LocalPlayer.DisplayName or "Player")
+			KSub.TextColor3 = currentAccentColor
+			KSub.TextSize = 10
+			KSub.TextXAlignment = Enum.TextXAlignment.Left
+			KSub.ZIndex = 502
+
+			local KStatusBadge = Instance.new("TextLabel")
+			KStatusBadge.Parent = KHeader
+			KStatusBadge.BackgroundColor3 = Color3.fromRGB(220, 50, 70)
+			KStatusBadge.Position = UDim2.new(1, -82, 0.5, -11)
+			KStatusBadge.Size = UDim2.new(0, 68, 0, 22)
+			KStatusBadge.Font = Enum.Font.GothamBold
+			KStatusBadge:SetAttribute("IsBoldFont", true)
+			KStatusBadge:SetAttribute("IgnoreTextColor", true)
+			KStatusBadge.Text = "LOCKED"
+			KStatusBadge.TextColor3 = Color3.fromRGB(255, 255, 255)
+			KStatusBadge.TextSize = 10
+			KStatusBadge.ZIndex = 502
+
+			local KSBCorner = Instance.new("UICorner")
+			KSBCorner.CornerRadius = UDim.new(1, 0)
+			KSBCorner.Parent = KStatusBadge
+
+			MakeDraggable(KHeader, KeyGui)
+
+			-- Banner Teks Berjalan (Marquee) Modern
 			local MarqueeContainer = Instance.new("Frame")
 			MarqueeContainer.Parent = KeyGui
-			MarqueeContainer.BackgroundTransparency = 1
-			MarqueeContainer.Position = UDim2.new(0, 16, 0, 44)
-			MarqueeContainer.Size = UDim2.new(1, -32, 0, 18)
+			MarqueeContainer.BackgroundColor3 = Color3.fromRGB(24, 24, 36)
+			MarqueeContainer.BackgroundTransparency = 0.2
+			MarqueeContainer.Position = UDim2.new(0, 16, 0, 58)
+			MarqueeContainer.Size = UDim2.new(1, -32, 0, 24)
 			MarqueeContainer.ClipsDescendants = true
 			MarqueeContainer.ZIndex = 501
+
+			local MCorner = Instance.new("UICorner")
+			MCorner.CornerRadius = UDim.new(0, 6)
+			MCorner.Parent = MarqueeContainer
+
+			local MStroke = Instance.new("UIStroke")
+			MStroke.Color = currentAccentColor
+			MStroke.Transparency = 0.65
+			MStroke.Thickness = 1
+			MStroke.Parent = MarqueeContainer
 
 			local MarqueeText = Instance.new("TextLabel")
 			MarqueeText.Parent = MarqueeContainer
 			MarqueeText.BackgroundTransparency = 1
-			MarqueeText.Size = UDim2.new(0, 600, 1, 0)
+			MarqueeText.Size = UDim2.new(0, 650, 1, 0)
 			MarqueeText.Font = Enum.Font.GothamBold
 			MarqueeText:SetAttribute("IsBoldFont", true)
 			MarqueeText:SetAttribute("IgnoreTextColor", true)
-			MarqueeText.Text = keySettings.MarqueeText or "Key1--1hari | Key2--2hari | Masukkan key yang sesuai untuk mengakses fitur script!"
-			MarqueeText.TextColor3 = Color3.fromRGB(255, 210, 100)
+			MarqueeText.Text = keySettings.MarqueeText or "⚡ AetherGen v18.5 Key System • Masukkan key valid sesuai durasi atau klik Ambil Key untuk menyalin tautan key!"
+			MarqueeText.TextColor3 = Color3.fromRGB(255, 215, 90)
 			MarqueeText.TextSize = 10
 			MarqueeText.TextXAlignment = Enum.TextXAlignment.Left
-			MarqueeText.ZIndex = 501
+			MarqueeText.ZIndex = 502
 
 			task.spawn(function()
-				local mPos = 320
+				local mPos = 350
 				while ScreenGui and ScreenGui.Parent and MarqueeText and MarqueeText.Parent do
 					mPos = mPos - 1.5
 					if mPos < -MarqueeText.TextBounds.X then
-						mPos = 320
+						mPos = 350
 					end
 					MarqueeText.Position = UDim2.new(0, mPos, 0, 0)
 					task.wait(0.02)
@@ -459,66 +540,135 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			local KDesc = Instance.new("TextLabel")
 			KDesc.Parent = KeyGui
 			KDesc.BackgroundTransparency = 1
-			KDesc.Position = UDim2.new(0, 16, 0, 68)
-			KDesc.Size = UDim2.new(1, -32, 0, 32)
+			KDesc.Position = UDim2.new(0, 16, 0, 88)
+			KDesc.Size = UDim2.new(1, -32, 0, 28)
 			KDesc.Font = Enum.Font.Gotham
-			KDesc.Text = keySettings.Description or "Masukkan key yang valid sesuai durasi terdaftar."
-			KDesc.TextColor3 = Color3.fromRGB(180, 180, 195)
-			KDesc.TextSize = 11
+			KDesc.Text = keySettings.Description or "Silakan masukkan kode akses (Key) di bawah ini untuk membuka seluruh fitur AetherLib v18.5."
+			KDesc.TextColor3 = Color3.fromRGB(190, 195, 215)
+			KDesc.TextSize = 10
 			KDesc.TextWrapped = true
 			KDesc.TextXAlignment = Enum.TextXAlignment.Left
 			KDesc.ZIndex = 501
 
+			-- Kotak Input Key dengan Ikon & Tombol Clear/Paste
+			local InputHolder = Instance.new("Frame")
+			InputHolder.Parent = KeyGui
+			InputHolder.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
+			InputHolder.Position = UDim2.new(0, 16, 0, 122)
+			InputHolder.Size = UDim2.new(1, -32, 0, 40)
+			InputHolder.ZIndex = 501
+
+			local IHCorner = Instance.new("UICorner")
+			IHCorner.CornerRadius = UDim.new(0, 8)
+			IHCorner.Parent = InputHolder
+
+			local IHStroke = Instance.new("UIStroke")
+			IHStroke.Color = Color3.fromRGB(65, 65, 90)
+			IHStroke.Thickness = 1.5
+			IHStroke.Parent = InputHolder
+
+			CreateIcon("lucide-key", InputHolder, UDim2.new(0, 12, 0.5, -8), UDim2.new(0, 16, 0, 16), 502, true)
+
 			local KeyInput = Instance.new("TextBox")
-			KeyInput.Parent = KeyGui
-			KeyInput.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-			KeyInput.Position = UDim2.new(0, 16, 0, 106)
-			KeyInput.Size = UDim2.new(1, -32, 0, 36)
-			KeyInput.Font = Enum.Font.Gotham
-			KeyInput.PlaceholderText = "Ketik key di sini..."
-			KeyInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 150)
+			KeyInput.Parent = InputHolder
+			KeyInput.BackgroundTransparency = 1
+			KeyInput.Position = UDim2.new(0, 36, 0, 0)
+			KeyInput.Size = UDim2.new(1, -92, 1, 0)
+			KeyInput.Font = Enum.Font.GothamBold
+			KeyInput.PlaceholderText = "Masukkan Key di sini..."
+			KeyInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 155)
 			KeyInput.Text = ""
 			KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-			KeyInput.TextSize = 12
+			KeyInput.TextSize = 11
+			KeyInput.TextXAlignment = Enum.TextXAlignment.Left
 			KeyInput.ClearTextOnFocus = false
-			KeyInput.ZIndex = 501
+			KeyInput.ZIndex = 502
 
-			local BICorner = Instance.new("UICorner")
-			BICorner.CornerRadius = UDim.new(0, 6)
-			BICorner.Parent = KeyInput
+			local ClearKeyBtn = Instance.new("TextButton")
+			ClearKeyBtn.Parent = InputHolder
+			ClearKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 58)
+			ClearKeyBtn.Position = UDim2.new(1, -50, 0.5, -12)
+			ClearKeyBtn.Size = UDim2.new(0, 42, 0, 24)
+			ClearKeyBtn.Font = Enum.Font.GothamBold
+			ClearKeyBtn:SetAttribute("IsBoldFont", true)
+			ClearKeyBtn.Text = "CLR"
+			ClearKeyBtn.TextColor3 = Color3.fromRGB(210, 210, 230)
+			ClearKeyBtn.TextSize = 9
+			ClearKeyBtn.ZIndex = 502
 
+			local CKCorner = Instance.new("UICorner")
+			CKCorner.CornerRadius = UDim.new(0, 5)
+			CKCorner.Parent = ClearKeyBtn
+
+			TrackConnection(ClearKeyBtn.MouseButton1Click:Connect(function()
+				KeyInput.Text = ""
+			end))
+
+			TrackConnection(KeyInput.Focused:Connect(function()
+				TweenService:Create(IHStroke, TweenInfo.new(0.2), { Color = currentAccentColor }):Play()
+			end))
+			TrackConnection(KeyInput.FocusLost:Connect(function()
+				TweenService:Create(IHStroke, TweenInfo.new(0.2), { Color = Color3.fromRGB(65, 65, 90) }):Play()
+			end))
+
+			-- Status Feedback Bar di Bawah Input
+			local KFeedback = Instance.new("TextLabel")
+			KFeedback.Parent = KeyGui
+			KFeedback.BackgroundTransparency = 1
+			KFeedback.Position = UDim2.new(0, 18, 0, 166)
+			KFeedback.Size = UDim2.new(1, -36, 0, 16)
+			KFeedback.Font = Enum.Font.GothamMedium
+			KFeedback:SetAttribute("IgnoreTextColor", true)
+			KFeedback.Text = "Status: Menunggu verifikasi key..."
+			KFeedback.TextColor3 = Color3.fromRGB(160, 165, 190)
+			KFeedback.TextSize = 10
+			KFeedback.TextXAlignment = Enum.TextXAlignment.Left
+			KFeedback.ZIndex = 502
+
+			-- Baris Tombol Aksi (Verifikasi Key & Ambil Key)
 			local VerifyBtn = Instance.new("TextButton")
 			VerifyBtn.Parent = KeyGui
 			VerifyBtn.BackgroundColor3 = currentAccentColor
-			VerifyBtn.Position = UDim2.new(0, 16, 0, 156)
-			VerifyBtn.Size = UDim2.new(0.48, -10, 0, 36)
+			VerifyBtn.Position = UDim2.new(0, 16, 0, 190)
+			VerifyBtn.Size = UDim2.new(0.52, -8, 0, 38)
 			VerifyBtn.Font = Enum.Font.GothamBold
 			VerifyBtn:SetAttribute("IsBoldFont", true)
 			VerifyBtn:SetAttribute("IgnoreTextColor", true)
-			VerifyBtn.Text = "Verifikasi"
+			VerifyBtn.Text = "Verifikasi Key"
 			VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 			VerifyBtn.TextSize = 12
-			VerifyBtn.ZIndex = 501
+			VerifyBtn.ZIndex = 502
 
 			local VCorner = Instance.new("UICorner")
-			VCorner.CornerRadius = UDim.new(0, 6)
+			VCorner.CornerRadius = UDim.new(0, 8)
 			VCorner.Parent = VerifyBtn
 
 			local GetKeyBtn = Instance.new("TextButton")
 			GetKeyBtn.Parent = KeyGui
-			GetKeyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-			GetKeyBtn.Position = UDim2.new(0.52, 6, 0, 156)
-			GetKeyBtn.Size = UDim2.new(0.48, -10, 0, 36)
+			GetKeyBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 54)
+			GetKeyBtn.Position = UDim2.new(0.52, 8, 0, 190)
+			GetKeyBtn.Size = UDim2.new(0.48, -24, 0, 38)
 			GetKeyBtn.Font = Enum.Font.GothamBold
 			GetKeyBtn:SetAttribute("IsBoldFont", true)
-			GetKeyBtn.Text = "Dapatkan Key"
-			GetKeyBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
+			GetKeyBtn.Text = "Ambil Key"
+			GetKeyBtn.TextColor3 = Color3.fromRGB(235, 235, 250)
 			GetKeyBtn.TextSize = 12
-			GetKeyBtn.ZIndex = 501
+			GetKeyBtn.ZIndex = 502
 
 			local GCorner = Instance.new("UICorner")
-			GCorner.CornerRadius = UDim.new(0, 6)
+			GCorner.CornerRadius = UDim.new(0, 8)
 			GCorner.Parent = GetKeyBtn
+
+			local GStroke = Instance.new("UIStroke")
+			GStroke.Color = currentAccentColor
+			GStroke.Transparency = 0.45
+			GStroke.Thickness = 1.2
+			GStroke.Parent = GetKeyBtn
+
+			-- Animasi Pop-In KeyGui
+			TweenService:Create(KeyGui, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.new(0, 370, 0, 244)
+			}):Play()
 
 			TrackConnection(VerifyBtn.MouseButton1Click:Connect(function()
 				local entered = KeyInput.Text
@@ -543,7 +693,12 @@ function AetherLib:Init(customCommandsURL, keySettings)
 				end
 
 				if isValid then
-					uiUnlocked = true
+					KStatusBadge.Text = "UNLOCKED"
+					KStatusBadge.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+					KFeedback.Text = "✓ Key Valid! Membuka AetherGen v18.5..."
+					KFeedback.TextColor3 = Color3.fromRGB(80, 245, 150)
+					IHStroke.Color = Color3.fromRGB(34, 197, 94)
+
 					if type(writefile) == "function" then
 						local expiryTime = os.time() + assignedDurationSec
 						local cacheData = HttpService:JSONEncode({ ExpiryTime = expiryTime })
@@ -551,41 +706,64 @@ function AetherLib:Init(customCommandsURL, keySettings)
 							writefile(keyFileName, cacheData)
 						end)
 					end
-					TweenService:Create(KeyGui, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-						Size = UDim2.new(0, 0, 0, 0)
-					}):Play()
-					task.delay(0.4, function()
-						if KeyGui and KeyGui.Parent then
-							KeyGui:Destroy()
-						end
+
+					task.delay(0.35, function()
+						TweenService:Create(KeyGui, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+							Size = UDim2.new(0, 0, 0, 0),
+							BackgroundTransparency = 1
+						}):Play()
+						TweenService:Create(KeyBackdrop, TweenInfo.new(0.35), { BackgroundTransparency = 1 }):Play()
+						task.delay(0.38, function()
+							if KeyGui and KeyGui.Parent then
+								KeyGui:Destroy()
+							end
+							if KeyBackdrop and KeyBackdrop.Parent then
+								KeyBackdrop:Destroy()
+							end
+							uiUnlocked = true
+						end)
 					end)
 				else
+					KFeedback.Text = "✕ Key salah atau tidak terdaftar! Silakan coba lagi."
+					KFeedback.TextColor3 = Color3.fromRGB(255, 90, 95)
+					IHStroke.Color = Color3.fromRGB(255, 75, 80)
 					KeyInput.Text = ""
-					KeyInput.PlaceholderText = "Key Salah / Tidak Terdaftar!"
+					KeyInput.PlaceholderText = "Key tidak valid!"
+					-- Efek getar halus pada kotak input saat key salah
+					task.spawn(function()
+						for _, offset in ipairs({ -6, 6, -4, 4, 0 }) do
+							if InputHolder and InputHolder.Parent then
+								InputHolder.Position = UDim2.new(0, 16 + offset, 0, 122)
+							end
+							task.wait(0.03)
+						end
+					end)
 				end
 			end))
 
 			TrackConnection(GetKeyBtn.MouseButton1Click:Connect(function()
 				if type(setclipboard) == "function" then
 					setclipboard(keySettings.KeyLink or "https://github.com/TheGoodManzz10/TheGoodManzzScript")
-					GetKeyBtn.Text = "Link Tersalin!"
-					task.delay(1.5, function()
-						if GetKeyBtn and GetKeyBtn.Parent then
-							GetKeyBtn.Text = "Dapatkan Key"
-						end
-					end)
 				end
+				GetKeyBtn.Text = "Link Tersalin!"
+				KFeedback.Text = "✓ Link Key berhasil disalin ke clipboard!"
+				KFeedback.TextColor3 = currentAccentColor
+				task.delay(1.5, function()
+					if GetKeyBtn and GetKeyBtn.Parent then
+						GetKeyBtn.Text = "Ambil Key"
+					end
+				end)
 			end))
 
 			while not uiUnlocked and ScreenGui and ScreenGui.Parent do
-				task.wait(0.1)
+				task.wait(0.05)
 			end
 		end
 	end
 
 	-------------------------------------------------------------------
-	-- ANIMASI INTRO EKSKLUSIF v17.0: "AETHER HORIZON SPLASH SCREEN"
-	-- (Muncul Setelah Verifikasi Key / Saat Eksekusi Script)
+	-- ANIMASI INTRO EKSKLUSIF v18.5: "AETHER HORIZON SPLASH SCREEN"
+	-- (100% Smooth: Mulai Tepat dari 0% -> 1% -> 2% ... -> 100% Tanpa Lompat!)
 	-------------------------------------------------------------------
 	local function PlayAetherHorizonIntro(onCompleteCallback)
 		local SplashCard = Instance.new("Frame")
@@ -615,19 +793,19 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		OuterRing.Parent = SplashCard
 		OuterRing.BackgroundTransparency = 1
 		OuterRing.AnchorPoint = Vector2.new(0.5, 0.5)
-		OuterRing.Position = UDim2.new(0.5, 0, 0, 52)
-		OuterRing.Size = UDim2.new(0, 54, 0, 54)
+		OuterRing.Position = UDim2.new(0.5, 0, 0, 50)
+		OuterRing.Size = UDim2.new(0, 56, 0, 56)
 		OuterRing.Image = Icons["SpinOuter"]
 		OuterRing.ImageColor3 = currentAccentColor
-		OuterRing.ImageTransparency = 0.2
+		OuterRing.ImageTransparency = 0.15
 		OuterRing.ZIndex = 602
 
-		-- Logo Inti di Tengah Cincin
+		-- Logo Inti Putih Permanen di Tengah Cincin
 		local CenterLogo = Instance.new("ImageLabel")
 		CenterLogo.Parent = SplashCard
 		CenterLogo.BackgroundTransparency = 1
 		CenterLogo.AnchorPoint = Vector2.new(0.5, 0.5)
-		CenterLogo.Position = UDim2.new(0.5, 0, 0, 52)
+		CenterLogo.Position = UDim2.new(0.5, 0, 0, 50)
 		CenterLogo.Size = UDim2.new(0, 26, 0, 26)
 		CenterLogo.Image = Icons["Logo"]
 		CenterLogo.ImageColor3 = Color3.fromRGB(255, 255, 255)
@@ -640,7 +818,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		MainTitleLbl.Position = UDim2.new(0, 16, 0, 86)
 		MainTitleLbl.Size = UDim2.new(1, -32, 0, 22)
 		MainTitleLbl.Font = Enum.Font.GothamBold
-		MainTitleLbl.Text = "AETHERGEN  •  HORIZON v17.0"
+		MainTitleLbl.Text = "AETHERGEN  •  HORIZON v18.5"
 		MainTitleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
 		MainTitleLbl.TextTransparency = 1
 		MainTitleLbl.TextSize = 15
@@ -659,15 +837,16 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		SubWelcomeLbl.TextSize = 11
 		SubWelcomeLbl.ZIndex = 603
 
-		-- Status Loading Teks & Persentase
+		-- Status Loading Teks & Persentase (Mulai dari 0%)
 		local StatusLbl = Instance.new("TextLabel")
 		StatusLbl.Parent = SplashCard
 		StatusLbl.BackgroundTransparency = 1
 		StatusLbl.Position = UDim2.new(0, 22, 0, 136)
 		StatusLbl.Size = UDim2.new(1, -80, 0, 16)
 		StatusLbl.Font = Enum.Font.Gotham
-		StatusLbl.Text = "Initializing Aether Core..."
+		StatusLbl.Text = "Preparing Aether Core v18.5..."
 		StatusLbl.TextColor3 = Color3.fromRGB(185, 185, 205)
+		StatusLbl.TextTransparency = 1
 		StatusLbl.TextSize = 10
 		StatusLbl.TextXAlignment = Enum.TextXAlignment.Left
 		StatusLbl.ZIndex = 603
@@ -680,7 +859,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		PercentLbl.Font = Enum.Font.GothamBold
 		PercentLbl.Text = "0%"
 		PercentLbl.TextColor3 = currentAccentColor
-		PercentLbl.TextSize = 10
+		PercentLbl.TextTransparency = 1
+		PercentLbl.TextSize = 11
 		PercentLbl.TextXAlignment = Enum.TextXAlignment.Right
 		PercentLbl.ZIndex = 603
 
@@ -706,63 +886,68 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		BarFillCorner.CornerRadius = UDim.new(1, 0)
 		BarFillCorner.Parent = BarFill
 
-		-- Jalankan Animasi Secara Asinkron agar Komponen Script Langsung Terdaftar
 		task.spawn(function()
-			-- Rotasi Cincin Orbital
-			local spinning = true
-			task.spawn(function()
-				while spinning and SplashCard and SplashCard.Parent do
-					OuterRing.Rotation = (OuterRing.Rotation + 4) % 360
-					task.wait(0.016)
+			-- Putar cincin orbital menggunakan RenderStepped agar 100% halus mengikuti FPS layar
+			local spinConn
+			spinConn = RunService.RenderStepped:Connect(function(dt)
+				if SplashCard and SplashCard.Parent then
+					OuterRing.Rotation = (OuterRing.Rotation + (dt or 0.016) * 200) % 360
+				elseif spinConn then
+					spinConn:Disconnect()
 				end
 			end)
 
-			-- Tahap 1: Pop-out Kartu Intro
-			TweenService:Create(SplashCard, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-				Size = UDim2.new(0, 350, 0, 184)
-			}):Play()
-			task.wait(0.25)
+			-- Tahap 1: Pop-out Kartu Intro hingga terbuka penuh terlebih dahulu (Persentase tetap 0%!)
+			local openTween = TweenService:Create(SplashCard, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.new(0, 356, 0, 184)
+			})
+			openTween:Play()
+			task.wait(0.28)
 
-			TweenService:Create(MainTitleLbl, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				TextTransparency = 0
-			}):Play()
-			TweenService:Create(SubWelcomeLbl, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				TextTransparency = 0
+			TweenService:Create(MainTitleLbl, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+			TweenService:Create(SubWelcomeLbl, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+			TweenService:Create(StatusLbl, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+			TweenService:Create(PercentLbl, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+			task.wait(0.22)
+
+			-- Tahap 2: Counting Halus 0% -> 1% -> 2% ... -> 100% Tanpa Melompati Angka!
+			PercentLbl.Text = "0%"
+			BarFill.Size = UDim2.new(0, 0, 1, 0)
+
+			-- Gerakkan BarFill secara kontinu dan mulus dari 0 ke 100% selama ~1.15 detik
+			local totalDuration = 1.15
+			TweenService:Create(BarFill, TweenInfo.new(totalDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Size = UDim2.new(1, 0, 1, 0)
 			}):Play()
 
-			-- Tahap 2: Animasi Progress Bar & Persentase
-			local stages = {
-				{ Target = 38, Text = "Loading Starlight & Nova Modules...", WaitTime = 0.35 },
-				{ Target = 76, Text = "Applying Sunlight Glow & Themes...", WaitTime = 0.35 },
-				{ Target = 100, Text = "Ready! Launching Interface...", WaitTime = 0.3 }
-			}
-
-			local currentPct = 0
-			for _, st in ipairs(stages) do
-				StatusLbl.Text = st.Text
-				TweenService:Create(BarFill, TweenInfo.new(st.WaitTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-					Size = UDim2.new(st.Target / 100, 0, 1, 0)
-				}):Play()
-				local steps = 10
-				local inc = (st.Target - currentPct) / steps
-				for _ = 1, steps do
-					currentPct = math.min(100, math.floor(currentPct + inc + 0.5))
-					PercentLbl.Text = tostring(currentPct) .. "%"
-					task.wait(st.WaitTime / steps)
+			local stepWait = totalDuration / 100
+			for pct = 1, 100 do
+				if pct == 1 then
+					StatusLbl.Text = "Initializing Aether Core v18.5..."
+				elseif pct == 28 then
+					StatusLbl.Text = "Loading Starlight & Nova Modules..."
+				elseif pct == 62 then
+					StatusLbl.Text = "Syncing 50 Themes & Universal Rows..."
+				elseif pct == 88 then
+					StatusLbl.Text = "Finalizing Interface..."
+				elseif pct == 100 then
+					StatusLbl.Text = "Ready! Launching AetherGen v18.5..."
 				end
-				currentPct = st.Target
-				PercentLbl.Text = tostring(currentPct) .. "%"
+				PercentLbl.Text = tostring(pct) .. "%"
+				task.wait(stepWait)
 			end
 
-			task.wait(0.2)
-			spinning = false
+			task.wait(0.18)
+			if spinConn then
+				spinConn:Disconnect()
+			end
 
 			-- Tahap 3: Morph Keluar dengan Halus
-			local closeTween = TweenService:Create(SplashCard, TweenInfo.new(0.45, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+			local closeTween = TweenService:Create(SplashCard, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
 				Size = UDim2.new(0, 380, 0, 0),
 				BackgroundTransparency = 1
 			})
-			TweenService:Create(SStroke, TweenInfo.new(0.35), { Transparency = 1 }):Play()
+			TweenService:Create(SStroke, TweenInfo.new(0.3), { Transparency = 1 }):Play()
 			closeTween:Play()
 			closeTween.Completed:Wait()
 			if SplashCard and SplashCard.Parent then
@@ -885,7 +1070,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	StarlightHeader.ZIndex = 22
 
 	-- Ikon Permanen di Kiri Judul UI 2 (Starlight = Bintang) & UI 3 (Aether Nova = Roket)
-	local HeaderMainIcon = CreateIcon("lucide-star", StarlightHeader, UDim2.new(0, 12, 0.5, -10), UDim2.new(0, 20, 0, 20), 23)
+	local HeaderMainIcon = CreateIcon("lucide-star", StarlightHeader, UDim2.new(0, 12, 0.5, -10), UDim2.new(0, 20, 0, 20), 23, true)
 
 	local SHeaderTitle = Instance.new("TextLabel")
 	SHeaderTitle.Parent = StarlightHeader
@@ -895,7 +1080,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	SHeaderTitle.Font = Enum.Font.GothamBold
 	SHeaderTitle:SetAttribute("IsBoldFont", true)
 	SHeaderTitle:SetAttribute("IgnoreTextColor", true)
-	SHeaderTitle.Text = "STARLIGHT ENGINE v17.0"
+	SHeaderTitle.Text = "STARLIGHT ENGINE v18.5"
 	SHeaderTitle.TextColor3 = currentAccentColor
 	SHeaderTitle.TextSize = 13
 	SHeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -1070,7 +1255,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	TopCorner.CornerRadius = UDim.new(0, 8)
 	TopCorner.Parent = TopBar
 
-	CreateIcon("Logo", TopBar, UDim2.new(0, 12, 0.5, -10), UDim2.new(0, 20, 0, 20), 10)
+	CreateIcon("Logo", TopBar, UDim2.new(0, 12, 0.5, -10), UDim2.new(0, 20, 0, 20), 10, true)
 
 	local Title = Instance.new("TextLabel")
 	Title.Parent = TopBar
@@ -1079,7 +1264,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	Title.Size = UDim2.new(1, -140, 0, 20)
 	Title.Font = Enum.Font.GothamBold
 	Title:SetAttribute("IsBoldFont", true)
-	Title.Text = "AetherGen 17.0"
+	Title.Text = "AetherGen 18.5"
 	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Title.TextSize = 14
 	Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1166,7 +1351,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 				StarlightFrame.Visible = true
 			end
 			HeaderMainIcon.Image = Icons["lucide-star"]
-			SHeaderTitle.Text = "STARLIGHT ENGINE v17.0"
+			SHeaderTitle.Text = "STARLIGHT ENGINE v18.5"
 			NovaModeBadge.Text = "Starlight UI"
 			StarlightSidebarHolder.Visible = true
 			NovaTopBarHolder.Visible = false
@@ -1195,7 +1380,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 				StarlightFrame.Visible = true
 			end
 			HeaderMainIcon.Image = Icons["lucide-rocket"]
-			SHeaderTitle.Text = "AETHER NOVA  •  HORIZON v17.0"
+			SHeaderTitle.Text = "AETHER NOVA  •  HORIZON v18.5"
 			NovaModeBadge.Text = "Aether Nova"
 			StarlightSidebarHolder.Visible = false
 			NovaTopBarHolder.Visible = true
@@ -1332,7 +1517,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		NSPStroke.Color = col
 	end)
 
-	CreateIcon("lucide-settings", NormalSettingsPanel, UDim2.new(0, 10, 0, 10), UDim2.new(0, 16, 0, 16), 401)
+	CreateIcon("lucide-settings", NormalSettingsPanel, UDim2.new(0, 10, 0, 10), UDim2.new(0, 16, 0, 16), 401, true)
 
 	local NSPTitle = Instance.new("TextLabel")
 	NSPTitle.Parent = NormalSettingsPanel
@@ -1341,7 +1526,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	NSPTitle.Size = UDim2.new(1, -65, 0, 22)
 	NSPTitle.Font = Enum.Font.GothamBold
 	NSPTitle:SetAttribute("IsBoldFont", true)
-	NSPTitle.Text = "Settings UI v17.0 (50 Tema & Warna)"
+	NSPTitle.Text = "Settings UI v18.5 (50 Tema & Warna)"
 	NSPTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 	NSPTitle.TextSize = 12
 	NSPTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -1918,7 +2103,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	CLStroke.Thickness = 2
 	CLStroke.Parent = CmdListFrame
 
-	CreateIcon("lucide-file-text", CmdListFrame, UDim2.new(0, 10, 0, 10), UDim2.new(0, 16, 0, 16), 251)
+	CreateIcon("lucide-file-text", CmdListFrame, UDim2.new(0, 10, 0, 10), UDim2.new(0, 16, 0, 16), 251, true)
 
 	local CLTitle = Instance.new("TextLabel")
 	CLTitle.Parent = CmdListFrame
@@ -2164,7 +2349,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		SPadding.PaddingLeft = UDim.new(0, 8)
 
 		if iconName then
-			CreateIcon(iconName, SideBtn, UDim2.new(0, 0, 0, 0), UDim2.new(0, 15, 0, 15), 24)
+			CreateIcon(iconName, SideBtn, UDim2.new(0, 0, 0, 0), UDim2.new(0, 15, 0, 15), 24, true)
 		end
 
 		local SideLbl = Instance.new("TextLabel")
@@ -2212,7 +2397,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		TPadding.PaddingRight = UDim.new(0, 12)
 
 		if iconName then
-			CreateIcon(iconName, TopBtn, UDim2.new(0, 0, 0, 0), UDim2.new(0, 14, 0, 14), 25)
+			CreateIcon(iconName, TopBtn, UDim2.new(0, 0, 0, 0), UDim2.new(0, 14, 0, 14), 25, true)
 		end
 
 		local TopLbl = Instance.new("TextLabel")
@@ -2724,7 +2909,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 				TrackConnection(child:GetPropertyChangedSignal("Visible"):Connect(function()
 					onUpdate(false)
 				end))
-				task.defer(function()
+				SafeDefer(function()
 					onUpdate(false)
 				end)
 			end
@@ -2753,13 +2938,13 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	TrackConnection(MainFrame:GetPropertyChangedSignal("Visible"):Connect(function()
 		if MainFrame.Visible then
 			RunAllDynamicRefreshes()
-			task.defer(RunAllDynamicRefreshes)
+			SafeDefer(RunAllDynamicRefreshes)
 		end
 	end))
 	TrackConnection(StarlightFrame:GetPropertyChangedSignal("Visible"):Connect(function()
 		if StarlightFrame.Visible then
 			RunAllDynamicRefreshes()
-			task.defer(RunAllDynamicRefreshes)
+			SafeDefer(RunAllDynamicRefreshes)
 		end
 	end))
 
@@ -2842,7 +3027,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 						local targetScope = (callCounter % 2 == 1) and LeftScope or RightScope
 						local res = targetScope[methodName](targetScope, ...)
 						SyncRowHeight()
-						task.defer(SyncRowHeight)
+						SafeDefer(SyncRowHeight)
 						return res or RowObj
 					end
 				end
@@ -3006,7 +3191,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 						CountBadge.Text = tostring(itemCount)
 						local res = InnerScope[methodName](InnerScope, ...)
 						RefreshGroupSize(false)
-						task.defer(function()
+						SafeDefer(function()
 							RefreshGroupSize(false)
 						end)
 						return res
@@ -3028,8 +3213,13 @@ function AetherLib:Init(customCommandsURL, keySettings)
 
 		local function MirrorCall(methodName, ...)
 			if getMirrorScopeFn then
-				local mScope = (type(getMirrorScopeFn) == "function") and getMirrorScopeFn() or getMirrorScopeFn
-				if mScope and type(mScope[methodName]) == "function" then
+				local mScope = nil
+				if type(getMirrorScopeFn) == "function" then
+					mScope = getMirrorScopeFn()
+				elseif type(getMirrorScopeFn) == "table" then
+					mScope = getMirrorScopeFn
+				end
+				if type(mScope) == "table" and type(mScope[methodName]) == "function" then
 					return mScope[methodName](mScope, ...)
 				end
 			end
@@ -7304,7 +7494,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		end)
 		if success and type(scriptFunc) == "function" then
 			pcall(scriptFunc, AetherLib)
-			Elements:AddNotification("AetherLib 17.0", "Perintah eksternal berhasil dimuat!", 3)
+			Elements:AddNotification("AetherLib 18.5", "Perintah eksternal berhasil dimuat!", 3)
 		end
 	end)
 
@@ -7512,7 +7702,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	RunAllDynamicRefreshes()
-	task.defer(RunAllDynamicRefreshes)
+	SafeDefer(RunAllDynamicRefreshes)
 
 	return Elements
 end
