@@ -254,7 +254,21 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		["lucide-wrench"] = "rbxassetid://10747383470",
 		["lucide-x"] = "rbxassetid://10747384394",
 		["lucide-x-circle"] = "rbxassetid://10747383819",
-		["lucide-zap"] = "rbxassetid://10723376114"
+		["lucide-zap"] = "rbxassetid://10723376114",
+		["lucide-sliders"] = "rbxassetid://10734950309",
+		["lucide-sliders-horizontal"] = "rbxassetid://10734950309",
+		["lucide-compass"] = "rbxassetid://10734886202",
+		["lucide-map-pin"] = "rbxassetid://10734886202",
+		["lucide-crosshair"] = "rbxassetid://10723395708",
+		["lucide-cpu"] = "rbxassetid://10709818996",
+		["lucide-save"] = "rbxassetid://10709782154",
+		["lucide-trash"] = "rbxassetid://10747383819",
+		["lucide-send"] = "rbxassetid://10734934585",
+		["lucide-sun"] = "rbxassetid://10734966248",
+		["lucide-moon"] = "rbxassetid://10734966248",
+		["lucide-move"] = "rbxassetid://10734886202",
+		["lucide-fast-forward"] = "rbxassetid://10734923549",
+		["lucide-anchor"] = "rbxassetid://10734951847"
 	}
 
 	local function CreateIcon(iconNameOrId, parent, position, size, zIndex)
@@ -2659,10 +2673,96 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	end
 
 	-------------------------------------------------------------------
-	-- ARSITEKTUR UNIVERSAL v17.0: CREATECONTAINERSCOPE
-	-- Membuat Kontainer Apa Pun (Tab, MainFrame, Group, atau 2-Column Row)
-	-- Memiliki 100% SEMUA Komponen Tanpa Batas!
+	-- ARSITEKTUR UNIVERSAL v17.0 (FIXED & STABIL 100%):
+	-- - Perhitungan tinggi kontainer deterministik (tidak bergantung pada Visible=true)
+	-- - MirrorCall aman mendukung fungsi maupun tabel objek Group/Row
+	-- - Sinkronisasi otomatis untuk semua komponen di dalam AddGroup & AddRow
 	-------------------------------------------------------------------
+	local DynamicRefreshCallbacks = {}
+
+	local function RunAllDynamicRefreshes()
+		for _, fn in ipairs(DynamicRefreshCallbacks) do
+			pcall(fn)
+		end
+	end
+
+	-- Menghitung tinggi aktual seluruh anak GuiObject secara deterministik (bahkan saat UI masih tersembunyi/Visible=false)
+	local function ComputeContainerHeight(container, layout)
+		if not container then
+			return 0
+		end
+		local pad = (layout and layout.Padding and layout.Padding.Offset) or 6
+		local total = 0
+		local count = 0
+		for _, child in ipairs(container:GetChildren()) do
+			if child:IsA("GuiObject") and child.Visible then
+				count = count + 1
+				local h = child.Size.Y.Offset
+				if h <= 0 and child.AbsoluteSize.Y > 0 then
+					h = child.AbsoluteSize.Y
+				end
+				total = total + h
+			end
+		end
+		if count > 1 then
+			total = total + ((count - 1) * pad)
+		end
+		if total > 0 then
+			return total
+		end
+		return (layout and layout.AbsoluteContentSize.Y) or 0
+	end
+
+	local function BindDynamicContainer(container, layout, onUpdate)
+		local hooked = {}
+		local function HookChild(child)
+			if child and child:IsA("GuiObject") and not hooked[child] then
+				hooked[child] = true
+				TrackConnection(child:GetPropertyChangedSignal("Size"):Connect(function()
+					onUpdate(false)
+				end))
+				TrackConnection(child:GetPropertyChangedSignal("Visible"):Connect(function()
+					onUpdate(false)
+				end))
+				task.defer(function()
+					onUpdate(false)
+				end)
+			end
+		end
+		for _, ch in ipairs(container:GetChildren()) do
+			HookChild(ch)
+		end
+		TrackConnection(container.ChildAdded:Connect(function(ch)
+			HookChild(ch)
+			onUpdate(false)
+		end))
+		TrackConnection(container.ChildRemoved:Connect(function()
+			onUpdate(false)
+		end))
+		if layout then
+			TrackConnection(layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				onUpdate(false)
+			end))
+		end
+		table.insert(DynamicRefreshCallbacks, function()
+			onUpdate(false)
+		end)
+	end
+
+	-- Pastikan saat MainFrame atau StarlightFrame tampil, semua Group & Row langsung disinkronkan
+	TrackConnection(MainFrame:GetPropertyChangedSignal("Visible"):Connect(function()
+		if MainFrame.Visible then
+			RunAllDynamicRefreshes()
+			task.defer(RunAllDynamicRefreshes)
+		end
+	end))
+	TrackConnection(StarlightFrame:GetPropertyChangedSignal("Visible"):Connect(function()
+		if StarlightFrame.Visible then
+			RunAllDynamicRefreshes()
+			task.defer(RunAllDynamicRefreshes)
+		end
+	end))
+
 	local CreateContainerScope
 	local CreateUniversalRowBuilder
 	local CreateGroupComponent
@@ -2674,7 +2774,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		RowFrame.Name = "UniversalDualRow"
 		RowFrame.Parent = parentContainer
 		RowFrame.BackgroundTransparency = 1
-		RowFrame.Size = UDim2.new(1, 0, 0, 40)
+		RowFrame.Size = UDim2.new(1, 0, 0, 38)
 		RowFrame.ZIndex = zBase
 
 		local LeftSlot = Instance.new("Frame")
@@ -2703,38 +2803,45 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		RightLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		RightLayout.Padding = UDim.new(0, 6)
 
-		-- Sinkronisasi Tinggi Baris Otomatis jika salah satu komponen di Kiri/Kanan melebar (misal Dropdown dibuka)
 		local function SyncRowHeight()
-			local hL = LeftLayout.AbsoluteContentSize.Y
-			local hR = RightLayout.AbsoluteContentSize.Y
-			local maxH = math.max(hL, hR, 36)
-			RowFrame.Size = UDim2.new(1, 0, 0, maxH)
+			if not RowFrame or not RowFrame.Parent then
+				return
+			end
+			local hL = ComputeContainerHeight(LeftSlot, LeftLayout)
+			local hR = ComputeContainerHeight(RightSlot, RightLayout)
+			local maxH = math.max(hL, hR, 38)
+			if RowFrame.Size.Y.Offset ~= maxH then
+				RowFrame.Size = UDim2.new(1, 0, 0, maxH)
+			end
 		end
 
-		TrackConnection(LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(SyncRowHeight))
-		TrackConnection(RightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(SyncRowHeight))
+		BindDynamicContainer(LeftSlot, LeftLayout, SyncRowHeight)
+		BindDynamicContainer(RightSlot, RightLayout, SyncRowHeight)
 
-		local LeftScope = CreateContainerScope(LeftSlot, zBase + 1, nil)
-		local RightScope = CreateContainerScope(RightSlot, zBase + 1, nil)
+		local LeftScope = CreateContainerScope(LeftSlot, zBase + 1, function()
+			return mirrorRowObj and mirrorRowObj.Left or nil
+		end)
+		local RightScope = CreateContainerScope(RightSlot, zBase + 1, function()
+			return mirrorRowObj and mirrorRowObj.Right or nil
+		end)
 
 		local callCounter = 0
 		local RowObj = {
 			Frame = RowFrame,
 			Left = LeftScope,
-			Right = RightScope
+			Right = RightScope,
+			RefreshSize = SyncRowHeight
 		}
 
 		-- Metatable Universal: Panggilan komponen ke-1 otomatis masuk ke Kiri, ke-2 ke Kanan (Mendukung SEMUA Komponen!)
 		setmetatable(RowObj, {
 			__index = function(_, methodName)
 				if type(LeftScope[methodName]) == "function" then
-					return function(selfRef, ...)
+					return function(_, ...)
 						callCounter = callCounter + 1
 						local targetScope = (callCounter % 2 == 1) and LeftScope or RightScope
-						if mirrorRowObj and type(mirrorRowObj[methodName]) == "function" then
-							pcall(mirrorRowObj[methodName], mirrorRowObj, ...)
-						end
 						local res = targetScope[methodName](targetScope, ...)
+						SyncRowHeight()
 						task.defer(SyncRowHeight)
 						return res or RowObj
 					end
@@ -2800,6 +2907,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		TitleLbl.Text = groupTitle or "Group"
 		TitleLbl.TextColor3 = currentAccentColor
 		TitleLbl.TextSize = 12
+		TitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
 		TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
 		TitleLbl.ZIndex = zBase + 2
 
@@ -2845,6 +2953,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		BodyContainer.BackgroundTransparency = 1
 		BodyContainer.Position = UDim2.new(0, 8, 0, 44)
 		BodyContainer.Size = UDim2.new(1, -16, 0, 0)
+		BodyContainer.Visible = isOpen
 		BodyContainer.ZIndex = zBase + 1
 
 		local BodyLayout = Instance.new("UIListLayout")
@@ -2853,27 +2962,41 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		BodyLayout.Padding = UDim.new(0, 6)
 
 		local itemCount = 0
-		local function RefreshGroupSize()
-			local contentY = BodyLayout.AbsoluteContentSize.Y
+		local function RefreshGroupSize(animate)
+			if not GroupCard or not GroupCard.Parent then
+				return
+			end
+			local contentY = ComputeContainerHeight(BodyContainer, BodyLayout)
 			BodyContainer.Size = UDim2.new(1, -16, 0, contentY)
+			BodyContainer.Visible = isOpen
 			local targetH = isOpen and (contentY + 52) or 38
-			TweenService:Create(GroupCard, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, targetH)
-			}):Play()
+			if animate then
+				TweenService:Create(GroupCard, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+					Size = UDim2.new(1, 0, 0, targetH)
+				}):Play()
+			else
+				GroupCard.Size = UDim2.new(1, 0, 0, targetH)
+			end
 		end
 
-		TrackConnection(BodyLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(RefreshGroupSize))
+		BindDynamicContainer(BodyContainer, BodyLayout, RefreshGroupSize)
 
 		TrackConnection(HeaderBtn.MouseButton1Click:Connect(function()
 			isOpen = not isOpen
 			ArrowLbl.Text = isOpen and "v" or ">"
-			RefreshGroupSize()
+			RefreshGroupSize(true)
 		end))
 
-		RefreshGroupSize()
+		RefreshGroupSize(false)
 
-		local InnerScope = CreateContainerScope(BodyContainer, zBase + 2, mirrorGroupObj)
-		local GroupObj = { Container = BodyContainer }
+		local InnerScope = CreateContainerScope(BodyContainer, zBase + 2, function()
+			return mirrorGroupObj
+		end)
+		local GroupObj = {
+			Container = BodyContainer,
+			Card = GroupCard,
+			RefreshSize = RefreshGroupSize
+		}
 
 		setmetatable(GroupObj, {
 			__index = function(_, methodName)
@@ -2882,7 +3005,10 @@ function AetherLib:Init(customCommandsURL, keySettings)
 						itemCount = itemCount + 1
 						CountBadge.Text = tostring(itemCount)
 						local res = InnerScope[methodName](InnerScope, ...)
-						task.defer(RefreshGroupSize)
+						RefreshGroupSize(false)
+						task.defer(function()
+							RefreshGroupSize(false)
+						end)
 						return res
 					end
 				end
@@ -2902,7 +3028,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 
 		local function MirrorCall(methodName, ...)
 			if getMirrorScopeFn then
-				local mScope = getMirrorScopeFn()
+				local mScope = (type(getMirrorScopeFn) == "function") and getMirrorScopeFn() or getMirrorScopeFn
 				if mScope and type(mScope[methodName]) == "function" then
 					return mScope[methodName](mScope, ...)
 				end
@@ -2924,17 +3050,27 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		Scope.AddDualRow = Scope.AddRow
 		Scope.AddSplitRow = Scope.AddRow
 
-		function Scope:AddDualToggle(name1, icon1, def1, cb1, name2, icon2, def2, cb2)
+		function Scope:AddDualToggle(name1, a2, a3, a4, a5, a6, a7, a8)
 			local r = Scope:AddRow()
-			r:AddToggle(name1, icon1, def1, cb1)
-			r:AddToggle(name2, icon2, def2, cb2)
+			if type(a2) == "boolean" or type(a2) == "function" then
+				r:AddToggle(name1, nil, a2, a3)
+				r:AddToggle(a4, nil, a5, a6)
+			else
+				r:AddToggle(name1, a2, a3, a4)
+				r:AddToggle(a5, a6, a7, a8)
+			end
 			return r
 		end
 
-		function Scope:AddDualCheckbox(name1, icon1, def1, cb1, name2, icon2, def2, cb2)
+		function Scope:AddDualCheckbox(name1, a2, a3, a4, a5, a6, a7, a8)
 			local r = Scope:AddRow()
-			r:AddCheckbox(name1, icon1, def1, cb1)
-			r:AddCheckbox(name2, icon2, def2, cb2)
+			if type(a2) == "boolean" or type(a2) == "function" then
+				r:AddCheckbox(name1, nil, a2, a3)
+				r:AddCheckbox(a4, nil, a5, a6)
+			else
+				r:AddCheckbox(name1, a2, a3, a4)
+				r:AddCheckbox(a5, a6, a7, a8)
+			end
 			return r
 		end
 
@@ -5001,7 +5137,6 @@ function AetherLib:Init(customCommandsURL, keySettings)
 
 			local Corner = Instance.new("UICorner")
 			Corner.CornerRadius = UDim.new(0, 6)
-			Frame.Parent = TabContent
 			Corner.Parent = Frame
 
 			local CardStroke = Instance.new("UIStroke")
@@ -5247,43 +5382,63 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			end)
 		end
 
-		-- 3. AddNovaNumberPad: Pengatur Angka Presisi (-- / - / Input / + / ++)
+		-- 3. AddNovaNumberPad: Pengatur Angka Presisi Responsif (-- / - / Input / + / ++)
 		function Scope:AddNovaNumberPad(name, min, max, default, step, callback)
+			if type(max) == "function" or max == nil then
+				callback = max
+				default = tonumber(min) or 0
+				min = 0
+				max = 999999
+				step = 1
+			end
 			MirrorCall("AddNovaNumberPad", name, min, max, default, step, callback)
-			min = min or 0
-			max = max or 1000
-			step = (step and step > 0) and step or 1
-			local currentVal = math.clamp(default or min, min, max)
+			min = tonumber(min) or 0
+			max = tonumber(max) or 1000
+			step = (tonumber(step) and tonumber(step) > 0) and tonumber(step) or 1
+			local currentVal = math.clamp(tonumber(default) or min, min, max)
 
 			local Frame = Instance.new("Frame")
 			Frame.Parent = TabContent
 			Frame.BackgroundColor3 = Color3.fromRGB(28, 28, 40)
 			Frame.BackgroundTransparency = 0.15
-			Frame.Size = UDim2.new(1, 0, 0, 42)
+			Frame.Size = UDim2.new(1, 0, 0, 56)
 			Frame.ZIndex = zBase
 
 			local Corner = Instance.new("UICorner")
 			Corner.CornerRadius = UDim.new(0, 6)
 			Corner.Parent = Frame
 
+			local Stroke = Instance.new("UIStroke")
+			Stroke.Color = currentAccentColor
+			Stroke.Transparency = 0.65
+			Stroke.Thickness = 1
+			Stroke.Parent = Frame
+
 			local Lbl = Instance.new("TextLabel")
 			Lbl.Parent = Frame
 			Lbl.BackgroundTransparency = 1
-			Lbl.Position = UDim2.new(0, 10, 0, 0)
-			Lbl.Size = UDim2.new(1, -175, 1, 0)
+			Lbl.Position = UDim2.new(0, 10, 0, 4)
+			Lbl.Size = UDim2.new(1, -20, 0, 18)
 			Lbl.Font = currentFontRegular
-			Lbl.Text = name
+			Lbl.Text = name .. " : " .. tostring(currentVal)
 			Lbl.TextColor3 = currentTextThemeColor
 			Lbl.TextSize = 11
 			Lbl.TextTruncate = Enum.TextTruncate.AtEnd
 			Lbl.TextXAlignment = Enum.TextXAlignment.Left
 			Lbl.ZIndex = zBase + 1
 
+			local PadHolder = Instance.new("Frame")
+			PadHolder.Parent = Frame
+			PadHolder.BackgroundTransparency = 1
+			PadHolder.Position = UDim2.new(0, 8, 0, 26)
+			PadHolder.Size = UDim2.new(1, -16, 0, 24)
+			PadHolder.ZIndex = zBase + 1
+
 			local ValBox = Instance.new("TextBox")
-			ValBox.Parent = Frame
+			ValBox.Parent = PadHolder
 			ValBox.BackgroundColor3 = Color3.fromRGB(40, 40, 56)
-			ValBox.Position = UDim2.new(1, -108, 0.5, -11)
-			ValBox.Size = UDim2.new(0, 44, 0, 22)
+			ValBox.Position = UDim2.new(0.36, 2, 0, 0)
+			ValBox.Size = UDim2.new(0.28, -4, 1, 0)
 			ValBox.Font = currentFontBold
 			ValBox:SetAttribute("IsBoldFont", true)
 			ValBox:SetAttribute("IgnoreTextColor", true)
@@ -5291,7 +5446,7 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			ValBox.TextColor3 = currentAccentColor
 			ValBox.TextSize = 10
 			ValBox.ClearTextOnFocus = false
-			ValBox.ZIndex = zBase + 1
+			ValBox.ZIndex = zBase + 2
 
 			local VBCorner = Instance.new("UICorner")
 			VBCorner.CornerRadius = UDim.new(0, 4)
@@ -5300,24 +5455,25 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			local function SetNum(v)
 				currentVal = math.clamp(math.floor(v), min, max)
 				ValBox.Text = tostring(currentVal)
+				Lbl.Text = name .. " : " .. tostring(currentVal)
 				if callback then
 					pcall(callback, currentVal)
 				end
 			end
 
-			local function MakePadBtn(txt, posX, delta)
+			local function MakePadBtn(txt, scaleX, scaleW, delta)
 				local B = Instance.new("TextButton")
-				B.Parent = Frame
+				B.Parent = PadHolder
 				B.BackgroundColor3 = (delta > 0) and currentAccentColor or TintWithAccent(Color3.fromRGB(48, 48, 66), currentAccentColor, 0.25)
-				B.Position = UDim2.new(1, posX, 0.5, -11)
-				B.Size = UDim2.new(0, 26, 0, 22)
+				B.Position = UDim2.new(scaleX, 1, 0, 0)
+				B.Size = UDim2.new(scaleW, -2, 1, 0)
 				B.Font = currentFontBold
 				B:SetAttribute("IsBoldFont", true)
 				B:SetAttribute("IgnoreTextColor", true)
 				B.Text = txt
 				B.TextColor3 = Color3.fromRGB(255, 255, 255)
 				B.TextSize = 10
-				B.ZIndex = zBase + 1
+				B.ZIndex = zBase + 2
 
 				local BC = Instance.new("UICorner")
 				BC.CornerRadius = UDim.new(0, 4)
@@ -5332,12 +5488,13 @@ function AetherLib:Init(customCommandsURL, keySettings)
 				end))
 			end
 
-			MakePadBtn("--", -166, -(step * 5))
-			MakePadBtn("-", -137, -step)
-			MakePadBtn("+", -61, step)
-			MakePadBtn("++", -32, step * 5)
+			MakePadBtn("--", 0.00, 0.18, -(step * 5))
+			MakePadBtn("-", 0.18, 0.18, -step)
+			MakePadBtn("+", 0.64, 0.18, step)
+			MakePadBtn("++", 0.82, 0.18, step * 5)
 
 			OnAccentChanged(function(col)
+				Stroke.Color = col
 				ValBox.TextColor3 = col
 			end)
 
@@ -5353,7 +5510,15 @@ function AetherLib:Init(customCommandsURL, keySettings)
 
 		-- 4. AddNovaProgressButton: Tombol Eksekusi Beranimasi Loading 0% -> 100%
 		function Scope:AddNovaProgressButton(btnText, iconNameArg, durationSec, callback)
-			if type(durationSec) == "function" then
+			if type(iconNameArg) == "number" then
+				callback = durationSec
+				durationSec = iconNameArg
+				iconNameArg = nil
+			elseif type(iconNameArg) == "function" then
+				callback = iconNameArg
+				durationSec = 1.2
+				iconNameArg = nil
+			elseif type(durationSec) == "function" then
 				callback = durationSec
 				durationSec = 1.2
 			end
@@ -5554,6 +5719,18 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		end
 
 		function Scope:AddCooldownButton(btnText, iconNameArg, cooldownSec, callback)
+			if type(iconNameArg) == "number" then
+				callback = cooldownSec
+				cooldownSec = iconNameArg
+				iconNameArg = nil
+			elseif type(iconNameArg) == "function" then
+				callback = iconNameArg
+				cooldownSec = 3
+				iconNameArg = nil
+			elseif type(cooldownSec) == "function" then
+				callback = cooldownSec
+				cooldownSec = 3
+			end
 			MirrorCall("AddCooldownButton", btnText, iconNameArg, cooldownSec, callback)
 			cooldownSec = tonumber(cooldownSec) or 3
 			local onCooldown = false
@@ -6202,24 +6379,34 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		end
 
 		function Scope:AddTextBoxWithButton(name, placeholder, buttonText, callback)
+			if type(buttonText) == "function" then
+				callback = buttonText
+				buttonText = "Save"
+			end
 			MirrorCall("AddTextBoxWithButton", name, placeholder, buttonText, callback)
 			buttonText = buttonText or "Save"
 			local Frame = Instance.new("Frame")
 			Frame.Parent = TabContent
 			Frame.BackgroundColor3 = Color3.fromRGB(28, 28, 40)
 			Frame.BackgroundTransparency = 0.15
-			Frame.Size = UDim2.new(1, 0, 0, 40)
+			Frame.Size = UDim2.new(1, 0, 0, 56)
 			Frame.ZIndex = zBase
 
 			local Corner = Instance.new("UICorner")
 			Corner.CornerRadius = UDim.new(0, 6)
 			Corner.Parent = Frame
 
+			local Stroke = Instance.new("UIStroke")
+			Stroke.Color = currentAccentColor
+			Stroke.Transparency = 0.65
+			Stroke.Thickness = 1
+			Stroke.Parent = Frame
+
 			local Label = Instance.new("TextLabel")
 			Label.Parent = Frame
 			Label.BackgroundTransparency = 1
-			Label.Position = UDim2.new(0, 10, 0, 0)
-			Label.Size = UDim2.new(1, -160, 1, 0)
+			Label.Position = UDim2.new(0, 10, 0, 4)
+			Label.Size = UDim2.new(1, -20, 0, 18)
 			Label.Font = currentFontRegular
 			Label.Text = name
 			Label.TextColor3 = currentTextThemeColor
@@ -6230,12 +6417,12 @@ function AetherLib:Init(customCommandsURL, keySettings)
 
 			local TextBox = Instance.new("TextBox")
 			TextBox.Parent = Frame
-			TextBox.BackgroundColor3 = Color3.fromRGB(48, 48, 64)
-			TextBox.Position = UDim2.new(1, -150, 0.5, -12)
-			TextBox.Size = UDim2.new(0, 74, 0, 24)
+			TextBox.BackgroundColor3 = Color3.fromRGB(44, 44, 60)
+			TextBox.Position = UDim2.new(0, 8, 0, 26)
+			TextBox.Size = UDim2.new(0.68, -12, 0, 24)
 			TextBox.Font = currentFontRegular
 			TextBox.PlaceholderText = placeholder or "Ketik..."
-			TextBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 160)
+			TextBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 165)
 			TextBox.Text = ""
 			TextBox.TextColor3 = currentTextThemeColor
 			TextBox.TextSize = 10
@@ -6249,8 +6436,8 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			local ActionBtn = Instance.new("TextButton")
 			ActionBtn.Parent = Frame
 			ActionBtn.BackgroundColor3 = currentAccentColor
-			ActionBtn.Position = UDim2.new(1, -70, 0.5, -12)
-			ActionBtn.Size = UDim2.new(0, 62, 0, 24)
+			ActionBtn.Position = UDim2.new(0.68, 0, 0, 26)
+			ActionBtn.Size = UDim2.new(0.32, -8, 0, 24)
 			ActionBtn.Font = currentFontBold
 			ActionBtn:SetAttribute("IsBoldFont", true)
 			ActionBtn:SetAttribute("IgnoreTextColor", true)
@@ -6258,6 +6445,10 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 			ActionBtn.TextSize = 10
 			ActionBtn.ZIndex = zBase + 1
+
+			OnAccentChanged(function(col)
+				Stroke.Color = col
+			end)
 
 			local ABCorner = Instance.new("UICorner")
 			ABCorner.CornerRadius = UDim.new(0, 4)
@@ -6995,6 +7186,13 @@ function AetherLib:Init(customCommandsURL, keySettings)
 		local TabObj = CreateContainerScope(TabContent, 23, nil)
 		TabObj.Entry = entry
 
+		BindDynamicContainer(TabContent, ContentLayout, function()
+			if TabContent and TabContent.Parent then
+				local h = ComputeContainerHeight(TabContent, ContentLayout)
+				TabContent.CanvasSize = UDim2.new(0, 0, 0, h + 24)
+			end
+		end)
+
 		if #StarlightTabs == 0 then
 			SelectTabEntry(entry)
 		end
@@ -7015,6 +7213,30 @@ function AetherLib:Init(customCommandsURL, keySettings)
 	-------------------------------------------------------------------
 	-- PASANG SELURUH KOMPONEN KE ELEMENTS (UI 1 + MIRROR KE MAIN TAB UI 2 & 3)
 	-------------------------------------------------------------------
+	BindDynamicContainer(ScrollContainer, UIListLayout, function()
+		if ScrollContainer and ScrollContainer.Parent then
+			local h = ComputeContainerHeight(ScrollContainer, UIListLayout)
+			ScrollContainer.CanvasSize = UDim2.new(0, 0, 0, h + 24)
+		end
+	end)
+	if SSetContent then
+		local sLayout = SSetContent:FindFirstChildOfClass("UIListLayout")
+		BindDynamicContainer(SSetContent, sLayout, function()
+			if SSetContent and SSetContent.Parent then
+				local h = ComputeContainerHeight(SSetContent, sLayout)
+				SSetContent.CanvasSize = UDim2.new(0, 0, 0, h + 24)
+			end
+		end)
+	end
+	if NSPScroll and NSPLayout then
+		BindDynamicContainer(NSPScroll, NSPLayout, function()
+			if NSPScroll and NSPScroll.Parent then
+				local h = ComputeContainerHeight(NSPScroll, NSPLayout)
+				NSPScroll.CanvasSize = UDim2.new(0, 0, 0, h + 24)
+			end
+		end)
+	end
+
 	local MainElementsScope = CreateContainerScope(ScrollContainer, 9, GetAutoMainTab)
 	for k, v in pairs(MainElementsScope) do
 		if type(v) == "function" and Elements[k] == nil then
@@ -7278,6 +7500,19 @@ function AetherLib:Init(customCommandsURL, keySettings)
 			end
 		end)
 	end
+
+	function Elements:PlayHorizonIntro(cb)
+		PlayAetherHorizonIntro(cb)
+	end
+	function AetherLib:PlayHorizonIntro(cb)
+		PlayAetherHorizonIntro(cb)
+	end
+	function AetherLib:MakeNotification(msg, col)
+		Elements:AddNotification("AetherLib", tostring(msg or ""), 3)
+	end
+
+	RunAllDynamicRefreshes()
+	task.defer(RunAllDynamicRefreshes)
 
 	return Elements
 end
