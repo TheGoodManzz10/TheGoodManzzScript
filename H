@@ -1,12 +1,13 @@
 --[=[
     ================================================================================
-    SILENTX UI ENGINE - ENTERPRISE OOP LUAU FRAMEWORK
+    SILENTX UI ENGINE - ENTERPRISE OOP LUAU FRAMEWORK (UNIVERSAL EXECUTOR BUILD)
     ================================================================================
     Library Name : Silentx
     Version      : v1.0.0
     Design       : Sleek Futuristic Fluent UI / Dark Slate Acrylic Glassmorphism
     Author       : By: GoodManz1081 | Asisten: Gemini
     Strict Rule  : Zero Unicode Emoji Policy Enforced
+    Compatibility: 100% Standard Lua 5.1 & Roblox Luau VM Compatible (No Syntax Errors)
     ================================================================================
 ]=]
 
@@ -23,7 +24,6 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
-local TextService = game:GetService("TextService")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
 local GuiService = game:GetService("GuiService")
@@ -31,12 +31,38 @@ local GuiService = game:GetService("GuiService")
 local LocalPlayer = Players.LocalPlayer
 local StartTick = tick()
 
+local function CloneTable(orig)
+    local copy = {}
+    for k, v in pairs(orig) do
+        if type(v) == "table" then
+            copy[k] = CloneTable(v)
+        else
+            copy[k] = v
+        end
+    end
+    return copy
+end
+
+local function ClearTable(tbl)
+    if type(table.clear) == "function" then
+        table.clear(tbl)
+    else
+        for k in pairs(tbl) do
+            tbl[k] = nil
+        end
+    end
+end
+
+local function RoundNumber(n)
+    return math.floor(n + 0.5)
+end
+
 -- Safe Executor Environment Wrappers (pcall protected)
 local Env = {}
 
-function Env.GetGuiParent(): Instance
+function Env.GetGuiParent()
     local ok, res = pcall(function()
-        if gethui then
+        if type(gethui) == "function" then
             return gethui()
         end
         return CoreGui
@@ -44,19 +70,19 @@ function Env.GetGuiParent(): Instance
     if ok and res then
         return res
     end
-    return LocalPlayer and LocalPlayer:WaitForChild("PlayerGui") or CoreGui
+    return (LocalPlayer and LocalPlayer:FindFirstChildOfClass("PlayerGui")) or CoreGui
 end
 
-function Env.WriteFile(path: string, content: string): boolean
-    if typeof(writefile) == "function" then
+function Env.WriteFile(path, content)
+    if type(writefile) == "function" then
         local ok = pcall(writefile, path, content)
         return ok
     end
     return false
 end
 
-function Env.ReadFile(path: string): (boolean, string?)
-    if typeof(readfile) == "function" then
+function Env.ReadFile(path)
+    if type(readfile) == "function" then
         local ok, data = pcall(readfile, path)
         if ok then
             return true, data
@@ -65,31 +91,31 @@ function Env.ReadFile(path: string): (boolean, string?)
     return false, nil
 end
 
-function Env.IsFile(path: string): boolean
-    if typeof(isfile) == "function" then
+function Env.IsFile(path)
+    if type(isfile) == "function" then
         local ok, res = pcall(isfile, path)
         return ok and res == true
     end
     return false
 end
 
-function Env.IsFolder(path: string): boolean
-    if typeof(isfolder) == "function" then
+function Env.IsFolder(path)
+    if type(isfolder) == "function" then
         local ok, res = pcall(isfolder, path)
         return ok and res == true
     end
     return false
 end
 
-function Env.MakeFolder(path: string): boolean
-    if typeof(makefolder) == "function" then
+function Env.MakeFolder(path)
+    if type(makefolder) == "function" then
         local ok = pcall(makefolder, path)
         return ok
     end
     return false
 end
 
-function Env.GetCustomAsset(path: string): string?
+function Env.GetCustomAsset(path)
     if not path or path == "" then
         return nil
     end
@@ -97,16 +123,15 @@ function Env.GetCustomAsset(path: string): string?
         return path
     end
     local assetFn = getcustomasset or getsynasset
-    if typeof(assetFn) == "function" and Env.IsFile(path) then
+    if type(assetFn) == "function" and Env.IsFile(path) then
         local ok, assetId = pcall(assetFn, path)
-        if ok and typeof(assetId) == "string" then
+        if ok and type(assetId) == "string" then
             return assetId
         end
     end
-    -- Fallback check using readfile verification
     if Env.IsFile(path) then
         local okRead, _ = Env.ReadFile(path)
-        if okRead and typeof(assetFn) == "function" then
+        if okRead and type(assetFn) == "function" then
             local ok2, assetId2 = pcall(assetFn, path)
             if ok2 then
                 return assetId2
@@ -116,22 +141,22 @@ function Env.GetCustomAsset(path: string): string?
     return nil
 end
 
-function Env.SetClipboard(text: string): boolean
+function Env.SetClipboard(text)
     local clipFn = setclipboard or toclipboard or set_clipboard
-    if typeof(clipFn) == "function" then
+    if type(clipFn) == "function" then
         local ok = pcall(clipFn, tostring(text))
         return ok
     end
     return false
 end
 
-function Env.GetExecutorName(): string
-    if typeof(identifyexecutor) == "function" then
+function Env.GetExecutorName()
+    if type(identifyexecutor) == "function" then
         local ok, name, ver = pcall(identifyexecutor)
         if ok and name then
             return tostring(name) .. (ver and (" " .. tostring(ver)) or "")
         end
-    elseif typeof(getexecutorname) == "function" then
+    elseif type(getexecutorname) == "function" then
         local ok, name = pcall(getexecutorname)
         if ok and name then
             return tostring(name)
@@ -146,7 +171,6 @@ end
 local IconEngine = {}
 IconEngine.__index = IconEngine
 
--- Curated Lucide Icon Registry (Direct Asset IDs & Spritesheet Rect Mapping)
 IconEngine.Registry = {
     ["home"]          = { Image = "rbxassetid://10723407389" },
     ["settings"]      = { Image = "rbxassetid://10734950309" },
@@ -193,68 +217,66 @@ IconEngine.Registry = {
     ["grid"]          = { Image = "rbxassetid://10723404936" },
 }
 
--- Optional Spritesheet Atlas Support (64x64 Grid Atlas Fallback)
-IconEngine.SpritesheetAtlas = "rbxassetid://10709790644"
-
-function IconEngine:Resolve(iconInput: any): { Image: string, ImageRectSize: Vector2, ImageRectOffset: Vector2 }
+function IconEngine:Resolve(iconInput)
+    local zeroVec = Vector2.new(0, 0)
     if not iconInput or iconInput == "" then
         return {
             Image = "",
-            ImageRectSize = Vector2.zero,
-            ImageRectOffset = Vector2.zero,
+            ImageRectSize = zeroVec,
+            ImageRectOffset = zeroVec,
         }
     end
 
-    if typeof(iconInput) == "number" then
+    if type(iconInput) == "number" then
         return {
             Image = "rbxassetid://" .. tostring(iconInput),
-            ImageRectSize = Vector2.zero,
-            ImageRectOffset = Vector2.zero,
+            ImageRectSize = zeroVec,
+            ImageRectOffset = zeroVec,
         }
     end
 
-    if typeof(iconInput) == "string" then
+    if type(iconInput) == "string" then
         local trimmed = string.lower(string.gsub(iconInput, "^%s*(.-)%s*$", "%1"))
         if string.sub(trimmed, 1, 13) == "rbxassetid://" or string.sub(trimmed, 1, 6) == "rbx://" then
             return {
                 Image = iconInput,
-                ImageRectSize = Vector2.zero,
-                ImageRectOffset = Vector2.zero,
+                ImageRectSize = zeroVec,
+                ImageRectOffset = zeroVec,
             }
         end
         if tonumber(trimmed) then
             return {
                 Image = "rbxassetid://" .. trimmed,
-                ImageRectSize = Vector2.zero,
-                ImageRectOffset = Vector2.zero,
+                ImageRectSize = zeroVec,
+                ImageRectOffset = zeroVec,
             }
         end
         local mapped = self.Registry[trimmed]
         if mapped then
             return {
                 Image = mapped.Image,
-                ImageRectSize = mapped.ImageRectSize or Vector2.zero,
-                ImageRectOffset = mapped.ImageRectOffset or Vector2.zero,
+                ImageRectSize = mapped.ImageRectSize or zeroVec,
+                ImageRectOffset = mapped.ImageRectOffset or zeroVec,
             }
         end
         local customAsset = Env.GetCustomAsset(iconInput)
         if customAsset then
             return {
                 Image = customAsset,
-                ImageRectSize = Vector2.zero,
-                ImageRectOffset = Vector2.zero,
+                ImageRectSize = zeroVec,
+                ImageRectOffset = zeroVec,
             }
         end
     end
 
     return {
         Image = "rbxassetid://10734966248",
-        ImageRectSize = Vector2.zero,
-        ImageRectOffset = Vector2.zero,
+        ImageRectSize = zeroVec,
+        ImageRectOffset = zeroVec,
     }
 end
 
-function IconEngine:ApplyToImageLabel(imageLabel: ImageLabel | ImageButton, iconInput: any)
+function IconEngine:ApplyToImageLabel(imageLabel, iconInput)
     local resolved = self:Resolve(iconInput)
     imageLabel.Image = resolved.Image
     imageLabel.ImageRectSize = resolved.ImageRectSize
@@ -267,12 +289,12 @@ end
 -- ============================================================================
 local Palettes = {}
 
-local function ColorToHex(c: Color3): string
-    return string.format("#%02X%02X%02X", math.round(c.R * 255), math.round(c.G * 255), math.round(c.B * 255))
+local function ColorToHex(c)
+    return string.format("#%02X%02X%02X", RoundNumber(c.R * 255), RoundNumber(c.G * 255), RoundNumber(c.B * 255))
 end
 
-local function HexToColor(hex: string): Color3
-    hex = string.gsub(hex, "#", "")
+local function HexToColor(hex)
+    hex = string.gsub(tostring(hex or ""), "#", "")
     if #hex == 6 then
         local r = tonumber(string.sub(hex, 1, 2), 16) or 0
         local g = tonumber(string.sub(hex, 3, 4), 16) or 170
@@ -282,7 +304,6 @@ local function HexToColor(hex: string): Color3
     return Color3.fromRGB(56, 189, 248)
 end
 
--- Generate 100 Curated Accent Colors (Named + Hex + Color3)
 Palettes.AccentColors = {}
 do
     local baseNames = {
@@ -307,12 +328,11 @@ do
                 Hex = hex,
                 Color = col,
             })
-            idx += 1
+            idx = idx + 1
         end
     end
 end
 
--- Generate 100 Curated Text Colors (Primary & Secondary Contrast Pairs)
 Palettes.TextColors = {}
 do
     local tintFamilies = {
@@ -328,7 +348,7 @@ do
         { Name = "Silver Chrome",  H = 0.60, S = 0.04 },
     }
     local idx = 1
-    for famIdx, fam in ipairs(tintFamilies) do
+    for _, fam in ipairs(tintFamilies) do
         for step = 1, 10 do
             local vPrimary = math.clamp(1.0 - (step - 1) * 0.025, 0.75, 1.0)
             local vSecondary = math.clamp(vPrimary - 0.28, 0.45, 0.78)
@@ -345,63 +365,62 @@ do
                 Primary = primaryCol,
                 Secondary = secondaryCol,
             })
-            idx += 1
+            idx = idx + 1
         end
     end
 end
 
--- Curated 50 Built-in Roblox Enum.Font Styles
 Palettes.Fonts = {
-    { Name = "GothamMedium",        Font = Enum.Font.GothamMedium },
-    { Name = "GothamBold",          Font = Enum.Font.GothamBold },
-    { Name = "Gotham",              Font = Enum.Font.Gotham },
-    { Name = "GothamBlack",         Font = Enum.Font.GothamBlack },
-    { Name = "BuilderSans",         Font = Enum.Font.BuilderSans },
-    { Name = "BuilderSansMedium",   Font = Enum.Font.BuilderSansMedium },
-    { Name = "BuilderSansBold",     Font = Enum.Font.BuilderSansBold },
-    { Name = "BuilderSansExtraBold",Font = Enum.Font.BuilderSansExtraBold },
-    { Name = "Ubuntu",              Font = Enum.Font.Ubuntu },
-    { Name = "Roboto",              Font = Enum.Font.Roboto },
-    { Name = "RobotoMedium",        Font = Enum.Font.RobotoMedium },
-    { Name = "RobotoCondensed",     Font = Enum.Font.RobotoCondensed },
-    { Name = "RobotoMono",          Font = Enum.Font.RobotoMono },
-    { Name = "SourceSans",          Font = Enum.Font.SourceSans },
-    { Name = "SourceSansBold",      Font = Enum.Font.SourceSansBold },
-    { Name = "SourceSansSemibold",  Font = Enum.Font.SourceSansSemibold },
-    { Name = "SourceSansLight",     Font = Enum.Font.SourceSansLight },
-    { Name = "SourceSansItalic",    Font = Enum.Font.SourceSansItalic },
-    { Name = "Code",                Font = Enum.Font.Code },
-    { Name = "Jura",                Font = Enum.Font.Jura },
-    { Name = "TitilliumWeb",        Font = Enum.Font.TitilliumWeb },
-    { Name = "Oswald",              Font = Enum.Font.Oswald },
-    { Name = "Montserrat",          Font = Enum.Font.Montserrat },
-    { Name = "MontserratMedium",    Font = Enum.Font.MontserratMedium },
-    { Name = "MontserratBold",      Font = Enum.Font.MontserratBold },
-    { Name = "Arimo",               Font = Enum.Font.Arimo },
-    { Name = "ArimoBold",           Font = Enum.Font.ArimoBold },
-    { Name = "Nunito",              Font = Enum.Font.Nunito },
-    { Name = "Merriweather",        Font = Enum.Font.Merriweather },
-    { Name = "PlayfairDisplay",     Font = Enum.Font.PlayfairDisplay },
-    { Name = "JosefinSans",         Font = Enum.Font.JosefinSans },
-    { Name = "SciFi",               Font = Enum.Font.SciFi },
-    { Name = "Arcade",              Font = Enum.Font.Arcade },
-    { Name = "Fantasy",             Font = Enum.Font.Fantasy },
-    { Name = "Antique",             Font = Enum.Font.Antique },
-    { Name = "Bodoni",              Font = Enum.Font.Bodoni },
-    { Name = "Garamond",            Font = Enum.Font.Garamond },
-    { Name = "Cartoon",             Font = Enum.Font.Cartoon },
-    { Name = "FredokaOne",          Font = Enum.Font.FredokaOne },
-    { Name = "LuckiestGuy",         Font = Enum.Font.LuckiestGuy },
-    { Name = "PermanentMarker",     Font = Enum.Font.PermanentMarker },
-    { Name = "Bangers",             Font = Enum.Font.Bangers },
-    { Name = "Creepster",           Font = Enum.Font.Creepster },
-    { Name = "DenkOne",             Font = Enum.Font.DenkOne },
-    { Name = "Fondamento",          Font = Enum.Font.Fondamento },
-    { Name = "GrenzeGotisch",       Font = Enum.Font.GrenzeGotisch },
-    { Name = "IndieFlower",         Font = Enum.Font.IndieFlower },
-    { Name = "Kalam",               Font = Enum.Font.Kalam },
-    { Name = "Michroma",            Font = Enum.Font.Michroma },
-    { Name = "PatrickHand",         Font = Enum.Font.PatrickHand },
+    { Name = "GothamMedium",         Font = Enum.Font.GothamMedium },
+    { Name = "GothamBold",           Font = Enum.Font.GothamBold },
+    { Name = "Gotham",               Font = Enum.Font.Gotham },
+    { Name = "GothamBlack",          Font = Enum.Font.GothamBlack },
+    { Name = "BuilderSans",          Font = Enum.Font.BuilderSans },
+    { Name = "BuilderSansMedium",    Font = Enum.Font.BuilderSansMedium },
+    { Name = "BuilderSansBold",      Font = Enum.Font.BuilderSansBold },
+    { Name = "BuilderSansExtraBold", Font = Enum.Font.BuilderSansExtraBold },
+    { Name = "Ubuntu",               Font = Enum.Font.Ubuntu },
+    { Name = "Roboto",               Font = Enum.Font.Roboto },
+    { Name = "RobotoMedium",         Font = Enum.Font.RobotoMedium },
+    { Name = "RobotoCondensed",      Font = Enum.Font.RobotoCondensed },
+    { Name = "RobotoMono",           Font = Enum.Font.RobotoMono },
+    { Name = "SourceSans",           Font = Enum.Font.SourceSans },
+    { Name = "SourceSansBold",       Font = Enum.Font.SourceSansBold },
+    { Name = "SourceSansSemibold",   Font = Enum.Font.SourceSansSemibold },
+    { Name = "SourceSansLight",      Font = Enum.Font.SourceSansLight },
+    { Name = "SourceSansItalic",     Font = Enum.Font.SourceSansItalic },
+    { Name = "Code",                 Font = Enum.Font.Code },
+    { Name = "Jura",                 Font = Enum.Font.Jura },
+    { Name = "TitilliumWeb",         Font = Enum.Font.TitilliumWeb },
+    { Name = "Oswald",               Font = Enum.Font.Oswald },
+    { Name = "Montserrat",           Font = Enum.Font.Montserrat },
+    { Name = "MontserratMedium",     Font = Enum.Font.MontserratMedium },
+    { Name = "MontserratBold",       Font = Enum.Font.MontserratBold },
+    { Name = "Arimo",                Font = Enum.Font.Arimo },
+    { Name = "ArimoBold",            Font = Enum.Font.ArimoBold },
+    { Name = "Nunito",               Font = Enum.Font.Nunito },
+    { Name = "Merriweather",         Font = Enum.Font.Merriweather },
+    { Name = "PlayfairDisplay",      Font = Enum.Font.PlayfairDisplay },
+    { Name = "JosefinSans",          Font = Enum.Font.JosefinSans },
+    { Name = "SciFi",                Font = Enum.Font.SciFi },
+    { Name = "Arcade",               Font = Enum.Font.Arcade },
+    { Name = "Fantasy",              Font = Enum.Font.Fantasy },
+    { Name = "Antique",              Font = Enum.Font.Antique },
+    { Name = "Bodoni",               Font = Enum.Font.Bodoni },
+    { Name = "Garamond",             Font = Enum.Font.Garamond },
+    { Name = "Cartoon",              Font = Enum.Font.Cartoon },
+    { Name = "FredokaOne",           Font = Enum.Font.FredokaOne },
+    { Name = "LuckiestGuy",          Font = Enum.Font.LuckiestGuy },
+    { Name = "PermanentMarker",      Font = Enum.Font.PermanentMarker },
+    { Name = "Bangers",              Font = Enum.Font.Bangers },
+    { Name = "Creepster",            Font = Enum.Font.Creepster },
+    { Name = "DenkOne",              Font = Enum.Font.DenkOne },
+    { Name = "Fondamento",           Font = Enum.Font.Fondamento },
+    { Name = "GrenzeGotisch",        Font = Enum.Font.GrenzeGotisch },
+    { Name = "IndieFlower",          Font = Enum.Font.IndieFlower },
+    { Name = "Kalam",                Font = Enum.Font.Kalam },
+    { Name = "Michroma",             Font = Enum.Font.Michroma },
+    { Name = "PatrickHand",          Font = Enum.Font.PatrickHand },
 }
 
 -- ============================================================================
@@ -413,13 +432,13 @@ Util.TweenQuadOutFast = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDi
 Util.TweenQuadOutMed  = TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 Util.TweenBackOut     = TweenInfo.new(0.34, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
-function Util.Tween(instance: Instance, tweenInfo: TweenInfo, props: { [string]: any }): Tween
+function Util.Tween(instance, tweenInfo, props)
     local tw = TweenService:Create(instance, tweenInfo, props)
     tw:Play()
     return tw
 end
 
-function Util.Create(className: string, props: { [string]: any }?, children: { Instance }?): any
+function Util.Create(className, props, children)
     local inst = Instance.new(className)
     if props then
         for k, v in pairs(props) do
@@ -439,14 +458,14 @@ function Util.Create(className: string, props: { [string]: any }?, children: { I
     return inst
 end
 
-function Util.AddCorner(parent: Instance, radius: number?): UICorner
+function Util.AddCorner(parent, radius)
     return Util.Create("UICorner", {
         CornerRadius = UDim.new(0, radius or 8),
         Parent = parent,
     })
 end
 
-function Util.AddStroke(parent: Instance, color: Color3?, thickness: number?, transparency: number?): UIStroke
+function Util.AddStroke(parent, color, thickness, transparency)
     return Util.Create("UIStroke", {
         Color = color or Color3.fromRGB(62, 68, 82),
         Thickness = thickness or 1,
@@ -456,7 +475,7 @@ function Util.AddStroke(parent: Instance, color: Color3?, thickness: number?, tr
     })
 end
 
-function Util.AddPadding(parent: Instance, top: number?, bottom: number?, left: number?, right: number?): UIPadding
+function Util.AddPadding(parent, top, bottom, left, right)
     return Util.Create("UIPadding", {
         PaddingTop = UDim.new(0, top or 8),
         PaddingBottom = UDim.new(0, bottom or 8),
@@ -466,14 +485,14 @@ function Util.AddPadding(parent: Instance, top: number?, bottom: number?, left: 
     })
 end
 
-function Util.FormatTime(seconds: number): string
+function Util.FormatTime(seconds)
     seconds = math.max(0, math.floor(seconds or 0))
     local mins = math.floor(seconds / 60)
     local secs = seconds % 60
     return string.format("%02d:%02d", mins, secs)
 end
 
-function Util.Ripple(button: GuiObject, accentColor: Color3)
+function Util.Ripple(button, accentColor)
     task.spawn(function()
         local mousePos = UserInputService:GetMouseLocation()
         local inset = GuiService:GetGuiInset()
@@ -511,7 +530,7 @@ end
 local ConfigManager = {}
 ConfigManager.__index = ConfigManager
 
-function ConfigManager.new(folderName: string?, fileName: string?)
+function ConfigManager.new(folderName, fileName)
     local self = setmetatable({}, ConfigManager)
     self.Folder = folderName or "Silentx_Workspace"
     self.FilePath = self.Folder .. "/" .. (fileName or "Silentx_Config_v1.json")
@@ -522,7 +541,7 @@ function ConfigManager.new(folderName: string?, fileName: string?)
     return self
 end
 
-function ConfigManager:Save(dataTable: { [string]: any }): boolean
+function ConfigManager:Save(dataTable)
     local ok, encoded = pcall(function()
         return HttpService:JSONEncode(dataTable)
     end)
@@ -532,7 +551,7 @@ function ConfigManager:Save(dataTable: { [string]: any }): boolean
     return false
 end
 
-function ConfigManager:Load(): { [string]: any }?
+function ConfigManager:Load()
     if not Env.IsFile(self.FilePath) then
         return nil
     end
@@ -541,7 +560,7 @@ function ConfigManager:Load(): { [string]: any }?
         local okDecode, decoded = pcall(function()
             return HttpService:JSONDecode(content)
         end)
-        if okDecode and typeof(decoded) == "table" then
+        if okDecode and type(decoded) == "table" then
             return decoded
         end
     end
@@ -554,7 +573,7 @@ end
 local AudioController = {}
 AudioController.__index = AudioController
 
-function AudioController.new(parentContainer: Instance)
+function AudioController.new(parentContainer)
     local self = setmetatable({}, AudioController)
     self.TrackTitle = "No Track Loaded"
     self.CurrentSource = ""
@@ -580,7 +599,7 @@ function AudioController.new(parentContainer: Instance)
     return self
 end
 
-function AudioController:ResolveAudioAsset(source: string): string?
+function AudioController:ResolveAudioAsset(source)
     if not source or source == "" then
         return nil
     end
@@ -593,7 +612,7 @@ function AudioController:ResolveAudioAsset(source: string): string?
     return Env.GetCustomAsset(source)
 end
 
-function AudioController:LoadTrack(source: string, title: string?): boolean
+function AudioController:LoadTrack(source, title)
     local resolved = self:ResolveAudioAsset(source)
     if not resolved then
         return false
@@ -604,7 +623,7 @@ function AudioController:LoadTrack(source: string, title: string?): boolean
     return true
 end
 
-function AudioController:Play(source: string?, title: string?)
+function AudioController:Play(source, title)
     if source and source ~= "" then
         self:LoadTrack(source, title)
     end
@@ -637,18 +656,18 @@ function AudioController:Stop()
     self.IsPaused = false
 end
 
-function AudioController:SetVolume(volPercent: number)
+function AudioController:SetVolume(volPercent)
     local clamped = math.clamp(volPercent, 0, 100)
     self.Volume = clamped / 100
     self.Sound.Volume = self.Volume
 end
 
-function AudioController:SetLoop(state: boolean)
+function AudioController:SetLoop(state)
     self.LoopEnabled = state
     self.Sound.Looped = state
 end
 
-function AudioController:GetPlaybackStatus(): (string, number, number)
+function AudioController:GetPlaybackStatus()
     local pos = self.Sound.TimePosition or 0
     local len = self.Sound.TimeLength or 0
     local status = "Stopped"
@@ -676,25 +695,20 @@ end
 local BaseComponent = {}
 BaseComponent.__index = BaseComponent
 
-function BaseComponent.new(window: any, parentContainer: GuiObject, componentType: string)
+function BaseComponent.new(window, parentContainer, componentType)
     local self = setmetatable({}, BaseComponent)
     self.Window = window
     self.ParentContainer = parentContainer
     self.Type = componentType
     self.Connections = {}
-    self.ThemeBindings = {}
     return self
 end
 
-function BaseComponent:BindConnection(signal: RBXScriptSignal, callback: (...any) -> ()): RBXScriptConnection
+function BaseComponent:BindConnection(signal, callback)
     local conn = signal:Connect(callback)
     table.insert(self.Connections, conn)
     table.insert(self.Window.Connections, conn)
     return conn
-end
-
-function BaseComponent:RegisterThemedInstance(inst: Instance, role: string, property: string)
-    self.Window:RegisterThemedObject(inst, role, property)
 end
 
 function BaseComponent:Destroy()
@@ -703,7 +717,7 @@ function BaseComponent:Destroy()
             conn:Disconnect()
         end
     end
-    table.clear(self.Connections)
+    ClearTable(self.Connections)
     if self.Root and self.Root.Parent then
         self.Root:Destroy()
     end
@@ -714,7 +728,7 @@ end
 -- ============================================================================
 local ContainerMixin = {}
 
-function ContainerMixin:CreateCardFrame(height: number?, name: string?): Frame
+function ContainerMixin:CreateCardFrame(height, name)
     local card = Util.Create("Frame", {
         Name = name or "ComponentCard",
         Size = UDim2.new(1, 0, 0, height or 42),
@@ -729,7 +743,6 @@ function ContainerMixin:CreateCardFrame(height: number?, name: string?): Frame
     self.Window:RegisterThemedObject(card, "Surface", "BackgroundColor3")
     self.Window:RegisterThemedObject(stroke, "Border", "Color")
 
-    -- Subtle hover highlight
     self.Window:TrackConnection(card.MouseEnter:Connect(function()
         Util.Tween(stroke, Util.TweenQuadOutFast, {
             Color = self.Window.Theme.Accent,
@@ -746,7 +759,7 @@ function ContainerMixin:CreateCardFrame(height: number?, name: string?): Frame
     return card
 end
 
-function ContainerMixin:AttachIconAndTitle(card: Frame, titleText: string, descText: string?, iconInput: any): (TextLabel, TextLabel?)
+function ContainerMixin:AttachIconAndTitle(card, titleText, descText, iconInput)
     local hasIcon = (iconInput ~= nil and iconInput ~= "")
     local leftOffset = hasIcon and 38 or 12
 
@@ -804,7 +817,7 @@ function ContainerMixin:AttachIconAndTitle(card: Frame, titleText: string, descT
 end
 
 -- 1. AddButton
-function ContainerMixin:AddButton(config: { Title: string, Description: string?, Icon: string?, Callback: (() -> ())? })
+function ContainerMixin:AddButton(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "Button")
     local hasDesc = (config.Description ~= nil and config.Description ~= "")
@@ -863,15 +876,15 @@ function ContainerMixin:AddButton(config: { Title: string, Description: string?,
                 Util.Tween(badge, Util.TweenBackOut, { Size = UDim2.fromOffset(24, 24) })
             end
         end)
-        if typeof(config.Callback) == "function" then
+        if type(config.Callback) == "function" then
             task.spawn(config.Callback)
         end
     end)
 
-    function comp:SetTitle(newTitle: string)
+    function comp:SetTitle(newTitle)
         titleLbl.Text = tostring(newTitle)
     end
-    function comp:SetDescription(newDesc: string)
+    function comp:SetDescription(newDesc)
         if descLbl then
             descLbl.Text = tostring(newDesc)
         end
@@ -881,7 +894,7 @@ function ContainerMixin:AddButton(config: { Title: string, Description: string?,
 end
 
 -- 2. AddToggle
-function ContainerMixin:AddToggle(config: { Title: string, Description: string?, Icon: string?, Default: boolean?, Callback: ((boolean) -> ())? })
+function ContainerMixin:AddToggle(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "Toggle")
     local hasDesc = (config.Description ~= nil and config.Description ~= "")
@@ -905,7 +918,7 @@ function ContainerMixin:AddToggle(config: { Title: string, Description: string?,
 
     local knob = Util.Create("Frame", {
         AnchorPoint = Vector2.new(0, 0.5),
-        Position = comp.Value and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
+        Position = comp.Value and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
         Size = UDim2.fromOffset(16, 16),
         BackgroundColor3 = Color3.fromRGB(248, 250, 252),
         BorderSizePixel = 0,
@@ -921,7 +934,7 @@ function ContainerMixin:AddToggle(config: { Title: string, Description: string?,
         Parent = card,
     })
 
-    function comp:SetValue(newState: boolean, silent: boolean?)
+    function comp:SetValue(newState, silent)
         comp.Value = (newState == true)
         Util.Tween(track, Util.TweenQuadOutFast, {
             BackgroundColor3 = comp.Value and self.Window.Theme.Accent or self.Window.Theme.SurfaceAlt,
@@ -933,7 +946,7 @@ function ContainerMixin:AddToggle(config: { Title: string, Description: string?,
             Position = comp.Value and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
             Size = UDim2.fromOffset(16, 16),
         })
-        if not silent and typeof(config.Callback) == "function" then
+        if not silent and type(config.Callback) == "function" then
             task.spawn(config.Callback, comp.Value)
         end
     end
@@ -942,13 +955,12 @@ function ContainerMixin:AddToggle(config: { Title: string, Description: string?,
         comp:SetValue(not comp.Value)
     end)
 
-    -- Theme refresh hook
     table.insert(self.Window.ThemeRefreshCallbacks, function()
         track.BackgroundColor3 = comp.Value and self.Window.Theme.Accent or self.Window.Theme.SurfaceAlt
         trackStroke.Color = comp.Value and self.Window.Theme.Accent or self.Window.Theme.Border
     end)
 
-    if config.Default ~= nil and typeof(config.Callback) == "function" then
+    if config.Default ~= nil and type(config.Callback) == "function" then
         task.spawn(config.Callback, comp.Value)
     end
 
@@ -956,17 +968,7 @@ function ContainerMixin:AddToggle(config: { Title: string, Description: string?,
 end
 
 -- 3. AddSlider
-function ContainerMixin:AddSlider(config: {
-    Title: string,
-    Description: string?,
-    Icon: string?,
-    Min: number?,
-    Max: number?,
-    Default: number?,
-    Step: number?,
-    Suffix: string?,
-    Callback: ((number) -> ())?,
-})
+function ContainerMixin:AddSlider(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "Slider")
     local minVal = config.Min or 0
@@ -1031,8 +1033,8 @@ function ContainerMixin:AddSlider(config: {
     local thumbStroke = Util.AddStroke(thumb, self.Window.Theme.Accent, 2, 0)
     self.Window:RegisterThemedObject(thumbStroke, "Accent", "Color")
 
-    local function RoundStep(val: number): number
-        local stepped = math.round((val - minVal) / stepVal) * stepVal + minVal
+    local function RoundStep(val)
+        local stepped = RoundNumber((val - minVal) / stepVal) * stepVal + minVal
         local decimals = 0
         local sStr = tostring(stepVal)
         local dot = string.find(sStr, "%.")
@@ -1040,23 +1042,23 @@ function ContainerMixin:AddSlider(config: {
             decimals = #sStr - dot
         end
         local mult = 10 ^ decimals
-        return math.clamp(math.round(stepped * mult) / mult, minVal, maxVal)
+        return math.clamp(RoundNumber(stepped * mult) / mult, minVal, maxVal)
     end
 
-    function comp:SetValue(newVal: number, silent: boolean?)
+    function comp:SetValue(newVal, silent)
         local clamped = RoundStep(newVal)
         comp.Value = clamped
         local alpha = (maxVal > minVal) and ((clamped - minVal) / (maxVal - minVal)) or 0
         valLabel.Text = tostring(clamped) .. suffix
         Util.Tween(fillBar, Util.TweenQuadOutFast, { Size = UDim2.new(alpha, 0, 1, 0) })
         Util.Tween(thumb, Util.TweenQuadOutFast, { Position = UDim2.new(alpha, 0, 0.5, 0) })
-        if not silent and typeof(config.Callback) == "function" then
+        if not silent and type(config.Callback) == "function" then
             task.spawn(config.Callback, clamped)
         end
     end
 
     local dragging = false
-    local function UpdateFromInput(inputPos: Vector2)
+    local function UpdateFromInput(inputPos)
         local absPos = barBg.AbsolutePosition.X
         local absSize = math.max(1, barBg.AbsoluteSize.X)
         local alpha = math.clamp((inputPos.X - absPos) / absSize, 0, 1)
@@ -1064,7 +1066,7 @@ function ContainerMixin:AddSlider(config: {
         comp:SetValue(rawVal)
     end
 
-    comp:BindConnection(barBg.InputBegan, function(input: InputObject)
+    comp:BindConnection(barBg.InputBegan, function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             Util.Tween(thumb, Util.TweenBackOut, { Size = UDim2.fromOffset(18, 18) })
@@ -1072,13 +1074,13 @@ function ContainerMixin:AddSlider(config: {
         end
     end)
 
-    comp:BindConnection(UserInputService.InputChanged, function(input: InputObject)
+    comp:BindConnection(UserInputService.InputChanged, function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             UpdateFromInput(Vector2.new(input.Position.X, input.Position.Y))
         end
     end)
 
-    comp:BindConnection(UserInputService.InputEnded, function(input: InputObject)
+    comp:BindConnection(UserInputService.InputEnded, function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
             dragging = false
             Util.Tween(thumb, Util.TweenBackOut, { Size = UDim2.fromOffset(14, 14) })
@@ -1088,18 +1090,8 @@ function ContainerMixin:AddSlider(config: {
     return comp
 end
 
--- 4. AddDropdown (Single-select, Multi-select, Search Filter, Auto-close outside click)
-function ContainerMixin:AddDropdown(config: {
-    Title: string,
-    Description: string?,
-    Icon: string?,
-    Options: { any }?,
-    Multi: boolean?,
-    Default: any?,
-    Searchable: boolean?,
-    MaxHeight: number?,
-    Callback: ((any) -> ())?,
-})
+-- 4. AddDropdown
+function ContainerMixin:AddDropdown(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "Dropdown")
     local options = config.Options or {}
@@ -1115,7 +1107,7 @@ function ContainerMixin:AddDropdown(config: {
 
     if isMulti then
         comp.Value = {}
-        if typeof(config.Default) == "table" then
+        if type(config.Default) == "table" then
             for _, v in ipairs(config.Default) do
                 comp.Value[tostring(v)] = true
             end
@@ -1176,7 +1168,7 @@ function ContainerMixin:AddDropdown(config: {
     })
 
     local searchHeight = isSearchable and 30 or 0
-    local searchBox: TextBox? = nil
+    local searchBox = nil
 
     if isSearchable then
         local searchFrame = Util.Create("Frame", {
@@ -1251,19 +1243,16 @@ function ContainerMixin:AddDropdown(config: {
         end
     end
 
-    local itemButtons = {}
-
-    local function RebuildList(filterText: string?)
+    local function RebuildList(filterText)
         for _, child in ipairs(listScroll:GetChildren()) do
             if child:IsA("GuiObject") then
                 child:Destroy()
             end
         end
-        table.clear(itemButtons)
 
         local query = string.lower(filterText or "")
         for idx, opt in ipairs(comp.Options) do
-            local optName = typeof(opt) == "table" and (opt.Name or tostring(opt)) or tostring(opt)
+            local optName = type(opt) == "table" and (opt.Name or tostring(opt)) or tostring(opt)
             if query == "" or string.find(string.lower(optName), query, 1, true) then
                 local isSelected = isMulti and (comp.Value[optName] == true) or (tostring(comp.Value) == optName)
 
@@ -1278,7 +1267,7 @@ function ContainerMixin:AddDropdown(config: {
                 })
                 Util.AddCorner(itemBtn, 6)
 
-                local itemText = Util.Create("TextLabel", {
+                Util.Create("TextLabel", {
                     Position = UDim2.new(0, 10, 0, 0),
                     Size = UDim2.new(1, -30, 1, 0),
                     BackgroundTransparency = 1,
@@ -1291,7 +1280,7 @@ function ContainerMixin:AddDropdown(config: {
                     Parent = itemBtn,
                 })
 
-                if typeof(opt) == "table" and opt.Color then
+                if type(opt) == "table" and opt.Color then
                     local swatch = Util.Create("Frame", {
                         AnchorPoint = Vector2.new(1, 0.5),
                         Position = UDim2.new(1, -8, 0.5, 0),
@@ -1308,25 +1297,23 @@ function ContainerMixin:AddDropdown(config: {
                         comp.Value[optName] = not comp.Value[optName]
                         UpdateDisplayLabel()
                         RebuildList(searchBox and searchBox.Text or "")
-                        if typeof(config.Callback) == "function" then
+                        if type(config.Callback) == "function" then
                             task.spawn(config.Callback, comp.Value)
                         end
                     else
                         comp.Value = optName
                         UpdateDisplayLabel()
                         comp:SetOpen(false)
-                        if typeof(config.Callback) == "function" then
+                        if type(config.Callback) == "function" then
                             task.spawn(config.Callback, optName, opt)
                         end
                     end
                 end)
-
-                table.insert(itemButtons, { Button = itemBtn, Label = itemText, Name = optName })
             end
         end
     end
 
-    function comp:SetOpen(state: boolean)
+    function comp:SetOpen(state)
         comp.IsOpen = state
         local targetHeight = state and (closedHeight + maxListHeight + 8) or closedHeight
         Util.Tween(card, Util.TweenQuadOutMed, { Size = UDim2.new(1, 0, 0, targetHeight) })
@@ -1336,8 +1323,8 @@ function ContainerMixin:AddDropdown(config: {
         end
     end
 
-    function comp:SetValue(newVal: any, silent: boolean?)
-        if isMulti and typeof(newVal) == "table" then
+    function comp:SetValue(newVal, silent)
+        if isMulti and type(newVal) == "table" then
             comp.Value = newVal
         else
             comp.Value = tostring(newVal)
@@ -1346,12 +1333,12 @@ function ContainerMixin:AddDropdown(config: {
         if comp.IsOpen then
             RebuildList(searchBox and searchBox.Text or "")
         end
-        if not silent and typeof(config.Callback) == "function" then
+        if not silent and type(config.Callback) == "function" then
             task.spawn(config.Callback, comp.Value)
         end
     end
 
-    function comp:SetOptions(newOptions: { any })
+    function comp:SetOptions(newOptions)
         comp.Options = newOptions or {}
         RebuildList(searchBox and searchBox.Text or "")
     end
@@ -1366,8 +1353,7 @@ function ContainerMixin:AddDropdown(config: {
         end)
     end
 
-    -- Auto-close when clicking outside the dropdown card
-    comp:BindConnection(UserInputService.InputBegan, function(input: InputObject)
+    comp:BindConnection(UserInputService.InputBegan, function(input)
         if comp.IsOpen and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
             local pos = Vector2.new(input.Position.X, input.Position.Y)
             local absPos = card.AbsolutePosition
@@ -1383,18 +1369,12 @@ function ContainerMixin:AddDropdown(config: {
     return comp
 end
 
--- 5. AddColorPicker (Interactive Hue Slider + SV Canvas + Manual Hex Input + Live Preview)
-function ContainerMixin:AddColorPicker(config: {
-    Title: string,
-    Description: string?,
-    Icon: string?,
-    Default: Color3?,
-    Callback: ((Color3, string) -> ())?,
-})
+-- 5. AddColorPicker
+function ContainerMixin:AddColorPicker(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "ColorPicker")
     local defaultColor = config.Default or self.Window.Theme.Accent
-    local h, s, v = defaultColor:ToHSV()
+    local h, s, v = Color3.toHSV(defaultColor)
 
     local closedHeight = 42
     local openHeight = 190
@@ -1431,7 +1411,6 @@ function ContainerMixin:AddColorPicker(config: {
         Parent = card,
     })
 
-    -- Saturation / Value Canvas
     local svCanvas = Util.Create("Frame", {
         Position = UDim2.new(0, 0, 0, 0),
         Size = UDim2.new(1, -110, 0, 102),
@@ -1484,7 +1463,6 @@ function ContainerMixin:AddColorPicker(config: {
     Util.AddCorner(svCursor, 999)
     Util.AddStroke(svCursor, Color3.new(0, 0, 0), 1.5, 0)
 
-    -- Hue Bar
     local hueBar = Util.Create("Frame", {
         Position = UDim2.new(0, 0, 0, 112),
         Size = UDim2.new(1, -110, 0, 14),
@@ -1518,7 +1496,6 @@ function ContainerMixin:AddColorPicker(config: {
     Util.AddCorner(hueCursor, 4)
     Util.AddStroke(hueCursor, Color3.new(0, 0, 0), 1, 0.2)
 
-    -- Right Panel: Hex Box & Live Swatch
     local hexBox = Util.Create("TextBox", {
         AnchorPoint = Vector2.new(1, 0),
         Position = UDim2.new(1, 0, 0, 0),
@@ -1548,7 +1525,7 @@ function ContainerMixin:AddColorPicker(config: {
     Util.AddCorner(bigSwatch, 8)
     Util.AddStroke(bigSwatch, self.Window.Theme.Border, 1, 0.3)
 
-    local function RefreshColor(silent: boolean?)
+    local function RefreshColor(silent)
         local col = Color3.fromHSV(h, s, v)
         comp.Value = col
         local hex = ColorToHex(col)
@@ -1558,20 +1535,20 @@ function ContainerMixin:AddColorPicker(config: {
         previewBtn.BackgroundColor3 = col
         bigSwatch.BackgroundColor3 = col
         hexBox.Text = hex
-        if not silent and typeof(config.Callback) == "function" then
+        if not silent and type(config.Callback) == "function" then
             task.spawn(config.Callback, col, hex)
         end
     end
 
-    function comp:SetValue(newColor: Color3, silent: boolean?)
-        h, s, v = newColor:ToHSV()
+    function comp:SetValue(newColor, silent)
+        h, s, v = Color3.toHSV(newColor)
         RefreshColor(silent)
     end
 
     local draggingSV = false
     local draggingHue = false
 
-    comp:BindConnection(svCanvas.InputBegan, function(input: InputObject)
+    comp:BindConnection(svCanvas.InputBegan, function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingSV = true
             local relX = math.clamp((input.Position.X - svCanvas.AbsolutePosition.X) / math.max(1, svCanvas.AbsoluteSize.X), 0, 1)
@@ -1582,7 +1559,7 @@ function ContainerMixin:AddColorPicker(config: {
         end
     end)
 
-    comp:BindConnection(hueBar.InputBegan, function(input: InputObject)
+    comp:BindConnection(hueBar.InputBegan, function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingHue = true
             local relX = math.clamp((input.Position.X - hueBar.AbsolutePosition.X) / math.max(1, hueBar.AbsoluteSize.X), 0, 1)
@@ -1591,7 +1568,7 @@ function ContainerMixin:AddColorPicker(config: {
         end
     end)
 
-    comp:BindConnection(UserInputService.InputChanged, function(input: InputObject)
+    comp:BindConnection(UserInputService.InputChanged, function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             if draggingSV then
                 local relX = math.clamp((input.Position.X - svCanvas.AbsolutePosition.X) / math.max(1, svCanvas.AbsoluteSize.X), 0, 1)
@@ -1607,7 +1584,7 @@ function ContainerMixin:AddColorPicker(config: {
         end
     end)
 
-    comp:BindConnection(UserInputService.InputEnded, function(input: InputObject)
+    comp:BindConnection(UserInputService.InputEnded, function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingSV = false
             draggingHue = false
@@ -1629,15 +1606,8 @@ function ContainerMixin:AddColorPicker(config: {
     return comp
 end
 
--- 6. AddKeybind (Hold / Toggle Mode + UserInputService Listener)
-function ContainerMixin:AddKeybind(config: {
-    Title: string,
-    Description: string?,
-    Icon: string?,
-    Default: Enum.KeyCode?,
-    Mode: string?, -- "Toggle" | "Hold"
-    Callback: ((boolean, Enum.KeyCode) -> ())?,
-})
+-- 6. AddKeybind
+function ContainerMixin:AddKeybind(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "Keybind")
     local card = self:CreateCardFrame(42, "KeybindComponent")
@@ -1693,7 +1663,7 @@ function ContainerMixin:AddKeybind(config: {
         keyBtn.Text = "[Press Key]"
     end)
 
-    comp:BindConnection(UserInputService.InputBegan, function(input: InputObject, gameProcessed: boolean)
+    comp:BindConnection(UserInputService.InputBegan, function(input, gameProcessed)
         if comp.Binding then
             if input.UserInputType == Enum.UserInputType.Keyboard then
                 comp.Binding = false
@@ -1708,22 +1678,22 @@ function ContainerMixin:AddKeybind(config: {
         if not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == comp.Key then
             if comp.Mode == "Toggle" then
                 comp.Active = not comp.Active
-                if typeof(config.Callback) == "function" then
+                if type(config.Callback) == "function" then
                     task.spawn(config.Callback, comp.Active, comp.Key)
                 end
             elseif comp.Mode == "Hold" then
                 comp.Active = true
-                if typeof(config.Callback) == "function" then
+                if type(config.Callback) == "function" then
                     task.spawn(config.Callback, true, comp.Key)
                 end
             end
         end
     end)
 
-    comp:BindConnection(UserInputService.InputEnded, function(input: InputObject)
+    comp:BindConnection(UserInputService.InputEnded, function(input)
         if not comp.Binding and comp.Mode == "Hold" and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == comp.Key then
             comp.Active = false
-            if typeof(config.Callback) == "function" then
+            if type(config.Callback) == "function" then
                 task.spawn(config.Callback, false, comp.Key)
             end
         end
@@ -1732,17 +1702,8 @@ function ContainerMixin:AddKeybind(config: {
     return comp
 end
 
--- 7. AddInput / AddTextBox (Floating Placeholder + Clear Button + onEnter / onChanged)
-function ContainerMixin:AddInput(config: {
-    Title: string,
-    Placeholder: string?,
-    Default: string?,
-    Icon: string?,
-    ClearOnFocus: boolean?,
-    OnChanged: ((string) -> ())?,
-    OnEnter: ((string) -> ())?,
-    Callback: ((string) -> ())?,
-})
+-- 7. AddInput / AddTextBox
+function ContainerMixin:AddInput(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "Input")
     local card = self:CreateCardFrame(50, "InputComponent")
@@ -1810,14 +1771,14 @@ function ContainerMixin:AddInput(config: {
         Util.Tween(wrapStroke, Util.TweenQuadOutFast, { Color = self.Window.Theme.Accent, Transparency = 0 })
     end)
 
-    comp:BindConnection(box.FocusLost, function(enterPressed: boolean)
+    comp:BindConnection(box.FocusLost, function(enterPressed)
         Util.Tween(floatLabel, Util.TweenQuadOutFast, { TextColor3 = self.Window.Theme.TextSecondary })
         Util.Tween(wrapStroke, Util.TweenQuadOutFast, { Color = self.Window.Theme.Border, Transparency = 0.4 })
         comp.Value = box.Text
-        if enterPressed and typeof(config.OnEnter) == "function" then
+        if enterPressed and type(config.OnEnter) == "function" then
             task.spawn(config.OnEnter, box.Text)
         end
-        if typeof(config.Callback) == "function" then
+        if type(config.Callback) == "function" then
             task.spawn(config.Callback, box.Text)
         end
     end)
@@ -1825,7 +1786,7 @@ function ContainerMixin:AddInput(config: {
     comp:BindConnection(box:GetPropertyChangedSignal("Text"), function()
         comp.Value = box.Text
         clearBtn.Visible = (#box.Text > 0)
-        if typeof(config.OnChanged) == "function" then
+        if type(config.OnChanged) == "function" then
             task.spawn(config.OnChanged, box.Text)
         end
     end)
@@ -1834,17 +1795,17 @@ function ContainerMixin:AddInput(config: {
         box.Text = ""
         comp.Value = ""
         clearBtn.Visible = false
-        if typeof(config.OnChanged) == "function" then
+        if type(config.OnChanged) == "function" then
             task.spawn(config.OnChanged, "")
         end
     end)
 
-    function comp:SetValue(text: string)
+    function comp:SetValue(text)
         box.Text = tostring(text or "")
         comp.Value = box.Text
     end
 
-    function comp:GetValue(): string
+    function comp:GetValue()
         return box.Text
     end
 
@@ -1854,7 +1815,7 @@ end
 ContainerMixin.AddTextBox = ContainerMixin.AddInput
 
 -- 8. AddParagraph
-function ContainerMixin:AddParagraph(config: { Title: string, Content: string })
+function ContainerMixin:AddParagraph(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "Paragraph")
     local card = self:CreateCardFrame(60, "ParagraphComponent")
@@ -1898,7 +1859,7 @@ function ContainerMixin:AddParagraph(config: { Title: string, Content: string })
     self.Window:RegisterThemedObject(contentLbl, "TextSecondary", "TextColor3")
     self.Window:RegisterThemedObject(contentLbl, "Font", "Font")
 
-    function comp:Set(newTitle: string, newContent: string)
+    function comp:Set(newTitle, newContent)
         titleLbl.Text = tostring(newTitle)
         contentLbl.Text = tostring(newContent)
     end
@@ -1906,8 +1867,8 @@ function ContainerMixin:AddParagraph(config: { Title: string, Content: string })
     return comp
 end
 
--- 9. AddCodeBlock (Monospace Dark Code Viewer + Copy Code Button)
-function ContainerMixin:AddCodeBlock(config: { Title: string?, Code: string })
+-- 9. AddCodeBlock
+function ContainerMixin:AddCodeBlock(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "CodeBlock")
     local card = self:CreateCardFrame(110, "CodeBlockComponent")
@@ -1981,15 +1942,15 @@ function ContainerMixin:AddCodeBlock(config: { Title: string?, Code: string })
         end)
     end)
 
-    function comp:SetCode(newCode: string)
+    function comp:SetCode(newCode)
         codeBox.Text = tostring(newCode)
     end
 
     return comp
 end
 
--- 10. AddProgressBar (Dynamic Animated Percentage Indicator)
-function ContainerMixin:AddProgressBar(config: { Title: string, Default: number?, Suffix: string? })
+-- 10. AddProgressBar
+function ContainerMixin:AddProgressBar(config)
     config = config or {}
     local comp = BaseComponent.new(self.Window, self.Container, "ProgressBar")
     local card = self:CreateCardFrame(50, "ProgressBarComponent")
@@ -2044,8 +2005,8 @@ function ContainerMixin:AddProgressBar(config: { Title: string, Default: number?
     Util.AddCorner(fill, 999)
     self.Window:RegisterThemedObject(fill, "Accent", "BackgroundColor3")
 
-    function comp:SetProgress(percent: number)
-        comp.Value = math.clamp(math.round(percent), 0, 100)
+    function comp:SetProgress(percent)
+        comp.Value = math.clamp(RoundNumber(percent), 0, 100)
         pctLbl.Text = tostring(comp.Value) .. suffix
         Util.Tween(fill, Util.TweenQuadOutMed, { Size = UDim2.new(comp.Value / 100, 0, 1, 0) })
     end
@@ -2053,8 +2014,8 @@ function ContainerMixin:AddProgressBar(config: { Title: string, Default: number?
     return comp
 end
 
--- 11. AddDivider (Horizontal Line + Optional Centered Label)
-function ContainerMixin:AddDivider(labelText: string?)
+-- 11. AddDivider
+function ContainerMixin:AddDivider(labelText)
     local comp = BaseComponent.new(self.Window, self.Container, "Divider")
     local row = Util.Create("Frame", {
         Name = "DividerComponent",
@@ -2113,8 +2074,8 @@ function ContainerMixin:AddDivider(labelText: string?)
     return comp
 end
 
--- 12. AddAccordion (Collapsible Sub-Component Group)
-function ContainerMixin:AddAccordion(config: { Title: string, Icon: string?, DefaultOpen: boolean? })
+-- 12. AddAccordion
+function ContainerMixin:AddAccordion(config)
     config = config or {}
     local accordion = setmetatable({}, { __index = ContainerMixin })
     accordion.Window = self.Window
@@ -2240,30 +2201,7 @@ ContainerMixin.DualContainer = ContainerMixin.AddRow
 -- ============================================================================
 -- [9] CORE WINDOW & SILENTX ENGINE IMPLEMENTATION
 -- ============================================================================
-function Silentx:CreateWindow(config: {
-    Title: string?,
-    SubTitle: string?,
-    Icon: string?,
-    Size: UDim2?,
-    Theme: { [string]: any }?,
-    FloatingButton: boolean?,
-    FloatingButtonConfig: {
-        Size: number?,
-        IdleTransparency: number?,
-        AutoHideWhenOpen: boolean?,
-        Icon: string?,
-    }?,
-    KeySystem: boolean?,
-    KeySettings: {
-        Title: string?,
-        Description: string?,
-        Keys: { string }?,
-        KeyLink: string?,
-    }?,
-    BackgroundImage: string?,
-    BackgroundTransparency: number?,
-    ConfigFile: string?,
-})
+function Silentx:CreateWindow(config)
     config = config or {}
     local window = setmetatable({}, { __index = Silentx })
 
@@ -2276,26 +2214,25 @@ function Silentx:CreateWindow(config: {
     window.IsMinimized = false
     window.ComponentRegistry = ContainerMixin
 
-    -- Default Sleek Slate / Charcoal Glassmorphism Theme
     window.DefaultTheme = {
-        Background       = Color3.fromRGB(15, 17, 23),
-        Sidebar          = Color3.fromRGB(19, 22, 30),
-        Header           = Color3.fromRGB(20, 24, 33),
-        Surface          = Color3.fromRGB(25, 29, 39),
-        SurfaceAlt       = Color3.fromRGB(32, 37, 50),
-        SurfaceHover     = Color3.fromRGB(36, 42, 56),
-        Border           = Color3.fromRGB(54, 62, 82),
-        Accent           = Color3.fromRGB(56, 189, 248),
-        TextPrimary      = Color3.fromRGB(241, 245, 249),
-        TextSecondary    = Color3.fromRGB(148, 163, 184),
-        Font             = Enum.Font.GothamMedium,
-        FontName         = "GothamMedium",
-        BgAsset          = config.BackgroundImage or "",
-        BgOpacity        = config.BackgroundTransparency or 0.88,
+        Background    = Color3.fromRGB(15, 17, 23),
+        Sidebar       = Color3.fromRGB(19, 22, 30),
+        Header        = Color3.fromRGB(20, 24, 33),
+        Surface       = Color3.fromRGB(25, 29, 39),
+        SurfaceAlt    = Color3.fromRGB(32, 37, 50),
+        SurfaceHover  = Color3.fromRGB(36, 42, 56),
+        Border        = Color3.fromRGB(54, 62, 82),
+        Accent        = Color3.fromRGB(56, 189, 248),
+        TextPrimary   = Color3.fromRGB(241, 245, 249),
+        TextSecondary = Color3.fromRGB(148, 163, 184),
+        Font          = Enum.Font.GothamMedium,
+        FontName      = "GothamMedium",
+        BgAsset       = config.BackgroundImage or "",
+        BgOpacity     = config.BackgroundTransparency or 0.88,
     }
 
-    window.Theme = table.clone(window.DefaultTheme)
-    if typeof(config.Theme) == "table" then
+    window.Theme = CloneTable(window.DefaultTheme)
+    if type(config.Theme) == "table" then
         for k, v in pairs(config.Theme) do
             window.Theme[k] = v
         end
@@ -2303,12 +2240,12 @@ function Silentx:CreateWindow(config: {
 
     window.ConfigManager = ConfigManager.new("Silentx_Workspace", config.ConfigFile or "Silentx_Settings.json")
 
-    function window:TrackConnection(conn: RBXScriptConnection): RBXScriptConnection
+    function window:TrackConnection(conn)
         table.insert(self.Connections, conn)
         return conn
     end
 
-    function window:RegisterThemedObject(inst: Instance, role: string, prop: string)
+    function window:RegisterThemedObject(inst, role, prop)
         table.insert(self.ThemedObjects, {
             Instance = inst,
             Role = role,
@@ -2341,7 +2278,6 @@ function Silentx:CreateWindow(config: {
         end
     end
 
-    -- Root ScreenGui
     local guiParent = Env.GetGuiParent()
     local existing = guiParent:FindFirstChild("Silentx_UI_v1")
     if existing then
@@ -2359,11 +2295,10 @@ function Silentx:CreateWindow(config: {
     })
     window.ScreenGui = screenGui
 
-    -- Initialize Audio Controller Engine
     window.Audio = AudioController.new(screenGui)
 
     -- ========================================================================
-    -- NOTIFICATION ENGINE (BOTTOM-RIGHT NON-BLOCKING TOAST STACK)
+    -- NOTIFICATION ENGINE
     -- ========================================================================
     local notifHolder = Util.Create("Frame", {
         Name = "NotificationStack",
@@ -2382,12 +2317,7 @@ function Silentx:CreateWindow(config: {
         Parent = notifHolder,
     })
 
-    function window:AddNotification(nConfig: {
-        Title: string?,
-        Description: string?,
-        Icon: string?,
-        Duration: number?,
-    })
+    function window:AddNotification(nConfig)
         nConfig = nConfig or {}
         local duration = nConfig.Duration or 4
 
@@ -2521,7 +2451,6 @@ function Silentx:CreateWindow(config: {
     })
     window.WindowScale = winScale
 
-    -- Background Custom Image Layer
     local bgImage = Util.Create("ImageLabel", {
         Name = "BackgroundMediaLayer",
         Size = UDim2.fromScale(1, 1),
@@ -2600,7 +2529,6 @@ function Silentx:CreateWindow(config: {
     window:RegisterThemedObject(subTitleLabel, "TextSecondary", "TextColor3")
     window:RegisterThemedObject(subTitleLabel, "Font", "Font")
 
-    -- Header Right Control Buttons (FAB Toggle, Minimize, Close)
     local controlsHolder = Util.Create("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, -10, 0.5, 0),
@@ -2616,7 +2544,7 @@ function Silentx:CreateWindow(config: {
         Parent = controlsHolder,
     })
 
-    local function CreateHeaderIconBtn(iconName: string, hoverColor: Color3?): TextButton
+    local function CreateHeaderIconBtn(iconName, hoverColor)
         local btn = Util.Create("TextButton", {
             Size = UDim2.fromOffset(26, 26),
             BackgroundColor3 = window.Theme.SurfaceAlt,
@@ -2661,13 +2589,12 @@ function Silentx:CreateWindow(config: {
     local minHeaderBtn = CreateHeaderIconBtn("minus")
     local closeHeaderBtn = CreateHeaderIconBtn("close", Color3.fromRGB(239, 68, 68))
 
-    -- Screen-Clamped Window Dragging via Header Bar
     do
         local draggingWin = false
-        local dragStart = Vector2.zero
-        local startPos = Vector2.zero
+        local dragStart = Vector2.new(0, 0)
+        local startPos = Vector2.new(0, 0)
 
-        window:TrackConnection(headerBar.InputBegan:Connect(function(input: InputObject)
+        window:TrackConnection(headerBar.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 draggingWin = true
                 dragStart = Vector2.new(input.Position.X, input.Position.Y)
@@ -2678,7 +2605,7 @@ function Silentx:CreateWindow(config: {
             end
         end))
 
-        window:TrackConnection(UserInputService.InputChanged:Connect(function(input: InputObject)
+        window:TrackConnection(UserInputService.InputChanged:Connect(function(input)
             if draggingWin and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStart
                 local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
@@ -2691,7 +2618,7 @@ function Silentx:CreateWindow(config: {
             end
         end))
 
-        window:TrackConnection(UserInputService.InputEnded:Connect(function(input: InputObject)
+        window:TrackConnection(UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 draggingWin = false
             end
@@ -2751,7 +2678,6 @@ function Silentx:CreateWindow(config: {
         Parent = tabListScroll,
     })
 
-    -- Sliding Active Pill Indicator on Sidebar
     local activePill = Util.Create("Frame", {
         Name = "ActiveTabPill",
         Position = UDim2.new(0, 4, 0, 16),
@@ -2765,7 +2691,6 @@ function Silentx:CreateWindow(config: {
     Util.AddCorner(activePill, 999)
     window:RegisterThemedObject(activePill, "Accent", "BackgroundColor3")
 
-    -- Integrated Mini Music Player Card in Sidebar Footer
     local musicCard = Util.Create("Frame", {
         Name = "MiniMusicPlayer",
         AnchorPoint = Vector2.new(0.5, 1),
@@ -2825,7 +2750,6 @@ function Silentx:CreateWindow(config: {
     window:RegisterThemedObject(audioInputBox, "SurfaceAlt", "BackgroundColor3")
     window:RegisterThemedObject(audioInputBox, "TextPrimary", "TextColor3")
 
-    -- Transport Controls Row: Play, Pause, Resume, Stop, Loop
     local transportRow = Util.Create("Frame", {
         Position = UDim2.new(0, 8, 0, 64),
         Size = UDim2.new(1, -16, 0, 24),
@@ -2839,7 +2763,7 @@ function Silentx:CreateWindow(config: {
         Parent = transportRow,
     })
 
-    local function MakeTransportBtn(labelTxt: string, width: number): TextButton
+    local function MakeTransportBtn(labelTxt, width)
         local b = Util.Create("TextButton", {
             Size = UDim2.fromOffset(width, 22),
             BackgroundColor3 = window.Theme.SurfaceAlt,
@@ -2862,7 +2786,6 @@ function Silentx:CreateWindow(config: {
     local btnStop   = MakeTransportBtn("Stop", 30)
     local btnLoop   = MakeTransportBtn("Loop:ON", 39)
 
-    -- Mini Volume Slider inside Footer
     local volLabel = Util.Create("TextLabel", {
         Position = UDim2.new(0, 8, 0, 94),
         Size = UDim2.fromOffset(52, 18),
@@ -2896,26 +2819,26 @@ function Silentx:CreateWindow(config: {
     window:RegisterThemedObject(volFill, "Accent", "BackgroundColor3")
 
     local draggingVol = false
-    local function UpdateVolFromInput(xPos: number)
+    local function UpdateVolFromInput(xPos)
         local alpha = math.clamp((xPos - volTrack.AbsolutePosition.X) / math.max(1, volTrack.AbsoluteSize.X), 0, 1)
-        local pct = math.round(alpha * 100)
+        local pct = RoundNumber(alpha * 100)
         window.Audio:SetVolume(pct)
         volLabel.Text = "Vol: " .. tostring(pct) .. "%"
         volFill.Size = UDim2.new(alpha, 0, 1, 0)
     end
 
-    window:TrackConnection(volTrack.InputBegan:Connect(function(input: InputObject)
+    window:TrackConnection(volTrack.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingVol = true
             UpdateVolFromInput(input.Position.X)
         end
     end))
-    window:TrackConnection(UserInputService.InputChanged:Connect(function(input: InputObject)
+    window:TrackConnection(UserInputService.InputChanged:Connect(function(input)
         if draggingVol and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             UpdateVolFromInput(input.Position.X)
         end
     end))
-    window:TrackConnection(UserInputService.InputEnded:Connect(function(input: InputObject)
+    window:TrackConnection(UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingVol = false
         end
@@ -2942,7 +2865,6 @@ function Silentx:CreateWindow(config: {
         btnLoop.Text = window.Audio.LoopEnabled and "Loop:ON" or "Loop:OFF"
     end))
 
-    -- Live Audio Playback Ticker
     window:TrackConnection(RunService.Heartbeat:Connect(function()
         if window.Audio and window.Audio.Sound then
             local status, pos, len = window.Audio:GetPlaybackStatus()
@@ -2950,7 +2872,6 @@ function Silentx:CreateWindow(config: {
         end
     end))
 
-    -- Content Pages Area
     local pagesArea = Util.Create("Frame", {
         Name = "PagesContainer",
         Position = UDim2.new(0, 195, 0, 0),
@@ -2984,7 +2905,7 @@ function Silentx:CreateWindow(config: {
         Parent = screenGui,
     })
     window.FloatingButton = fabButton
-    Util.AddCorner(fabButton, 14) -- Modern Squircle
+    Util.AddCorner(fabButton, 14)
     local fabStroke = Util.AddStroke(fabButton, window.Theme.Accent, 1.5, 0.15)
     window:RegisterThemedObject(fabButton, "Surface", "BackgroundColor3")
     window:RegisterThemedObject(fabStroke, "Accent", "Color")
@@ -3000,11 +2921,10 @@ function Silentx:CreateWindow(config: {
     IconEngine:ApplyToImageLabel(fabIcon, fabCfg.Icon or config.Icon or "sparkles")
     window:RegisterThemedObject(fabIcon, "Accent", "ImageColor3")
 
-    -- FAB Edge-Snapping & Dragging Logic
     do
         local draggingFab = false
-        local fabStartInput = Vector2.zero
-        local fabStartPos = Vector2.zero
+        local fabStartInput = Vector2.new(0, 0)
+        local fabStartPos = Vector2.new(0, 0)
         local movedDistance = 0
 
         local function SnapFabToNearestEdge()
@@ -3020,7 +2940,7 @@ function Silentx:CreateWindow(config: {
             })
         end
 
-        window:TrackConnection(fabButton.InputBegan:Connect(function(input: InputObject)
+        window:TrackConnection(fabButton.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 draggingFab = true
                 movedDistance = 0
@@ -3030,7 +2950,7 @@ function Silentx:CreateWindow(config: {
             end
         end))
 
-        window:TrackConnection(UserInputService.InputChanged:Connect(function(input: InputObject)
+        window:TrackConnection(UserInputService.InputChanged:Connect(function(input)
             if draggingFab and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local curr = Vector2.new(input.Position.X, input.Position.Y)
                 local delta = curr - fabStartInput
@@ -3040,7 +2960,7 @@ function Silentx:CreateWindow(config: {
             end
         end))
 
-        window:TrackConnection(UserInputService.InputEnded:Connect(function(input: InputObject)
+        window:TrackConnection(UserInputService.InputEnded:Connect(function(input)
             if draggingFab and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                 draggingFab = false
                 Util.Tween(fabButton, Util.TweenQuadOutFast, { BackgroundTransparency = fabIdleTrans })
@@ -3053,7 +2973,7 @@ function Silentx:CreateWindow(config: {
         end))
     end
 
-    function window:ToggleVisibility(forceState: boolean?)
+    function window:ToggleVisibility(forceState)
         if forceState ~= nil then
             self.IsVisible = forceState
         else
@@ -3084,7 +3004,6 @@ function Silentx:CreateWindow(config: {
         end
     end
 
-    -- Header Controls Connections
     window:TrackConnection(fabHeaderBtn.MouseButton1Click:Connect(function()
         fabEnabled = not fabEnabled
         fabButton.Visible = fabEnabled and (not fabAutoHide or not window.IsVisible)
@@ -3103,7 +3022,6 @@ function Silentx:CreateWindow(config: {
         Util.Tween(mainWin, Util.TweenQuadOutMed, { Size = targetSize })
     end))
 
-    -- Close Confirmation Dialog Modal
     local closeDialog = Util.Create("Frame", {
         Name = "CloseConfirmationOverlay",
         Size = UDim2.fromScale(1, 1),
@@ -3192,9 +3110,9 @@ function Silentx:CreateWindow(config: {
     -- ========================================================================
     local userTabCounter = 0
 
-    function window:CreateTab(tabConfig: { Title: string, Icon: string?, LayoutOrder: number? })
+    function window:CreateTab(tabConfig)
         tabConfig = tabConfig or {}
-        userTabCounter += 1
+        userTabCounter = userTabCounter + 1
         local tabOrder = tabConfig.LayoutOrder or userTabCounter
 
         local tabObj = setmetatable({}, { __index = ContainerMixin })
@@ -3281,7 +3199,6 @@ function Silentx:CreateWindow(config: {
             Util.Tween(tabTitle, Util.TweenQuadOutFast, { TextColor3 = window.Theme.TextPrimary })
             Util.Tween(tabIcon, Util.TweenQuadOutFast, { ImageColor3 = window.Theme.Accent })
 
-            -- Move Active Pill Indicator with Back/Out Tween
             activePill.Visible = true
             local relY = (tabBtn.AbsolutePosition.Y - sidebar.AbsolutePosition.Y) + 7
             Util.Tween(activePill, Util.TweenBackOut, {
@@ -3294,7 +3211,7 @@ function Silentx:CreateWindow(config: {
         end))
 
         table.insert(self.Tabs, tabObj)
-        if #self.Tabs == 1 then
+        if #self.Tabs == 1 or (self.ActiveTab and (self.ActiveTab == self.SettingsTab or self.ActiveTab == self.InformationTab) and tabOrder < 9990) then
             task.defer(function()
                 tabObj:Activate()
             end)
@@ -3307,7 +3224,6 @@ function Silentx:CreateWindow(config: {
     -- MANDATORY DEFAULT TABS: [1] SETTINGS (ORDER 9998) & [2] INFORMATION (9999)
     -- ========================================================================
     local function BuildMandatoryDefaultTabs()
-        -- 1. TAB "Settings"
         local settingsTab = window:CreateTab({
             Title = "Settings",
             Icon = "settings",
@@ -3326,7 +3242,6 @@ function Silentx:CreateWindow(config: {
 
         settingsTab:AddDivider("Visual & Theme Customization")
 
-        -- 100 Curated Accent Color Presets Dropdown
         local accentDropdown = settingsTab:AddDropdown({
             Title = "Accent Color Palette (100 Presets)",
             Icon = "palette",
@@ -3334,13 +3249,12 @@ function Silentx:CreateWindow(config: {
             Default = Palettes.AccentColors[1].Name,
             Searchable = true,
             Callback = function(_, selectedObj)
-                if typeof(selectedObj) == "table" and selectedObj.Color then
+                if type(selectedObj) == "table" and selectedObj.Color then
                     pendingTheme.Accent = selectedObj.Color
                 end
             end,
         })
 
-        -- 50 Built-in Roblox Enum.Font Styles Selector
         local fontDropdown = settingsTab:AddDropdown({
             Title = "Font Typography Selector (50 Styles)",
             Icon = "code",
@@ -3348,14 +3262,13 @@ function Silentx:CreateWindow(config: {
             Default = "GothamMedium",
             Searchable = true,
             Callback = function(_, selectedObj)
-                if typeof(selectedObj) == "table" and selectedObj.Font then
+                if type(selectedObj) == "table" and selectedObj.Font then
                     pendingTheme.Font = selectedObj.Font
                     pendingTheme.FontName = selectedObj.Name
                 end
             end,
         })
 
-        -- 100 Curated Text Color Presets Selector
         local textDropdown = settingsTab:AddDropdown({
             Title = "Text Color Selector (100 Contrast Presets)",
             Icon = "eye",
@@ -3363,7 +3276,7 @@ function Silentx:CreateWindow(config: {
             Default = Palettes.TextColors[1].Name,
             Searchable = true,
             Callback = function(_, selectedObj)
-                if typeof(selectedObj) == "table" and selectedObj.Primary then
+                if type(selectedObj) == "table" and selectedObj.Primary then
                     pendingTheme.TextPrimary = selectedObj.Primary
                     pendingTheme.TextSecondary = selectedObj.Secondary
                 end
@@ -3400,7 +3313,7 @@ function Silentx:CreateWindow(config: {
             Icon = "image",
             Min = 0,
             Max = 100,
-            Default = math.round(window.Theme.BgOpacity * 100),
+            Default = RoundNumber(window.Theme.BgOpacity * 100),
             Step = 1,
             Suffix = "%",
             Callback = function(val)
@@ -3413,7 +3326,6 @@ function Silentx:CreateWindow(config: {
 
         settingsTab:AddDivider("Configuration Action Controls")
 
-        -- 3 Mandatory Action Buttons: "Pasang", "Simpan", "Normal"
         settingsTab:AddButton({
             Title = "Pasang",
             Description = "Apply selected palette, typography, and background changes live.",
@@ -3468,7 +3380,7 @@ function Silentx:CreateWindow(config: {
             Description = "Reset all visual states to default.",
             Icon = "refresh",
             Callback = function()
-                window.Theme = table.clone(window.DefaultTheme)
+                window.Theme = CloneTable(window.DefaultTheme)
                 pendingTheme.Accent = window.Theme.Accent
                 pendingTheme.Font = window.Theme.Font
                 pendingTheme.FontName = window.Theme.FontName
@@ -3490,7 +3402,6 @@ function Silentx:CreateWindow(config: {
             end,
         })
 
-        -- 2. TAB "Information"
         local infoTab = window:CreateTab({
             Title = "Information",
             Icon = "info",
@@ -3520,7 +3431,6 @@ function Silentx:CreateWindow(config: {
         })
         Util.AddCorner(avatarImg, 999)
 
-        -- Asynchronous Avatar Thumbnail Resolution for "GoodManz1081"
         task.spawn(function()
             local okId, userId = pcall(function()
                 return Players:GetUserIdFromNameAsync("GoodManz1081")
@@ -3602,7 +3512,6 @@ function Silentx:CreateWindow(config: {
 
     BuildMandatoryDefaultTabs()
 
-    -- Auto-load Saved JSON Configuration on Startup if Present
     do
         local savedCfg = window.ConfigManager:Load()
         if savedCfg then
@@ -3634,9 +3543,6 @@ function Silentx:CreateWindow(config: {
         end
     end
 
-    -- ========================================================================
-    -- ISOLATED KEY SYSTEM (PRE-LAUNCH MODAL AUTHENTICATION)
-    -- ========================================================================
     local function LaunchMainInterface()
         mainWin.Visible = true
         winScale.Scale = 0.9
@@ -3811,9 +3717,6 @@ function Silentx:CreateWindow(config: {
         LaunchMainInterface()
     end
 
-    -- ========================================================================
-    -- FULL DESTRUCTOR (:Destroy()) - ZERO MEMORY LEAK CLEANUP
-    -- ========================================================================
     function window:Destroy()
         for _, conn in ipairs(self.Connections) do
             if conn and conn.Connected then
@@ -3822,7 +3725,7 @@ function Silentx:CreateWindow(config: {
                 end)
             end
         end
-        table.clear(self.Connections)
+        ClearTable(self.Connections)
 
         if self.Audio then
             self.Audio:Destroy()
@@ -3836,181 +3739,6 @@ function Silentx:CreateWindow(config: {
     end
 
     return window
-end
-
--- ============================================================================
--- [10] COMPLETE USAGE EXAMPLE (IMPLEMENTATION SHOWCASE)
--- ============================================================================
---[[
-    Below is the complete usage showcase demonstrating:
-    - Key System initialization
-    - Floating Trigger Button (FAB) with Edge-Snapping
-    - Custom Tabs & Universal Icon Engine
-    - Dual-Component Row Container (50:50 Horizontal Grid)
-    - All 14 Core Components + Built-in Audio Player
-    - Automatic Settings & Information Tabs
-]]
-
-local function RunSilentxShowcase()
-    local Window = Silentx:CreateWindow({
-        Title = "Silentx v1",
-        SubTitle = "Cybernetic Fluent Framework | Production Build",
-        Icon = "sparkles",
-        Size = UDim2.fromOffset(700, 460),
-        FloatingButton = true,
-        FloatingButtonConfig = {
-            Size = 48,
-            IdleTransparency = 0.15,
-            AutoHideWhenOpen = false,
-            Icon = "compass",
-        },
-        KeySystem = true,
-        KeySettings = {
-            Title = "Silentx v1 Authentication",
-            Description = "Use default key: SILENTX-V1-KEY to unlock the workspace.",
-            Keys = { "SILENTX-V1-KEY", "GOODMANZ1081" },
-            KeyLink = "https://example.com/silentx-key",
-        },
-        ConfigFile = "Silentx_Showcase_Config.json",
-    })
-
-    -- Create Dashboard Tab
-    local MainTab = Window:CreateTab({
-        Title = "Dashboard",
-        Icon = "home",
-    })
-
-    MainTab:AddParagraph({
-        Title = "Silentx v1 Enterprise Architecture",
-        Content = "Welcome to Silentx v1. This framework utilizes a sleek dark slate glassmorphism aesthetic, TweenService Quad/Back micro-interactions, and a 100+ variation-ready OOP component factory.",
-    })
-
-    MainTab:AddDivider("Dual-Component Row (50:50 Split)")
-
-    -- Dual-Component Row Showcase (Toggle on Left, Slider on Right)
-    local SplitRow1 = MainTab:AddRow()
-
-    SplitRow1.Left:AddToggle({
-        Title = "Auto Sprint",
-        Icon = "zap",
-        Default = true,
-        Callback = function(state)
-            Window:AddNotification({
-                Title = "Auto Sprint",
-                Description = "State changed to: " .. tostring(state),
-                Duration = 2,
-                Icon = "zap",
-            })
-        end,
-    })
-
-    SplitRow1.Right:AddSlider({
-        Title = "Field of View",
-        Icon = "eye",
-        Min = 70,
-        Max = 120,
-        Default = 90,
-        Step = 1,
-        Suffix = " deg",
-        Callback = function(val)
-            if workspace.CurrentCamera then
-                workspace.CurrentCamera.FieldOfView = val
-            end
-        end,
-    })
-
-    -- Second Dual Row (Input Box on Left, Action Button on Right)
-    local SplitRow2 = MainTab:AddRow()
-
-    local CustomTagInput = SplitRow2.Left:AddInput({
-        Title = "Player Tag",
-        Placeholder = "Enter custom tag...",
-        Default = "SilentxUser",
-    })
-
-    SplitRow2.Right:AddButton({
-        Title = "Broadcast Tag",
-        Description = "Send toast with current tag",
-        Icon = "bell",
-        Callback = function()
-            Window:AddNotification({
-                Title = "Tag Broadcast",
-                Description = "Active Tag: " .. CustomTagInput:GetValue(),
-                Duration = 3,
-                Icon = "user",
-            })
-        end,
-    })
-
-    MainTab:AddDivider("Interactive Controls & Media")
-
-    MainTab:AddDropdown({
-        Title = "Execution Profile (Single Select)",
-        Icon = "cpu",
-        Options = { "Balanced", "Hyper Speed", "Stealth Mode", "Low Latency" },
-        Default = "Balanced",
-        Searchable = true,
-        Callback = function(selected)
-            Window:AddNotification({
-                Title = "Profile Selected",
-                Description = "Switched profile to " .. tostring(selected),
-                Duration = 2.5,
-                Icon = "cpu",
-            })
-        end,
-    })
-
-    MainTab:AddColorPicker({
-        Title = "ESP Highlight Tint",
-        Icon = "palette",
-        Default = Color3.fromRGB(56, 189, 248),
-        Callback = function(_, hex)
-            -- Live color callback
-            local _ = hex
-        end,
-    })
-
-    MainTab:AddKeybind({
-        Title = "Quick Toggle Keybind",
-        Icon = "key",
-        Default = Enum.KeyCode.RightControl,
-        Mode = "Toggle",
-        Callback = function()
-            Window:ToggleVisibility()
-        end,
-    })
-
-    local TaskProgress = MainTab:AddProgressBar({
-        Title = "Module Synchronization",
-        Default = 75,
-        Suffix = "%",
-    })
-
-    local AdvAccordion = MainTab:AddAccordion({
-        Title = "Advanced Developer Diagnostics",
-        Icon = "terminal",
-        DefaultOpen = false,
-    })
-
-    AdvAccordion:AddCodeBlock({
-        Title = "Quick Initialization Snippet",
-        Code = 'local Window = Silentx:CreateWindow({ Title = "Silentx v1", FloatingButton = true })\nWindow:AddNotification({ Title = "Ready", Description = "Loaded!", Duration = 3 })',
-    })
-
-    AdvAccordion:AddButton({
-        Title = "Simulate 100% Sync",
-        Icon = "check",
-        Callback = function()
-            TaskProgress:SetProgress(100)
-        end,
-    })
-
-    return Window
-end
-
--- Auto-run showcase if executed directly as a standalone script
-if not _G.SILENTX_MODULE_ONLY then
-    RunSilentxShowcase()
 end
 
 return Silentx
