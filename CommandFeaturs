@@ -1,470 +1,1037 @@
 -- =================================================================
--- AETHERLIB v5.0 - MODUL 50 PERINTAH POWERFUL, SINGKATAN (ALIAS) & AWALAN ';'
--- Simpan kode ini di GitHub/Pastebin/RAW URL kamu
+-- AETHERLIB v6.5.0 - MODUL PERINTAH EKSTERNAL BARU (COMMANDFEATURS)
+-- Simpan kode ini di GitHub/Pastebin/RAW URL CommandFeaturs kamu:
+-- https://raw.githubusercontent.com/TheGoodManzz10/TheGoodManzzScript/refs/heads/main/CommandFeaturs
+-- =================================================================
+-- Daftar Perintah Baru v6.5.0 (Mendukung Tombol 'Fast' Nama Lengkap & Singkatan):
+--   1.  fly [nilai kecepatan]         (fly / f)
+--   2.  unfly                         (ufly / uf)
+--   3.  noclip                        (ncp / cl)
+--   4.  clip                          (cp / c)
+--   5.  inf jump                      (infjp / fjp)
+--   6.  uninf jump                    (ufjp / ujp)
+--   7.  set waypoint [nama]           (swp / sp)
+--   8.  tween to [nama waypoint]      (twp / tn)
+--   9.  cframe to [nama waypoint]     (cfm / tp)
+--   10. speed tween [nilai]           (spt / st)
+--   11. speed walk [nilai]            (spw / sp)
+--   12. jumppower [nilai]             (jpp / jp)
+--   13. gravity [nilai]               (grav / gv)
+--   14. siang                         (sng / sg)
+--   15. malam                         (mlm / mm)
+--   16. subuh                         (sbh / sh)  -- Kabut tebal & atmosfer subuh
+--   17. pagi                          (pgi / pg)  -- Suasana pagi berkabut sejuk
+--   18. subuh2                        (sbh2 / sb2)-- Suasana subuh + sinar matahari (SunRays)
+--   19. efek api [nilai radius]       (efkp / ei) -- Cahaya & partikel api di sekitar karakter
+--   20. unefek api                    (ufak / ufi)-- Matikan efek api
+--   21. salju                         (slj / s)   -- Salju layar + salju di atas part (1x per part, anti-lag!)
+--   22. unsalju                       (uslj / us) -- Matikan salju & bersihkan salju part
+--   23. salju extreme                 (sljex / se)-- Seluruh layar terkena efek beku es
+--   24. unsalju extreme               (usme / usx)-- Matikan efek layar beku
+--   25. sore / sunset                 (sre / snt) -- Suasana sore / sunset keemasan
+--   26. hujan                         (hjn / rn)  -- Suasana hujan + rintik hujan
+--   + 5 Fitur Tambahan:
+--   27. dex                           (dex / dx)  -- Execute Dark Dex Explorer
+--   28. sspy                          (sspy / rspy)-- Execute SimpleSpy Remote Explorer
+--   29. iy                            (iy / infyield) -- Execute Infinite Yield
+--   30. rejoin                        (rejoin / rj)-- Rejoin server saat ini
+--   31. serverhop                     (serverhop / shop) -- Pindah ke server lain
 -- =================================================================
 
 return function(AetherLib)
-    local Players = game:GetService("Players")
-    local TweenService = game:GetService("TweenService")
-    local RunService = game:GetService("RunService")
-    local Lighting = game:GetService("Lighting")
-    local TeleportService = game:GetService("TeleportService")
-    local LocalPlayer = Players.LocalPlayer
+	local CoreGui = game:GetService("CoreGui")
+	local HttpService = game:GetService("HttpService")
+	local Lighting = game:GetService("Lighting")
+	local Players = game:GetService("Players")
+	local RunService = game:GetService("RunService")
+	local TeleportService = game:GetService("TeleportService")
+	local TweenService = game:GetService("TweenService")
+	local UserInputService = game:GetService("UserInputService")
+	local Workspace = game:GetService("Workspace")
+	local LocalPlayer = Players.LocalPlayer
 
-    -- State Manager
-    local States = {
-        Fly = false,
-        Noclip = false,
-        InfJump = false,
-        ESP = false,
-        Fullbright = false,
-        Xray = false,
-        Spin = false,
-        Godmode = false,
-        Invisible = false,
-        AutoClick = false,
-        OriginalLighting = {
-            Ambient = Lighting.Ambient,
-            Brightness = Lighting.Brightness,
-            ClockTime = Lighting.ClockTime,
-            GlobalShadows = Lighting.GlobalShadows
-        }
-    }
+	-- Bersihkan seluruh perintah lama agar hanya daftar perintah baru ini yang tampil
+	if type(AetherLib.RegisteredCommands) == "table" then
+		for k in pairs(AetherLib.RegisteredCommands) do
+			AetherLib.RegisteredCommands[k] = nil
+		end
+	end
 
-    local Connections = {}
+	local States = {
+		Fly = false,
+		FlySpeed = 50,
+		Noclip = false,
+		InfJump = false,
+		TweenSpeed = 150,
+		IsTweening = false,
+		ActiveTween = nil,
+		Waypoints = {},
+		FireEffectActive = false,
+		SnowActive = false,
+		SnowExtremeActive = false,
+		RainActive = false,
+		OriginalLighting = {
+			Ambient = Lighting.Ambient,
+			OutdoorAmbient = Lighting.OutdoorAmbient,
+			Brightness = Lighting.Brightness,
+			ClockTime = Lighting.ClockTime,
+			FogStart = Lighting.FogStart,
+			FogEnd = Lighting.FogEnd,
+			FogColor = Lighting.FogColor,
+			GlobalShadows = Lighting.GlobalShadows
+		}
+	}
 
-    -- Fungsi pembantu pendaftaran perintah + singkatan (Alias)
-    local function Register(mainCmd, aliasCmd, desc, syntax, callback)
-        AetherLib:RegisterCommand(mainCmd, desc, syntax, callback)
-        if aliasCmd and aliasCmd ~= "" and aliasCmd ~= mainCmd then
-            AetherLib:RegisterCommand(aliasCmd, "[Singkatan] " .. desc, syntax, callback)
-        end
-    end
+	local Connections = {}
+	local FireInstances = {}
+	local SnowCapFolder = nil
+	local CoveredSnowParts = {} -- [BasePart] = true (Anti-Lag: Part yang sudah kena salju tidak akan dibuatkan lagi!)
+	local WeatherScreenGui = nil
+	local SnowScreenFrame = nil
+	local FrostExtremeFrame = nil
+	local RainScreenFrame = nil
 
-    -------------------------------------------------------------------
-    -- BAGIAN 1: PERINTAH LAMA (1 - 25) DENGAN SINGKATAN
-    -------------------------------------------------------------------
+	local function Notify(title, text, duration)
+		if AetherLib and type(AetherLib.AddNotification) == "function" then
+			pcall(function()
+				AetherLib:AddNotification(title, text, duration or 2)
+			end)
+		end
+	end
 
-    -- 1. Get Tools
-    Register("gettools", "gt", "Mengambil seluruh Tool di Workspace", "gt / gettools", function()
-        local count = 0
-        for _, item in ipairs(workspace:GetDescendants()) do
-            if item:IsA("Tool") or item:IsA("HopperBin") then
-                item.Parent = LocalPlayer:FindFirstChildOfClass("Backpack") or LocalPlayer.Backpack
-                count = count + 1
-            end
-        end
-        AetherLib:AddNotification("GetTools", count .. " Tools diambil!", 2)
-    end)
+	local function GetRootPart()
+		local char = LocalPlayer and LocalPlayer.Character
+		return char and (char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart or char:FindFirstChildWhichIsA("BasePart"))
+	end
 
-    -- 2. BTools
-    Register("btools", "bt", "Mendapatkan Hammer/BTools", "bt / btools", function()
-        for i = 1, 4 do
-            local tool = Instance.new("HopperBin")
-            tool.BinType = i
-            tool.Parent = LocalPlayer:FindFirstChildOfClass("Backpack")
-        end
-        AetherLib:AddNotification("BTools", "BTools diberikan!", 2)
-    end)
+	local function GetHumanoid()
+		local char = LocalPlayer and LocalPlayer.Character
+		return char and char:FindFirstChildOfClass("Humanoid")
+	end
 
-    -- 3. Delete Object
-    Register("delete", "del", "Menghapus objek yang ditunjuk mouse", "del / delete", function()
-        local mouse = LocalPlayer:GetMouse()
-        if mouse and mouse.Target then
-            mouse.Target:Destroy()
-            AetherLib:AddNotification("Delete", "Objek dihapus!", 1.5)
-        end
-    end)
+	-- Fungsi Pendaftaran Perintah Utama + Banyak Singkatan (Alias)
+	-- Tombol "Fast" di Command List otomatis selalu menulis `mainCmd` (nama lengkap, bukan singkatan!)
+	local function RegisterCmd(mainCmd, aliases, desc, syntax, callback)
+		local cleanMain = string.lower(tostring(mainCmd))
+		AetherLib:RegisterCommand(cleanMain, desc, syntax, callback, false, cleanMain)
+		if type(aliases) == "table" then
+			for _, al in ipairs(aliases) do
+				local cleanAlias = string.lower(tostring(al))
+				if cleanAlias ~= "" and cleanAlias ~= cleanMain then
+					AetherLib:RegisterCommand(cleanAlias, "[Singkatan] " .. desc, syntax, callback, true, cleanMain)
+				end
+			end
+		end
+	end
 
-    -- 4. Dex Explorer
-    Register("dex", "dex", "Membuka Dark Dex Explorer", "dex", function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
-    end)
+	-- =================================================================
+	-- 1 & 2. FLY & UNFLY
+	-- =================================================================
+	local function StopFly()
+		States.Fly = false
+		local root = GetRootPart()
+		if root then
+			local bg = root:FindFirstChild("AetherFlyGyro")
+			if bg then bg:Destroy() end
+			local bv = root:FindFirstChild("AetherFlyVel")
+			if bv then bv:Destroy() end
+		end
+	end
 
-    -- 5. Remote Spy
-    Register("spy", "rspy", "Membuka SimpleSpy Remote Event", "spy / rspy", function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/ex-ser/SimpleSpy/main/source.lua"))()
-    end)
+	RegisterCmd("fly", { "f" }, "Mengaktifkan mode terbang dengan kecepatan tertentu", "fly [nilai kecepatan] (fly/f)", function(args)
+		local speed = tonumber(args[1]) or 50
+		States.FlySpeed = math.max(speed, 5)
+		States.Fly = true
 
-    -- 6. Fly
-    Register("fly", "f", "Mengaktifkan mode terbang", "fly [speed] / f [speed]", function(args)
-        local speed = tonumber(args[1]) or 50
-        States.Fly = true
-        local char = LocalPlayer.Character
-        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-        local hrp = char.HumanoidRootPart
-        
-        local bg = hrp:FindFirstChild("AetherFlyGyro") or Instance.new("BodyGyro", hrp)
-        bg.Name = "AetherFlyGyro"
-        bg.P = 9e4
-        bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+		local root = GetRootPart()
+		if not root then return end
 
-        local bv = hrp:FindFirstChild("AetherFlyVel") or Instance.new("BodyVelocity", hrp)
-        bv.Name = "AetherFlyVel"
-        bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+		local bg = root:FindFirstChild("AetherFlyGyro") or Instance.new("BodyGyro")
+		bg.Name = "AetherFlyGyro"
+		bg.P = 9e4
+		bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+		bg.Parent = root
 
-        task.spawn(function()
-            while States.Fly and char and char:FindFirstChild("HumanoidRootPart") do
-                bv.velocity = workspace.CurrentCamera.CFrame.LookVector * speed
-                bg.cframe = workspace.CurrentCamera.CFrame
-                RunService.RenderStepped:Wait()
-            end
-        end)
-    end)
+		local bv = root:FindFirstChild("AetherFlyVel") or Instance.new("BodyVelocity")
+		bv.Name = "AetherFlyVel"
+		bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+		bv.Parent = root
 
-    -- 7. Unfly
-    Register("unfly", "unf", "Mematikan mode terbang", "unfly / unf", function()
-        States.Fly = false
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = LocalPlayer.Character.HumanoidRootPart
-            if hrp:FindFirstChild("AetherFlyGyro") then hrp.AetherFlyGyro:Destroy() end
-            if hrp:FindFirstChild("AetherFlyVel") then hrp.AetherFlyVel:Destroy() end
-        end
-    end)
+		Notify("Fly Aktif", "Mode terbang aktif! Kecepatan: " .. tostring(States.FlySpeed), 2)
 
-    -- 8. Noclip
-    Register("noclip", "nc", "Menembus semua dinding", "noclip / nc", function()
-        States.Noclip = true
-        task.spawn(function()
-            while States.Noclip do
-                if LocalPlayer.Character then
-                    for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-                        if part:IsA("BasePart") then part.CanCollide = false end
-                    end
-                end
-                RunService.Stepped:Wait()
-            end
-        end)
-    end)
+		task.spawn(function()
+			while States.Fly do
+				local r = GetRootPart()
+				local cam = Workspace.CurrentCamera
+				local hum = GetHumanoid()
+				if not r or not cam or not bg.Parent or not bv.Parent then
+					break
+				end
+				bg.CFrame = cam.CFrame
+				if hum and hum.MoveDirection.Magnitude > 0 then
+					bv.Velocity = cam.CFrame.LookVector * States.FlySpeed
+				else
+					bv.Velocity = Vector3.zero
+				end
+				RunService.RenderStepped:Wait()
+			end
+		end)
+	end)
 
-    -- 9. Clip
-    Register("clip", "c", "Mematikan noclip", "clip / c", function()
-        States.Noclip = false
-        if LocalPlayer.Character then
-            for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanCollide = true end
-            end
-        end
-    end)
+	RegisterCmd("unfly", { "ufly", "uf" }, "Mematikan mode terbang", "unfly (ufly/uf)", function()
+		StopFly()
+		Notify("Unfly", "Mode terbang dimatikan.", 1.8)
+	end)
 
-    -- 10. Infinite Jump
-    Register("infjump", "ijump", "Lompat tanpa batas di udara", "infjump / ijump", function()
-        States.InfJump = true
-        if not Connections["InfJump"] then
-            Connections["InfJump"] = game:GetService("UserInputService").JumpRequest:Connect(function()
-                if States.InfJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                    LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end)
-        end
-    end)
+	-- =================================================================
+	-- 3 & 4. NOCLIP & CLIP
+	-- =================================================================
+	if not Connections.NoclipLoop then
+		Connections.NoclipLoop = RunService.Stepped:Connect(function()
+			if (States.Noclip or States.IsTweening) and LocalPlayer and LocalPlayer.Character then
+				for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+					if part:IsA("BasePart") and part.CanCollide then
+						part.CanCollide = false
+					end
+				end
+			end
+		end)
+	end
 
-    -- 11. Uninfjump
-    Register("uninfjump", "unijump", "Mematikan lompatan tanpa batas", "uninfjump / unijump", function()
-        States.InfJump = false
-    end)
+	RegisterCmd("noclip", { "ncp", "cl" }, "Menembus semua dinding dan objek", "noclip (ncp/cl)", function()
+		States.Noclip = true
+		Notify("Noclip", "Noclip diaktifkan!", 1.8)
+	end)
 
-    -- 12. Freeze
-    Register("freeze", "frz", "Membekukan karakter di tempat", "freeze / frz", function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.Anchored = true
-        end
-    end)
+	RegisterCmd("clip", { "cp", "c" }, "Mematikan noclip dan mengembalikan tabrakan karakter", "clip (cp/c)", function()
+		States.Noclip = false
+		if LocalPlayer and LocalPlayer.Character then
+			for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+				if part:IsA("BasePart") and (part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" or part.Name == "LowerTorso") then
+					part.CanCollide = true
+				end
+			end
+		end
+		Notify("Clip", "Noclip dimatikan (Clip aktif).", 1.8)
+	end)
 
-    -- 13. Unfreeze
-    Register("unfreeze", "unfrz", "Melepaskan pembekuan karakter", "unfreeze / unfrz", function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.Anchored = false
-        end
-    end)
+	-- =================================================================
+	-- 5 & 6. INF JUMP & UNINF JUMP
+	-- =================================================================
+	if not Connections.InfJumpConn then
+		Connections.InfJumpConn = UserInputService.JumpRequest:Connect(function()
+			if States.InfJump then
+				local hum = GetHumanoid()
+				if hum then
+					hum:ChangeState(Enum.HumanoidStateType.Jumping)
+				end
+			end
+		end)
+	end
 
-    -- 14. ESP Player
-    Register("esp", "esp", "Melihat outline pemain tembus dinding", "esp", function()
-        States.ESP = true
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character then
-                local hl = p.Character:FindFirstChild("AetherESP") or Instance.new("Highlight")
-                hl.Name = "AetherESP"
-                hl.FillColor = Color3.fromRGB(255, 50, 50)
-                hl.Parent = p.Character
-            end
-        end
-    end)
+	RegisterCmd("inf jump", { "infjp", "fjp", "infjump" }, "Melompat tanpa batas di udara", "inf jump (infjp/fjp)", function()
+		States.InfJump = true
+		Notify("Inf Jump", "Infinite Jump diaktifkan!", 1.8)
+	end)
 
-    -- 15. Unesp
-    Register("unesp", "unesp", "Mematikan ESP", "unesp", function()
-        States.ESP = false
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("AetherESP") then
-                p.Character.AetherESP:Destroy()
-            end
-        end
-    end)
+	RegisterCmd("uninf jump", { "ufjp", "ujp", "uninfjump" }, "Mematikan lompatan tanpa batas", "uninf jump (ufjp/ujp)", function()
+		States.InfJump = false
+		Notify("Uninf Jump", "Infinite Jump dimatikan.", 1.8)
+	end)
 
-    -- 16. Fullbright
-    Register("fullbright", "fb", "Pencahayaan terang maksimal", "fullbright / fb", function()
-        States.Fullbright = true
-        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-        Lighting.Brightness = 2
-        Lighting.ClockTime = 14
-        Lighting.GlobalShadows = false
-    end)
+	-- =================================================================
+	-- 7, 8, 9, 10, 11. WAYPOINT, TWEEN TO, CFRAME TO, SPEED TWEEN, SPEED WALK
+	-- =================================================================
+	local function SaveNamedWaypoint(wpName)
+		local root = GetRootPart()
+		if not root then
+			Notify("Set Waypoint", "Karakter belum siap!", 2)
+			return
+		end
+		local cleanName = tostring(wpName or ""):gsub("^%s+", ""):gsub("%s+$", "")
+		if cleanName == "" then
+			cleanName = "default"
+		end
+		States.Waypoints[string.lower(cleanName)] = {
+			Name = cleanName,
+			CFrame = root.CFrame
+		}
+		Notify("Waypoint Disimpan", "Waypoint '" .. cleanName .. "' berhasil disimpan!", 2.2)
+	end
 
-    -- 17. Unfullbright
-    Register("unfullbright", "unfb", "Mengembalikan pencahayaan asli", "unfullbright / unfb", function()
-        States.Fullbright = false
-        Lighting.Ambient = States.OriginalLighting.Ambient
-        Lighting.Brightness = States.OriginalLighting.Brightness
-        Lighting.ClockTime = States.OriginalLighting.ClockTime
-        Lighting.GlobalShadows = States.OriginalLighting.GlobalShadows
-    end)
+	local function FindWaypointRecord(wpName)
+		local key = string.lower(tostring(wpName or ""):gsub("^%s+", ""):gsub("%s+$", ""))
+		if key == "" then
+			key = "default"
+		end
+		if States.Waypoints[key] then
+			return States.Waypoints[key]
+		end
+		for k, v in pairs(States.Waypoints) do
+			if k:find(key, 1, true) then
+				return v
+			end
+		end
+		return nil
+	end
 
-    -- 18. Speed
-    Register("speed", "ws", "Mengatur kecepatan jalan karakter", "speed [nilai] / ws [nilai]", function(args)
-        local val = tonumber(args[1]) or 16
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = val
-        end
-    end)
+	RegisterCmd("set waypoint", { "swp", "setwaypoint" }, "Menyimpan posisi saat ini sebagai waypoint bernama", "set waypoint [nama] (swp/sp)", function(args)
+		local wpName = table.concat(args, " ")
+		SaveNamedWaypoint(wpName)
+	end)
 
-    -- 19. Unspeed
-    Register("unspeed", "unws", "Mereset kecepatan ke normal (16)", "unspeed / unws", function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
-        end
-    end)
+	RegisterCmd("tween to", { "twp", "tn", "tweento" }, "Meluncur dengan gaya Tween ke waypoint yang disimpan", "tween to [nama waypoint] (twp/tn)", function(args)
+		local wpName = table.concat(args, " ")
+		local rec = FindWaypointRecord(wpName)
+		if not rec or not rec.CFrame then
+			Notify("Tween To Gagal", "Waypoint '" .. tostring(wpName) .. "' belum ditemukan!", 2.2)
+			return
+		end
+		local root = GetRootPart()
+		if not root then return end
 
-    -- 20. JumpPower
-    Register("jumppower", "jp", "Mengatur tinggi lompatan", "jumppower [nilai] / jp [nilai]", function(args)
-        local val = tonumber(args[1]) or 50
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            hum.UseJumpPower = true
-            hum.JumpPower = val
-        end
-    end)
+		if States.ActiveTween then
+			pcall(function() States.ActiveTween:Cancel() end)
+			States.ActiveTween = nil
+		end
 
-    -- 21. Unjumppower
-    Register("unjumppower", "unjp", "Mereset lompatan ke normal (50)", "unjumppower / unjp", function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            hum.UseJumpPower = true
-            hum.JumpPower = 50
-        end
-    end)
+		local dist = (root.Position - rec.CFrame.Position).Magnitude
+		local spd = math.max(tonumber(States.TweenSpeed) or 150, 10)
+		local dur = math.clamp(dist / spd, 0.08, 60)
 
-    -- 22. Click TP
-    Register("clicktp", "ctp", "Teleportasi ke titik klik mouse/sentuhan", "clicktp / ctp", function()
-        local mouse = LocalPlayer:GetMouse()
-        if mouse and LocalPlayer.Character then
-            LocalPlayer.Character:MoveTo(mouse.Hit.Position)
-        end
-    end)
+		States.IsTweening = true
+		local tw = TweenService:Create(root, TweenInfo.new(dur, Enum.EasingStyle.Linear), { CFrame = rec.CFrame })
+		States.ActiveTween = tw
+		tw:Play()
+		Notify("Tween To", "Meluncur ke waypoint '" .. tostring(rec.Name) .. "'...", 2)
 
-    -- 23. Rejoin
-    Register("rejoin", "rj", "Masuk ulang ke server ini", "rejoin / rj", function()
-        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-    end)
+		tw.Completed:Once(function()
+			if States.ActiveTween == tw then
+				States.ActiveTween = nil
+				States.IsTweening = false
+			end
+		end)
+	end)
 
-    -- 24. Server Hop
-    Register("serverhop", "shop", "Pindah ke server Roblox lain", "serverhop / shop", function()
-        TeleportService:Teleport(game.PlaceId, LocalPlayer)
-    end)
+	RegisterCmd("cframe to", { "cfm", "tp", "cframeto" }, "Teleport instan (CFrame) ke waypoint yang disimpan", "cframe to [nama waypoint] (cfm/tp)", function(args)
+		local wpName = table.concat(args, " ")
+		local rec = FindWaypointRecord(wpName)
+		if not rec or not rec.CFrame then
+			Notify("CFrame To Gagal", "Waypoint '" .. tostring(wpName) .. "' belum ditemukan!", 2.2)
+			return
+		end
+		local root = GetRootPart()
+		if not root then return end
 
-    -- 25. Reset
-    Register("re", "res", "Mereset/Respawn karakter", "re / res", function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health = 0
-        end
-    end)
+		if States.ActiveTween then
+			pcall(function() States.ActiveTween:Cancel() end)
+			States.ActiveTween = nil
+		end
+		States.IsTweening = false
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.CFrame = rec.CFrame
+		Notify("CFrame To", "Teleport instan ke waypoint '" .. tostring(rec.Name) .. "'!", 2)
+	end)
 
-    -------------------------------------------------------------------
-    -- BAGIAN 2: 25 FITUR BARU TERBARU (26 - 50) + SINGKATAN
-    -------------------------------------------------------------------
+	RegisterCmd("speed tween", { "spt", "st", "speedtween" }, "Mengatur kecepatan meluncur Tween", "speed tween [nilai] (spt/st)", function(args)
+		local val = tonumber(args[1]) or 150
+		States.TweenSpeed = math.clamp(val, 10, 2000)
+		Notify("Speed Tween", "Kecepatan Tween diatur ke: " .. tostring(States.TweenSpeed), 2)
+	end)
 
-    -- 26. Teleport to Player
-    Register("teleport", "to", "Teleportasi langsung ke pemain lain", "to [nama_pemain]", function(args)
-        local targetName = string.lower(args[1] or "")
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and string.find(string.lower(p.Name), targetName) then
-                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character then
-                    LocalPlayer.Character:MoveTo(p.Character.HumanoidRootPart.Position)
-                end
-                break
-            end
-        end
-    end)
+	RegisterCmd("speed walk", { "spw", "speedwalk" }, "Mengatur kecepatan jalan (WalkSpeed) karakter", "speed walk [nilai] (spw/sp)", function(args)
+		local val = tonumber(args[1]) or 16
+		local hum = GetHumanoid()
+		if hum then
+			hum.WalkSpeed = val
+		end
+		Notify("Speed Walk", "WalkSpeed diatur ke: " .. tostring(val), 2)
+	end)
 
-    -- 27. Field of View
-    Register("fieldofview", "fov", "Mengatur luas pandangan kamera", "fov [30-120]", function(args)
-        local val = tonumber(args[1]) or 70
-        workspace.CurrentCamera.FieldOfView = math.clamp(val, 10, 120)
-    end)
+	-- Singkatan pintar "sp": jika argumen berupa angka (;sp 50) -> atur Speed Walk; jika berupa nama teks (;sp markas) -> Set Waypoint!
+	AetherLib:RegisterCommand("sp", "[Singkatan] Speed Walk (angka) atau Set Waypoint (nama)", "sp [nilai_speed / nama_waypoint]", function(args)
+		local firstArg = args[1]
+		if firstArg and tonumber(firstArg) ~= nil then
+			local val = tonumber(firstArg)
+			local hum = GetHumanoid()
+			if hum then hum.WalkSpeed = val end
+			Notify("Speed Walk (sp)", "WalkSpeed diatur ke: " .. tostring(val), 2)
+		else
+			local wpName = table.concat(args, " ")
+			SaveNamedWaypoint(wpName)
+		end
+	end, true, "speed walk")
 
-    -- 28. Unfieldofview
-    Register("unfov", "unfov", "Mereset FOV ke standar (70)", "unfov", function()
-        workspace.CurrentCamera.FieldOfView = 70
-    end)
+	-- =================================================================
+	-- 12 & 13. JUMPPOWER & GRAVITY
+	-- =================================================================
+	RegisterCmd("jumppower", { "jpp", "jp" }, "Mengatur kekuatan lompatan karakter", "jumppower [nilai] (jpp/jp)", function(args)
+		local val = tonumber(args[1]) or 50
+		local hum = GetHumanoid()
+		if hum then
+			hum.UseJumpPower = true
+			hum.JumpPower = val
+		end
+		Notify("JumpPower", "JumpPower diatur ke: " .. tostring(val), 2)
+	end)
 
-    -- 29. Gravity
-    Register("gravity", "grav", "Mengubah gravitasi dunia/game", "grav [nilai]", function(args)
-        local val = tonumber(args[1]) or 196.2
-        workspace.Gravity = val
-    end)
+	RegisterCmd("gravity", { "grav", "gv" }, "Mengatur gravitasi dunia game", "gravity [nilai] (grav/gv)", function(args)
+		local val = tonumber(args[1]) or 196.2
+		Workspace.Gravity = val
+		Notify("Gravity", "Gravitasi diatur ke: " .. tostring(val), 2)
+	end)
 
-    -- 30. Ungravity / Reset Gravity
-    Register("ungravity", "ungrav", "Mereset gravitasi ke standar (196.2)", "ungrav", function()
-        workspace.Gravity = 196.2
-    end)
+	-- =================================================================
+	-- 14, 15, 16, 17, 18, 25. CUACA & WAKTU (SIANG, MALAM, SUBUH, PAGI, SUBUH2, SORE/SUNSET)
+	-- =================================================================
+	local function ClearCustomLightingEffects()
+		for _, child in ipairs(Lighting:GetChildren()) do
+			if child.Name == "AetherCmd_Atmosphere" or child.Name == "AetherCmd_SunRays" or child.Name == "AetherCmd_ColorCorrection" or child.Name == "AetherCmd_Bloom" then
+				pcall(function() child:Destroy() end)
+			end
+		end
+	end
 
-    -- 31. HipHeight
-    Register("hipheight", "hh", "Mengatur tinggi melayang kaki karakter", "hh [nilai]", function(args)
-        local val = tonumber(args[1]) or 2
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").HipHeight = val
-        end
-    end)
+	RegisterCmd("siang", { "sng", "sg" }, "Mengubah waktu menjadi siang hari yang cerah", "siang (sng/sg)", function()
+		ClearCustomLightingEffects()
+		Lighting.ClockTime = 13.5
+		Lighting.Brightness = 2.5
+		Lighting.Ambient = Color3.fromRGB(150, 155, 165)
+		Lighting.OutdoorAmbient = Color3.fromRGB(175, 180, 190)
+		Lighting.FogStart = 500
+		Lighting.FogEnd = 100000
+		Lighting.FogColor = Color3.fromRGB(200, 225, 255)
+		Notify("Suasana Siang", "Waktu diubah menjadi Siang cerah!", 2)
+	end)
 
-    -- 32. Unhipheight
-    Register("unhipheight", "unhh", "Mereset tinggi melayang kaki", "unhh", function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").HipHeight = 2
-        end
-    end)
+	RegisterCmd("malam", { "mlm", "mm" }, "Mengubah waktu menjadi suasana malam", "malam (mlm/mm)", function()
+		ClearCustomLightingEffects()
+		Lighting.ClockTime = 0
+		Lighting.Brightness = 0.6
+		Lighting.Ambient = Color3.fromRGB(30, 35, 55)
+		Lighting.OutdoorAmbient = Color3.fromRGB(40, 48, 75)
+		Lighting.FogStart = 60
+		Lighting.FogEnd = 900
+		Lighting.FogColor = Color3.fromRGB(18, 22, 38)
+		Notify("Suasana Malam", "Waktu diubah menjadi Malam!", 2)
+	end)
 
-    -- 33. Xray
-    Register("xray", "xr", "Membuat dinding/objek transparan", "xray / xr", function()
-        States.Xray = true
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and not obj:IsDescendantOf(LocalPlayer.Character) then
-                obj.LocalTransparencyModifier = 0.6
-            end
-        end
-    end)
+	RegisterCmd("subuh", { "sbh", "sh" }, "Suasana subuh dengan kabut tebal dingin dan langit fajar gelap", "subuh (sbh/sh)", function()
+		ClearCustomLightingEffects()
+		Lighting.ClockTime = 5.15
+		Lighting.Brightness = 0.85
+		Lighting.Ambient = Color3.fromRGB(48, 58, 82)
+		Lighting.OutdoorAmbient = Color3.fromRGB(58, 70, 98)
+		Lighting.FogStart = 8
+		Lighting.FogEnd = 95
+		Lighting.FogColor = Color3.fromRGB(62, 74, 102)
 
-    -- 34. Unxray
-    Register("unxray", "unxr", "Mematikan mode transparan dinding", "unxray / unxr", function()
-        States.Xray = false
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") then
-                obj.LocalTransparencyModifier = 0
-            end
-        end
-    end)
+		pcall(function()
+			local atm = Instance.new("Atmosphere")
+			atm.Name = "AetherCmd_Atmosphere"
+			atm.Density = 0.62
+			atm.Offset = 0.15
+			atm.Color = Color3.fromRGB(70, 84, 115)
+			atm.Decay = Color3.fromRGB(45, 55, 80)
+			atm.Glare = 0.1
+			atm.Haze = 2.2
+			atm.Parent = Lighting
+		end)
+		Notify("Suasana Subuh", "Suasana subuh dengan kabut tebal diaktifkan!", 2.2)
+	end)
 
-    -- 35. Spin Character
-    Register("spin", "sp", "Memutar karakter dengan cepat", "spin [speed] / sp [speed]", function(args)
-        local speed = tonumber(args[1]) or 30
-        States.Spin = true
-        task.spawn(function()
-            while States.Spin and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") do
-                LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(speed), 0)
-                RunService.RenderStepped:Wait()
-            end
-        end)
-    end)
+	RegisterCmd("pagi", { "pgi", "pg" }, "Suasana pagi sejuk lengkap dengan kabut pagi tipis", "pagi (pgi/pg)", function()
+		ClearCustomLightingEffects()
+		Lighting.ClockTime = 7.1
+		Lighting.Brightness = 1.65
+		Lighting.Ambient = Color3.fromRGB(125, 138, 158)
+		Lighting.OutdoorAmbient = Color3.fromRGB(145, 160, 180)
+		Lighting.FogStart = 20
+		Lighting.FogEnd = 185
+		Lighting.FogColor = Color3.fromRGB(188, 202, 220)
 
-    -- 36. Unspin
-    Register("unspin", "unsp", "Mematikan putaran karakter", "unspin / unsp", function()
-        States.Spin = false
-    end)
+		pcall(function()
+			local atm = Instance.new("Atmosphere")
+			atm.Name = "AetherCmd_Atmosphere"
+			atm.Density = 0.44
+			atm.Offset = 0.1
+			atm.Color = Color3.fromRGB(195, 210, 230)
+			atm.Decay = Color3.fromRGB(150, 170, 195)
+			atm.Haze = 1.6
+			atm.Parent = Lighting
+		end)
+		Notify("Suasana Pagi", "Suasana pagi berkabut diaktifkan!", 2)
+	end)
 
-    -- 37. Invisible (Local Simulation)
-    Register("invis", "inv", "Menyembunyikan karakter secara lokal", "invis / inv", function()
-        if LocalPlayer.Character then
-            for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") or part:IsA("Decal") then
-                    part.Transparency = 1
-                end
-            end
-        end
-    end)
+	RegisterCmd("subuh2", { "sbh2", "sb2" }, "Suasana subuh dengan sinar matahari fajar yang menyinari (SunRays)", "subuh2 (sbh2/sb2)", function()
+		ClearCustomLightingEffects()
+		Lighting.ClockTime = 6.25
+		Lighting.Brightness = 2.1
+		Lighting.Ambient = Color3.fromRGB(115, 95, 85)
+		Lighting.OutdoorAmbient = Color3.fromRGB(165, 130, 105)
+		Lighting.FogStart = 35
+		Lighting.FogEnd = 280
+		Lighting.FogColor = Color3.fromRGB(215, 165, 125)
 
-    -- 38. Uninvisible
-    Register("uninvis", "uninv", "Memunculkan kembali karakter", "uninvis / uninv", function()
-        if LocalPlayer.Character then
-            for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                    part.Transparency = 0
-                end
-            end
-        end
-    end)
+		pcall(function()
+			local sr = Instance.new("SunRaysEffect")
+			sr.Name = "AetherCmd_SunRays"
+			sr.Intensity = 0.42
+			sr.Spread = 0.88
+			sr.Enabled = true
+			sr.Parent = Lighting
 
-    -- 39. Max Zoom Distance
-    Register("maxzoom", "mz", "Mengatur jarak maksimum zoom kamera", "mz [nilai]", function(args)
-        local val = tonumber(args[1]) or 10000
-        LocalPlayer.CameraMaxZoomDistance = val
-    end)
+			local cc = Instance.new("ColorCorrectionEffect")
+			cc.Name = "AetherCmd_ColorCorrection"
+			cc.Brightness = 0.04
+			cc.Contrast = 0.12
+			cc.Saturation = 0.18
+			cc.TintColor = Color3.fromRGB(255, 228, 195)
+			cc.Parent = Lighting
 
-    -- 40. Unmaxzoom
-    Register("unmaxzoom", "unmz", "Mereset jarak zoom kamera ke standar", "unmaxzoom", function()
-        LocalPlayer.CameraMaxZoomDistance = 128
-    end)
+			local atm = Instance.new("Atmosphere")
+			atm.Name = "AetherCmd_Atmosphere"
+			atm.Density = 0.36
+			atm.Color = Color3.fromRGB(235, 185, 140)
+			atm.Decay = Color3.fromRGB(190, 130, 90)
+			atm.Glare = 0.55
+			atm.Haze = 1.4
+			atm.Parent = Lighting
+		end)
+		Notify("Suasana Subuh 2", "Suasana subuh dengan pancaran sinar matahari aktif!", 2.2)
+	end)
 
-    -- 41. Clear Backpack
-    Register("clearbackpack", "cb", "Menghapus seluruh item di Backpack", "cb / clearbackpack", function()
-        if LocalPlayer:FindFirstChild("Backpack") then
-            LocalPlayer.Backpack:ClearAllChildren()
-        end
-    end)
+	RegisterCmd("sore", { "sunset", "sre", "snt" }, "Suasana sore / sunset jingga keemasan", "sore / sunset (sre/snt)", function()
+		ClearCustomLightingEffects()
+		Lighting.ClockTime = 17.65
+		Lighting.Brightness = 1.9
+		Lighting.Ambient = Color3.fromRGB(135, 85, 68)
+		Lighting.OutdoorAmbient = Color3.fromRGB(185, 105, 78)
+		Lighting.FogStart = 45
+		Lighting.FogEnd = 420
+		Lighting.FogColor = Color3.fromRGB(230, 125, 82)
 
-    -- 42. Anti AFK
-    Register("antiafk", "aafk", "Mencegah terputus koneksi karena AFK", "aafk", function()
-        local vu = game:GetService("VirtualUser")
-        LocalPlayer.Idled:Connect(function()
-            vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-            task.wait(1)
-            vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-        end)
-        AetherLib:AddNotification("AntiAFK", "Anti AFK Aktif!", 2)
-    end)
+		pcall(function()
+			local sr = Instance.new("SunRaysEffect")
+			sr.Name = "AetherCmd_SunRays"
+			sr.Intensity = 0.35
+			sr.Spread = 0.75
+			sr.Enabled = true
+			sr.Parent = Lighting
 
-    -- 43. Copy Place ID
-    Register("copyplaceid", "cpid", "Menyalin Place ID game ke clipboard", "cpid", function()
-        if setclipboard then setclipboard(tostring(game.PlaceId)) end
-    end)
+			local cc = Instance.new("ColorCorrectionEffect")
+			cc.Name = "AetherCmd_ColorCorrection"
+			cc.TintColor = Color3.fromRGB(255, 205, 175)
+			cc.Saturation = 0.22
+			cc.Contrast = 0.1
+			cc.Parent = Lighting
+		end)
+		Notify("Suasana Sore / Sunset", "Langit sore sunset keemasan diaktifkan!", 2)
+	end)
 
-    -- 44. Copy Job ID
-    Register("copyjobid", "cjid", "Menyalin Job/Server ID ke clipboard", "cjid", function()
-        if setclipboard then setclipboard(tostring(game.JobId)) end
-    end)
+	-- =================================================================
+	-- 19 & 20. EFEK API [NILAI RADIUS] & UNEFEK API
+	-- =================================================================
+	local function ClearFireEffects()
+		States.FireEffectActive = false
+		for _, inst in ipairs(FireInstances) do
+			if inst and inst.Parent then
+				pcall(function() inst:Destroy() end)
+			end
+		end
+		FireInstances = {}
+	end
 
-    -- 45. Night Vision
-    Register("nightvision", "nv", "Membuat malam menjadi terang tembus", "nv", function()
-        Lighting.ClockTime = 0
-        Lighting.Ambient = Color3.fromRGB(0, 255, 100)
-    end)
+	RegisterCmd("efek api", { "efkp", "ei", "efekapi" }, "Memunculkan cahaya api & kobaran api di sekitar karakter sesuai radius", "efek api [nilai radius] (efkp/ei)", function(args)
+		ClearFireEffects()
+		local radius = math.clamp(tonumber(args[1]) or 25, 5, 60)
+		local root = GetRootPart()
+		if not root then
+			Notify("Efek Api", "Karakter tidak ditemukan!", 2)
+			return
+		end
 
-    -- 46. Unnightvision
-    Register("unnightvision", "unnv", "Mematikan Night Vision", "unnv", function()
-        Lighting.ClockTime = States.OriginalLighting.ClockTime
-        Lighting.Ambient = States.OriginalLighting.Ambient
-    end)
+		States.FireEffectActive = true
 
-    -- 47. Remove Fog
-    Register("nofog", "nf", "Menghilangkan kabut di dalam game", "nf", function()
-        Lighting.FogEnd = 9e9
-    end)
+		-- 1. Cahaya Api Utama pada Karakter (PointLight dengan Range = radius)
+		local mainLight = Instance.new("PointLight")
+		mainLight.Name = "AetherFirePointLight"
+		mainLight.Color = Color3.fromRGB(255, 130, 35)
+		mainLight.Range = radius
+		mainLight.Brightness = 3.8
+		mainLight.Shadows = true
+		mainLight.Parent = root
+		table.insert(FireInstances, mainLight)
 
-    -- 48. Save Position
-    Register("savepos", "spos", "Menyimpan posisi koordinat saat ini", "spos", function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            States.SavedPos = LocalPlayer.Character.HumanoidRootPart.CFrame
-            AetherLib:AddNotification("SavePos", "Posisi tersimpan!", 1.5)
-        end
-    end)
+		-- 2. Kobaran Api Tengah pada Karakter
+		local centerFire = Instance.new("Fire")
+		centerFire.Name = "AetherCenterFire"
+		centerFire.Color = Color3.fromRGB(255, 140, 30)
+		centerFire.SecondaryColor = Color3.fromRGB(255, 45, 10)
+		centerFire.Size = math.clamp(radius * 0.35, 4, 22)
+		centerFire.Heat = 12
+		centerFire.Parent = root
+		table.insert(FireInstances, centerFire)
 
-    -- 49. Load Position
-    Register("loadpos", "lpos", "Teleportasi ke posisi yang disimpan", "lpos", function()
-        if States.SavedPos and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = States.SavedPos
-        end
-    end)
+		-- 3. Cincin Partikel & Cahaya Api Mengelilingi Karakter pada Jarak Radius
+		local ringCount = 6
+		local ringAttachments = {}
+		local ringRadius = math.clamp(radius * 0.45, 4, 25)
+		for i = 1, ringCount do
+			local att = Instance.new("Attachment")
+			att.Name = "AetherFireRingAtt_" .. tostring(i)
+			local angle = (i / ringCount) * math.pi * 2
+			att.Position = Vector3.new(math.cos(angle) * ringRadius, -1.5, math.sin(angle) * ringRadius)
+			att.Parent = root
 
-    -- 50. Destroy UI
-    Register("destroyui", "dui", "Menutup dan menghapus AetherLib", "dui", function()
-        AetherLib:Unload()
-    end)
+			local f = Instance.new("Fire")
+			f.Color = Color3.fromRGB(255, 150, 40)
+			f.SecondaryColor = Color3.fromRGB(255, 60, 15)
+			f.Size = math.clamp(radius * 0.25, 3, 14)
+			f.Heat = 9
+			f.Parent = att
 
+			local pl = Instance.new("PointLight")
+			pl.Color = Color3.fromRGB(255, 120, 30)
+			pl.Range = math.clamp(radius * 0.65, 8, 40)
+			pl.Brightness = 2.0
+			pl.Parent = att
+
+			table.insert(FireInstances, att)
+			table.insert(ringAttachments, { Attachment = att, BaseAngle = angle })
+		end
+
+		-- Animasi putaran cincin api & kedipan cahaya api alami
+		task.spawn(function()
+			local t0 = os.clock()
+			while States.FireEffectActive and root and root.Parent and mainLight.Parent do
+				local elapsed = os.clock() - t0
+				mainLight.Brightness = 3.5 + math.sin(elapsed * 9) * 0.55
+				for _, item in ipairs(ringAttachments) do
+					if item.Attachment and item.Attachment.Parent then
+						local a = item.BaseAngle + elapsed * 1.8
+						item.Attachment.Position = Vector3.new(math.cos(a) * ringRadius, -1.5, math.sin(a) * ringRadius)
+					end
+				end
+				task.wait(0.04)
+			end
+		end)
+
+		Notify("Efek Api Aktif", "Cahaya & cincin api menyala (Radius: " .. tostring(radius) .. ")!", 2.2)
+	end)
+
+	RegisterCmd("unefek api", { "ufak", "ufi", "unefekapi" }, "Menonaktifkan efek api di sekitar karakter", "unefek api (ufak/ufi)", function()
+		ClearFireEffects()
+		Notify("Unefek Api", "Efek cahaya api telah dimatikan.", 1.8)
+	end)
+
+	-- =================================================================
+	-- OVERLAY CUACA LAYAR (SALJU, SALJU EXTREME BEKU, & HUJAN)
+	-- =================================================================
+	local function EnsureWeatherScreenGui()
+		if WeatherScreenGui and WeatherScreenGui.Parent then
+			return WeatherScreenGui
+		end
+		local sg = Instance.new("ScreenGui")
+		sg.Name = "AetherWeatherOverlayGui"
+		sg.IgnoreGuiInset = true
+		sg.ResetOnSpawn = false
+		sg.DisplayOrder = 5
+		pcall(function() sg.Parent = CoreGui end)
+		if not sg.Parent and LocalPlayer then
+			pcall(function() sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end)
+		end
+		WeatherScreenGui = sg
+		return sg
+	end
+
+	-- =================================================================
+	-- 21 & 22. SALJU (LAYAR + ATAS PART ANTI-LAG) & UNSALJU
+	-- =================================================================
+	local function StopSnowEffect()
+		States.SnowActive = false
+		if SnowScreenFrame and SnowScreenFrame.Parent then
+			pcall(function() SnowScreenFrame:Destroy() end)
+		end
+		SnowScreenFrame = nil
+
+		-- Bersihkan semua lapisan salju di atas part & reset penanda agar bisa dipakai lagi nanti
+		if SnowCapFolder and SnowCapFolder.Parent then
+			pcall(function() SnowCapFolder:Destroy() end)
+		end
+		SnowCapFolder = nil
+
+		for part in pairs(CoveredSnowParts) do
+			if part and part.Parent then
+				pcall(function()
+					part:SetAttribute("AetherSnowCovered", nil)
+				end)
+			end
+			CoveredSnowParts[part] = nil
+		end
+	end
+
+	RegisterCmd("salju", { "slj", "s" }, "Muncul salju di layar & salju di atas part/block yang terkena (1x per part agar anti-lag)", "salju (slj/s)", function()
+		if States.SnowActive then
+			Notify("Salju", "Efek salju sudah aktif!", 1.8)
+			return
+		end
+		States.SnowActive = true
+
+		local sg = EnsureWeatherScreenGui()
+		local sFrame = Instance.new("Frame")
+		sFrame.Name = "SnowScreenContainer"
+		sFrame.Size = UDim2.new(1, 0, 1, 0)
+		sFrame.BackgroundTransparency = 1
+		sFrame.Parent = sg
+		SnowScreenFrame = sFrame
+
+		if not SnowCapFolder or not SnowCapFolder.Parent then
+			SnowCapFolder = Instance.new("Folder")
+			SnowCapFolder.Name = "AetherSnowCaps_AntiLag"
+			SnowCapFolder.Parent = Workspace
+		end
+
+		-- Buat butiran salju layar yang bergerak turun secara halus
+		local flakes = {}
+		for i = 1, 42 do
+			local f = Instance.new("Frame")
+			local sz = math.random(3, 7)
+			f.Size = UDim2.new(0, sz, 0, sz)
+			f.Position = UDim2.new(math.random(), 0, math.random(), 0)
+			f.BackgroundColor3 = Color3.fromRGB(245, 250, 255)
+			f.BackgroundTransparency = math.random(15, 45) / 100
+			f.BorderSizePixel = 0
+			f.Parent = sFrame
+			local c = Instance.new("UICorner")
+			c.CornerRadius = UDim.new(1, 0)
+			c.Parent = f
+			table.insert(flakes, {
+				UI = f,
+				X = math.random(),
+				Y = math.random(),
+				SpeedY = math.random(12, 28) / 100,
+				DriftX = (math.random(-15, 15) / 100)
+			})
+		end
+
+		-- Loop animasi salju layar
+		task.spawn(function()
+			local lastTick = os.clock()
+			while States.SnowActive and sFrame and sFrame.Parent do
+				local now = os.clock()
+				local dt = math.min(now - lastTick, 0.1)
+				lastTick = now
+				for _, fl in ipairs(flakes) do
+					fl.Y = fl.Y + fl.SpeedY * dt
+					fl.X = (fl.X + fl.DriftX * dt * 0.25) % 1
+					if fl.Y > 1.04 then
+						fl.Y = -0.04
+						fl.X = math.random()
+					end
+					if fl.UI and fl.UI.Parent then
+						fl.UI.Position = UDim2.new(fl.X, 0, fl.Y, 0)
+					end
+				end
+				task.wait(0.03)
+			end
+		end)
+
+		-- Loop Penumpukan Salju di Atas Part/Block (ANTI-LAG: Part yang sudah terkena salju TIDAK BISA muncul lagi di atasnya!)
+		task.spawn(function()
+			local rayParams = RaycastParams.new()
+			rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+			while States.SnowActive and SnowCapFolder and SnowCapFolder.Parent do
+				local root = GetRootPart()
+				if root then
+					local char = LocalPlayer.Character
+					rayParams.FilterDescendantsInstances = { char, SnowCapFolder }
+
+					-- Jatuhkan beberapa titik salju per siklus di sekitar karakter
+					for _ = 1, 5 do
+						if not States.SnowActive then break end
+						local offsetX = math.random(-65, 65)
+						local offsetZ = math.random(-65, 65)
+						local origin = root.Position + Vector3.new(offsetX, 60, offsetZ)
+						local hit = Workspace:Raycast(origin, Vector3.new(0, -140, 0), rayParams)
+
+						if hit and hit.Instance and hit.Instance:IsA("BasePart") then
+							local hitPart = hit.Instance
+							-- Cek apakah part ini SUDAH pernah terkena salju (Anti-Lag 100%!)
+							local alreadySnowed = CoveredSnowParts[hitPart] or (hitPart:GetAttribute("AetherSnowCovered") == true)
+							if not alreadySnowed and hitPart.Name ~= "AetherSnowCap" and hitPart.Transparency < 0.95 then
+								-- Tandai part ini sudah terkena salju agar TIDAK PERNAH muncul lagi di atasnya!
+								CoveredSnowParts[hitPart] = true
+								pcall(function()
+									hitPart:SetAttribute("AetherSnowCovered", true)
+								end)
+
+								local snowCap = Instance.new("Part")
+								snowCap.Name = "AetherSnowCap"
+								snowCap.Anchored = true
+								snowCap.CanCollide = false
+								snowCap.CanQuery = false
+								snowCap.CanTouch = false
+								snowCap.CastShadow = false
+								snowCap.Material = Enum.Material.Sand
+								snowCap.Color = Color3.fromRGB(242, 248, 255)
+
+								-- Sesuaikan ukuran lapisan salju tepat di permukaan atas part/block tersebut
+								local capX = math.clamp(hitPart.Size.X, 1.5, 45)
+								local capZ = math.clamp(hitPart.Size.Z, 1.5, 45)
+								snowCap.Size = Vector3.new(capX, 0.22, capZ)
+								snowCap.CFrame = hitPart.CFrame * CFrame.new(0, (hitPart.Size.Y * 0.5) + 0.11, 0)
+								snowCap.Parent = SnowCapFolder
+							end
+						end
+					end
+				end
+				task.wait(0.35)
+			end
+		end)
+
+		Notify("Salju Aktif", "Salju layar & lapisan salju di atas part (Anti-Lag 1x per part) aktif!", 2.5)
+	end)
+
+	RegisterCmd("unsalju", { "uslj", "us" }, "Menonaktifkan efek salju dan membersihkan lapisan salju di part", "unsalju (uslj/us)", function()
+		StopSnowEffect()
+		Notify("Unsalju", "Efek salju telah dimatikan & dibersihkan.", 2)
+	end)
+
+	-- =================================================================
+	-- 23 & 24. SALJU EXTREME (EFEK LAYAR BEKU) & UNSALJU EXTREME
+	-- =================================================================
+	local function StopSnowExtreme()
+		States.SnowExtremeActive = false
+		if FrostExtremeFrame and FrostExtremeFrame.Parent then
+			pcall(function() FrostExtremeFrame:Destroy() end)
+		end
+		FrostExtremeFrame = nil
+	end
+
+	RegisterCmd("salju extreme", { "sljex", "se", "saljuextreme" }, "Seluruh layar terkena efek beku es & badai salju ekstrem", "salju extreme (sljex/se)", function()
+		StopSnowExtreme()
+		States.SnowExtremeActive = true
+
+		local sg = EnsureWeatherScreenGui()
+		local frostContainer = Instance.new("Frame")
+		frostContainer.Name = "FrostExtremeScreenOverlay"
+		frostContainer.Size = UDim2.new(1, 0, 1, 0)
+		frostContainer.BackgroundColor3 = Color3.fromRGB(165, 225, 255)
+		frostContainer.BackgroundTransparency = 0.72
+		frostContainer.BorderSizePixel = 0
+		frostContainer.Parent = sg
+		FrostExtremeFrame = frostContainer
+
+		-- Bingkai Es Beku Tebal di Seluruh Pinggiran Layar
+		local iceStroke = Instance.new("UIStroke")
+		iceStroke.Color = Color3.fromRGB(210, 245, 255)
+		iceStroke.Thickness = 22
+		iceStroke.Transparency = 0.25
+		iceStroke.Parent = frostContainer
+
+		-- Gradasi Kristal Es Membeku di Layar
+		local frostGrad = Instance.new("UIGradient")
+		frostGrad.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(220, 248, 255)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 205, 255)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(225, 250, 255))
+		})
+		frostGrad.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.35),
+			NumberSequenceKeypoint.new(0.25, 0.72),
+			NumberSequenceKeypoint.new(0.5, 0.84),
+			NumberSequenceKeypoint.new(0.75, 0.72),
+			NumberSequenceKeypoint.new(1, 0.35)
+		})
+		frostGrad.Rotation = 35
+		frostGrad.Parent = frostContainer
+
+		-- Panel Sudut Es Beku (4 Pojok Layar)
+		local cornersPos = {
+			{ Pos = UDim2.new(0, 0, 0, 0), Size = UDim2.new(1, 0, 0, 65) },
+			{ Pos = UDim2.new(0, 0, 1, -65), Size = UDim2.new(1, 0, 0, 65) },
+			{ Pos = UDim2.new(0, 0, 0, 0), Size = UDim2.new(0, 75, 1, 0) },
+			{ Pos = UDim2.new(1, -75, 0, 0), Size = UDim2.new(0, 75, 1, 0) }
+		}
+		for _, cp in ipairs(cornersPos) do
+			local edgeIce = Instance.new("Frame")
+			edgeIce.Position = cp.Pos
+			edgeIce.Size = cp.Size
+			edgeIce.BackgroundColor3 = Color3.fromRGB(205, 242, 255)
+			edgeIce.BackgroundTransparency = 0.52
+			edgeIce.BorderSizePixel = 0
+			edgeIce.Parent = frostContainer
+		end
+
+		-- Badai Butiran Es Cepat di Layar
+		local blizzardFlakes = {}
+		for _ = 1, 60 do
+			local bf = Instance.new("Frame")
+			local sz = math.random(4, 10)
+			bf.Size = UDim2.new(0, sz, 0, sz)
+			bf.Position = UDim2.new(math.random(), 0, math.random(), 0)
+			bf.BackgroundColor3 = Color3.fromRGB(235, 252, 255)
+			bf.BackgroundTransparency = math.random(10, 35) / 100
+			bf.BorderSizePixel = 0
+			bf.Parent = frostContainer
+			local bc = Instance.new("UICorner")
+			bc.CornerRadius = UDim.new(1, 0)
+			bc.Parent = bf
+			table.insert(blizzardFlakes, {
+				UI = bf,
+				X = math.random(),
+				Y = math.random(),
+				SpeedY = math.random(45, 85) / 100,
+				SpeedX = math.random(25, 55) / 100
+			})
+		end
+
+		task.spawn(function()
+			local lastT = os.clock()
+			while States.SnowExtremeActive and frostContainer and frostContainer.Parent do
+				local now = os.clock()
+				local dt = math.min(now - lastT, 0.1)
+				lastT = now
+				for _, fl in ipairs(blizzardFlakes) do
+					fl.Y = (fl.Y + fl.SpeedY * dt) % 1.05
+					fl.X = (fl.X + fl.SpeedX * dt) % 1.05
+					if fl.UI and fl.UI.Parent then
+						fl.UI.Position = UDim2.new(fl.X, 0, fl.Y, 0)
+					end
+				end
+				task.wait(0.03)
+			end
+		end)
+
+		Notify("Salju Extreme", "Efek layar beku & badai salju ekstrem aktif!", 2.2)
+	end)
+
+	RegisterCmd("unsalju extreme", { "usme", "usx", "unsaljuextreme" }, "Menonaktifkan efek beku pada layar", "unsalju extreme (usme/usx)", function()
+		StopSnowExtreme()
+		Notify("Unsalju Extreme", "Efek layar beku telah dimatikan.", 2)
+	end)
+
+	-- =================================================================
+	-- 26. HUJAN (hjn / rn) & UNHUJAN (uhjn / urn)
+	-- =================================================================
+	local function StopRainEffect()
+		States.RainActive = false
+		if RainScreenFrame and RainScreenFrame.Parent then
+			pcall(function() RainScreenFrame:Destroy() end)
+		end
+		RainScreenFrame = nil
+	end
+
+	RegisterCmd("hujan", { "hjn", "rn" }, "Mengaktifkan suasana mendung hujan & rintik hujan deras", "hujan (hjn/rn)", function()
+		StopRainEffect()
+		States.RainActive = true
+
+		Lighting.ClockTime = 15.2
+		Lighting.Brightness = 1.15
+		Lighting.Ambient = Color3.fromRGB(85, 95, 110)
+		Lighting.OutdoorAmbient = Color3.fromRGB(95, 108, 125)
+		Lighting.FogStart = 25
+		Lighting.FogEnd = 260
+		Lighting.FogColor = Color3.fromRGB(105, 118, 138)
+
+		local sg = EnsureWeatherScreenGui()
+		local rFrame = Instance.new("Frame")
+		rFrame.Name = "RainScreenContainer"
+		rFrame.Size = UDim2.new(1, 0, 1, 0)
+		rFrame.BackgroundTransparency = 1
+		rFrame.Parent = sg
+		RainScreenFrame = rFrame
+
+		local drops = {}
+		for _ = 1, 55 do
+			local d = Instance.new("Frame")
+			d.Size = UDim2.new(0, 2, 0, math.random(14, 26))
+			d.Position = UDim2.new(math.random(), 0, math.random(), 0)
+			d.BackgroundColor3 = Color3.fromRGB(175, 215, 255)
+			d.BackgroundTransparency = math.random(25, 55) / 100
+			d.BorderSizePixel = 0
+			d.Rotation = 12
+			d.Parent = rFrame
+			table.insert(drops, {
+				UI = d,
+				X = math.random(),
+				Y = math.random(),
+				SpeedY = math.random(95, 155) / 100
+			})
+		end
+
+		task.spawn(function()
+			local lastT = os.clock()
+			while States.RainActive and rFrame and rFrame.Parent do
+				local now = os.clock()
+				local dt = math.min(now - lastT, 0.1)
+				lastT = now
+				for _, dr in ipairs(drops) do
+					dr.Y = dr.Y + dr.SpeedY * dt
+					dr.X = (dr.X - 0.18 * dt) % 1
+					if dr.Y > 1.05 then
+						dr.Y = -0.06
+						dr.X = math.random()
+					end
+					if dr.UI and dr.UI.Parent then
+						dr.UI.Position = UDim2.new(dr.X, 0, dr.Y, 0)
+					end
+				end
+				task.wait(0.025)
+			end
+		end)
+
+		Notify("Suasana Hujan", "Efek hujan deras diaktifkan! (Ketik ;unhujan untuk mematikan)", 2.2)
+	end)
+
+	RegisterCmd("unhujan", { "uhjn", "urn" }, "Mematikan efek hujan", "unhujan (uhjn/urn)", function()
+		StopRainEffect()
+		Notify("Unhujan", "Efek hujan telah dimatikan.", 1.8)
+	end)
+
+	-- =================================================================
+	-- 27 - 31. LIMA (5) FITUR TAMBAHAN PILIHAN (DEX, SSPY, IY, REJOIN, SERVERHOP)
+	-- =================================================================
+	RegisterCmd("dex", { "dx" }, "Membuka Dark Dex Explorer untuk inspeksi objek game", "dex (dex/dx)", function()
+		Notify("Dex Explorer", "Memuat Dark Dex Explorer...", 2)
+		task.spawn(function()
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+			end)
+		end)
+	end)
+
+	RegisterCmd("sspy", { "rspy", "spy" }, "Membuka SimpleSpy untuk memantau RemoteEvent & RemoteFunction", "sspy (sspy/spy)", function()
+		Notify("SimpleSpy", "Memuat SimpleSpy Remote Explorer...", 2)
+		task.spawn(function()
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/ex-ser/SimpleSpy/main/source.lua"))()
+			end)
+		end)
+	end)
+
+	RegisterCmd("iy", { "infyield" }, "Membuka Infinite Yield Admin Commands", "iy (iy/infy)", function()
+		Notify("Infinite Yield", "Memuat Infinite Yield...", 2)
+		task.spawn(function()
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+			end)
+		end)
+	end)
+
+	RegisterCmd("rejoin", { "rj" }, "Masuk ulang (Rejoin) ke server ini", "rejoin (rejn/rj)", function()
+		Notify("Rejoin", "Melakukan Rejoin ke server saat ini...", 2)
+		pcall(function()
+			TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+		end)
+	end)
+
+	RegisterCmd("serverhop", { "shop" }, "Pindah ke server Roblox lain yang tersedia", "serverhop (serverhop/shop)", function()
+		Notify("Server Hop", "Mencari & pindah ke server lain...", 2)
+		pcall(function()
+			TeleportService:Teleport(game.PlaceId, LocalPlayer)
+		end)
+	end)
 end
