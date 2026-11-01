@@ -1,9 +1,9 @@
 -- =================================================================
--- AETHERLIB v6.5.2 - MODUL PERINTAH EKSTERNAL LENGKAP (COMMANDFEATURS)
+-- AETHERLIB v6.5.5 - MODUL PERINTAH EKSTERNAL LENGKAP (COMMANDFEATURS)
 -- Simpan kode ini di GitHub/Pastebin/RAW URL CommandFeaturs kamu:
 -- https://raw.githubusercontent.com/TheGoodManzz10/TheGoodManzzScript/refs/heads/main/CommandFeaturs
 -- =================================================================
--- Daftar Perintah v6.5.2 (Mendukung Tombol 'Fast' Nama Lengkap & Singkatan):
+-- Daftar Perintah v6.5.5 (Total 55 Perintah - Mendukung Tombol 'Fast' Nama Lengkap & Singkatan):
 --   1.  fly [nilai kecepatan]         (fly / f)
 --   2.  unfly                         (ufly / uf)
 --   3.  noclip                        (ncp / cl)
@@ -24,17 +24,16 @@
 --   18. subuh2                        (sbh2 / sb2)  -- Suasana subuh + sinar matahari (SunRays)
 --   19. efek api [nilai radius]       (efkp / ei)   -- Cahaya & cincin api di sekitar karakter
 --   20. unefek api                    (ufak / ufi)  -- Matikan efek api
---   21. salju                         (slj / s)     -- Salju layar + lapisan salju putih tipis di atas permukaan semua part (1x per part, anti-lag!)
+--   21. salju                         (slj / s)     -- Salju layar + lapisan salju putih tipis di permukaan semua part (Anti-Lag!)
 --   22. unsalju                       (uslj / us)   -- Matikan salju & bersihkan lapisan salju part
 --   23. salju extreme                 (sljex / se)  -- Seluruh layar warna biru muda salju transparan mulus seperti proses loading!
 --   24. unsalju extreme               (usme / usx)  -- Matikan efek layar salju extreme
 --   25. sore / sunset                 (sre / snt)   -- Suasana sore / sunset keemasan
---   26. hujan                         (hjn / rn)    -- Hujan + genangan air + partikel cipratan air
+--   26. hujan                         (hjn / rn)    -- Hujan + genangan air bulat anti-glitch + partikel cipratan air
 --   27. unhujan                       (uhjn / uh)   -- Matikan hujan, partikel air & genangan air
 --   28. air walk                      (awk / aw)    -- Berjalan di udara di ketinggian tetap
 --   29. unair walk                    (uak / uw)    -- Matikan Air Walk
 --   30. intant promt                  (itpm / inp)  -- Semua ProximityPrompt langsung instan (0 detik)
---   + 10 Fitur Baru Tambahan (31 - 45):
 --   31. dex                           (dex / dx)    -- Execute Dark Dex Explorer
 --   32. sspy                          (sspy / rspy) -- Execute SimpleSpy Remote Explorer
 --   33. iy                            (iy / infyield) -- Execute Infinite Yield
@@ -50,6 +49,17 @@
 --   43. spin [kecepatan]              (spn / sn)    -- Putar karakter dengan cepat
 --   44. unspin                        (uspn / usn)  -- Hentikan putaran karakter
 --   45. antiafk                       (aafk / afk)  -- Cegah terputus karena AFK
+--   + 10 Fitur Baru Update v6.5.5 (46 - 55):
+--   46. freeze                        (frz / fz)    -- Bekukan posisi karakter di tempat
+--   47. unfreeze                      (ufrz / ufz)  -- Lepaskan pembekuan posisi karakter
+--   48. invisible                     (invis / inv) -- Sembunyikan karakter menjadi transparan
+--   49. uninvisible                   (uninvis / uinv) -- Munculkan kembali karakter seperti semula
+--   50. maxzoom [nilai]               (mzm / mz)    -- Atur jarak zoom kamera maksimal (hingga 10000)
+--   51. btools                        (btl / bt)    -- Berikan alat BTools ke Backpack
+--   52. gettools                      (gtl / gt)    -- Ambil seluruh Tool di map ke Backpack
+--   53. sit                           (duduk / st2) -- Buat karakter langsung duduk di tempat
+--   54. reset                         (rst / re)    -- Respawn / mereset karakter dengan cepat
+--   55. fpscap [nilai]                (fps / fc)    -- Buka / atur batas maksimum FPS (default 240)
 -- =================================================================
 
 return function(AetherLib)
@@ -64,7 +74,7 @@ return function(AetherLib)
 	local Workspace = game:GetService("Workspace")
 	local LocalPlayer = Players.LocalPlayer
 
-	-- Bersihkan seluruh perintah lama agar hanya daftar perintah baru v6.5.2 ini yang tampil
+	-- Bersihkan seluruh perintah lama agar hanya daftar perintah baru v6.5.5 ini yang tampil
 	if type(AetherLib.RegisteredCommands) == "table" then
 		for k in pairs(AetherLib.RegisteredCommands) do
 			AetherLib.RegisteredCommands[k] = nil
@@ -107,9 +117,9 @@ return function(AetherLib)
 	local Connections = {}
 	local FireInstances = {}
 	local SnowCapFolder = nil
-	local CoveredSnowParts = {} -- [BasePart] = true (Anti-Lag: Part yang sudah tertutup salju tidak dibuatkan lagi)
+	local CoveredSnowParts = {}
 	local RainPuddleFolder = nil
-	local CoveredPuddleParts = {} -- [BasePart] = true (Anti-Lag: Part yang sudah ada genangan air tidak dibuatkan lagi)
+	local PuddlePositions = {} -- Menyimpan titik tengah genangan air agar tidak pernah bertumpuk / glitch Z-fighting!
 	local RainEmitterPart = nil
 	local AirWalkPart = nil
 	local PlayerEspObjects = {}
@@ -146,8 +156,6 @@ return function(AetherLib)
 		return false
 	end
 
-	-- Fungsi Pendaftaran Perintah Utama + Banyak Singkatan (Alias)
-	-- Tombol "Fast" di Command List otomatis selalu menulis `mainCmd` (nama lengkap, bukan singkatan!)
 	local function RegisterCmd(mainCmd, aliases, desc, syntax, callback)
 		local cleanMain = string.lower(tostring(mainCmd))
 		AetherLib:RegisterCommand(cleanMain, desc, syntax, callback, false, cleanMain)
@@ -702,7 +710,6 @@ return function(AetherLib)
 		end
 	end
 
-	-- Membuat lapisan part putih salju tipis (0.08 stud) tepat di atas permukaan BasePart (1x per part, anti-lag!)
 	local function CreateThinSnowCapOnPart(part)
 		if not States.SnowActive or not SnowCapFolder or not SnowCapFolder.Parent then
 			return false
@@ -713,7 +720,7 @@ return function(AetherLib)
 		if CoveredSnowParts[part] or part:GetAttribute("AetherSnowCovered") == true then
 			return false
 		end
-		if part.Name == "AetherSnowCap" or part.Name == "AetherWaterPuddle" or part.Name == "AetherAirWalkPad" then
+		if part.Name == "AetherSnowCap" or part.Name == "AetherWaterPuddle" or part.Name == "AetherAirWalkPad" or part.Name == "AetherRainSkyEmitter" then
 			return false
 		end
 		if part.Transparency >= 0.92 or part.Size.X < 1.2 or part.Size.Z < 1.2 then
@@ -725,16 +732,10 @@ return function(AetherLib)
 		if RainPuddleFolder and part:IsDescendantOf(RainPuddleFolder) then
 			return false
 		end
-		if IsCharacterPart(part) then
+		if IsCharacterPart(part) or part.CFrame.UpVector.Y < 0.65 then
 			return false
 		end
 
-		-- Hanya buat di atas part yang permukaannya menghadap ke atas (UpVector.Y > 0.65)
-		if part.CFrame.UpVector.Y < 0.65 then
-			return false
-		end
-
-		-- Tandai part ini sudah tertutup salju agar TIDAK PERNAH muncul lagi di atasnya (Anti-Lag!)
 		CoveredSnowParts[part] = true
 		pcall(function()
 			part:SetAttribute("AetherSnowCovered", true)
@@ -750,10 +751,10 @@ return function(AetherLib)
 		snowCap.Material = Enum.Material.Sand
 		snowCap.Color = Color3.fromRGB(248, 252, 255)
 
-		-- Tipis & pas menutupi seluruh permukaan atas part tersebut
+		-- Beri jarak 0.02 stud di atas permukaan part agar tidak Z-fighting / kedap-kedip!
 		local thickness = 0.08
 		snowCap.Size = Vector3.new(part.Size.X, thickness, part.Size.Z)
-		snowCap.CFrame = part.CFrame * CFrame.new(0, (part.Size.Y * 0.5) + (thickness * 0.5), 0)
+		snowCap.CFrame = part.CFrame * CFrame.new(0, (part.Size.Y * 0.5) + (thickness * 0.5) + 0.02, 0)
 		snowCap.Parent = SnowCapFolder
 		return true
 	end
@@ -822,7 +823,6 @@ return function(AetherLib)
 			end
 		end)
 
-		-- Munculkan lapisan part putih salju tipis di atas permukaan semua BasePart yang ada di Workspace secara bertahap (Anti-Lag!)
 		task.spawn(function()
 			while States.SnowActive and SnowCapFolder and SnowCapFolder.Parent do
 				local processedInBatch = 0
@@ -870,23 +870,20 @@ return function(AetherLib)
 		States.SnowExtremeActive = true
 
 		local sg = EnsureWeatherScreenGui()
-		-- Satu Frame Penuh Menutupi Seluruh Layar Tanpa Garis Kotak Pinggiran (Mulus 100% Seperti Proses Loading!)
 		local frostFull = Instance.new("Frame")
 		frostFull.Name = "FrostExtremeFullScreen"
 		frostFull.Position = UDim2.new(-0.05, 0, -0.1, 0)
 		frostFull.Size = UDim2.new(1.1, 0, 1.2, 0)
-		frostFull.BackgroundColor3 = Color3.fromRGB(185, 232, 255) -- Warna biru muda salju
-		frostFull.BackgroundTransparency = 1 -- Mulai dari 1 lalu fade-in halus seperti loading
+		frostFull.BackgroundColor3 = Color3.fromRGB(185, 232, 255)
+		frostFull.BackgroundTransparency = 1
 		frostFull.BorderSizePixel = 0
 		frostFull.Parent = sg
 		FrostExtremeFrame = frostFull
 
-		-- Animasi Fade-In Halus seperti Layar Proses Loading menuju transparan dikit (0.38)
 		TweenService:Create(frostFull, TweenInfo.new(0.85, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
 			BackgroundTransparency = 0.38
 		}):Play()
 
-		-- Tambahan rona dingin biru salju di dunia 3D
 		pcall(function()
 			local cc = Instance.new("ColorCorrectionEffect")
 			cc.Name = "AetherFrostExtremeCC"
@@ -896,7 +893,6 @@ return function(AetherLib)
 			cc.Parent = Lighting
 		end)
 
-		-- Butiran salju halus melayang di seluruh layar biru muda
 		local blizzardFlakes = {}
 		for _ = 1, 55 do
 			local bf = Instance.new("Frame")
@@ -926,7 +922,6 @@ return function(AetherLib)
 				local now = os.clock()
 				local dt = math.min(now - lastT, 0.1)
 				lastT = now
-				-- Efek bernafas lembut seperti layar loading (transparansi berayun halus di sekitar 0.36 - 0.44)
 				if (now - t0) > 0.85 then
 					frostFull.BackgroundTransparency = 0.40 + math.sin((now - t0) * 2.2) * 0.04
 				end
@@ -950,7 +945,11 @@ return function(AetherLib)
 	end)
 
 	-- =================================================================
-	-- 26 & 27. HUJAN (GENANGAN AIR + PARTIKEL AIR) & UNHUJAN (uhjn / uh)
+	-- 26 & 27. HUJAN (GENANGAN AIR BULAT ANTI-GLITCH + PARTIKEL AIR) & UNHUJAN
+	-- Perbaikan v6.5.5:
+	--   - Tidak lagi memakai Material.Glass (yang menyebabkan glitch distorsi di Roblox)
+	--   - Menggunakan genangan air bulat (Cylinder tipis SmoothPlastic) dengan jarak celah 0.04 stud
+	--     di atas permukaan tanah + pengecekan jarak antar genangan (>= 16 stud) sehingga 100% bebas Z-fighting / kedap-kedip!
 	-- =================================================================
 	local function StopRainEffect()
 		States.RainActive = false
@@ -968,92 +967,19 @@ return function(AetherLib)
 			pcall(function() RainPuddleFolder:Destroy() end)
 		end
 		RainPuddleFolder = nil
+		PuddlePositions = {}
+	end
 
-		for part in pairs(CoveredPuddleParts) do
-			if part and part.Parent then
-				pcall(function()
-					part:SetAttribute("AetherRainPuddle", nil)
-				end)
+	local function IsNearExistingPuddle(pos, minDist)
+		for _, existingPos in ipairs(PuddlePositions) do
+			if (existingPos - pos).Magnitude < minDist then
+				return true
 			end
-			CoveredPuddleParts[part] = nil
 		end
+		return false
 	end
 
-	-- Membuat Genangan Air tipis berkilau + Partikel Cipratan Air di atas permukaan part
-	local function CreateWaterPuddleOnPart(part)
-		if not States.RainActive or not RainPuddleFolder or not RainPuddleFolder.Parent then
-			return false
-		end
-		if not part or not part.Parent or not part:IsA("BasePart") then
-			return false
-		end
-		if CoveredPuddleParts[part] or part:GetAttribute("AetherRainPuddle") == true then
-			return false
-		end
-		if part.Name == "AetherWaterPuddle" or part.Name == "AetherSnowCap" or part.Name == "AetherAirWalkPad" or part.Name == "AetherRainSkyEmitter" then
-			return false
-		end
-		if part.Transparency >= 0.9 or part.Size.X < 3 or part.Size.Z < 3 then
-			return false
-		end
-		if RainPuddleFolder and part:IsDescendantOf(RainPuddleFolder) then
-			return false
-		end
-		if SnowCapFolder and part:IsDescendantOf(SnowCapFolder) then
-			return false
-		end
-		if IsCharacterPart(part) or part.CFrame.UpVector.Y < 0.75 then
-			return false
-		end
-
-		CoveredPuddleParts[part] = true
-		pcall(function()
-			part:SetAttribute("AetherRainPuddle", true)
-		end)
-
-		local puddle = Instance.new("Part")
-		puddle.Name = "AetherWaterPuddle"
-		puddle.Anchored = true
-		puddle.CanCollide = false
-		puddle.CanQuery = false
-		puddle.CanTouch = false
-		puddle.CastShadow = false
-		puddle.Material = Enum.Material.Glass
-		puddle.Color = Color3.fromRGB(110, 180, 245)
-		puddle.Transparency = 0.35
-		puddle.Reflectance = 0.45
-
-		local pSizeX = math.clamp(part.Size.X * 0.72, 2.5, 38)
-		local pSizeZ = math.clamp(part.Size.Z * 0.72, 2.5, 38)
-		puddle.Size = Vector3.new(pSizeX, 0.05, pSizeZ)
-		puddle.CFrame = part.CFrame * CFrame.new(0, (part.Size.Y * 0.5) + 0.025, 0)
-		puddle.Parent = RainPuddleFolder
-
-		-- Tambahkan Partikel Cipratan Air Hujan di atas Genangan Air
-		local splash = Instance.new("ParticleEmitter")
-		splash.Name = "WaterSplashParticles"
-		splash.Color = ColorSequence.new(Color3.fromRGB(190, 230, 255))
-		splash.Size = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.15),
-			NumberSequenceKeypoint.new(0.5, 0.32),
-			NumberSequenceKeypoint.new(1, 0)
-		})
-		splash.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.25),
-			NumberSequenceKeypoint.new(1, 1)
-		})
-		splash.Lifetime = NumberRange.new(0.25, 0.45)
-		splash.Rate = 14
-		splash.Speed = NumberRange.new(2, 5)
-		splash.SpreadAngle = Vector2.new(45, 45)
-		splash.Acceleration = Vector3.new(0, -18, 0)
-		splash.EmissionDirection = Enum.NormalId.Top
-		splash.Parent = puddle
-
-		return true
-	end
-
-	RegisterCmd("hujan", { "hjn", "rn" }, "Mengaktifkan hujan lengkap dengan partikel air 3D, cipratan air, & genangan air di tanah", "hujan (hjn/rn)", function()
+	RegisterCmd("hujan", { "hjn", "rn" }, "Mengaktifkan hujan lengkap dengan partikel air 3D, cipratan air, & genangan air bulat anti-glitch", "hujan (hjn/rn)", function()
 		StopRainEffect()
 		States.RainActive = true
 
@@ -1075,11 +1001,11 @@ return function(AetherLib)
 
 		if not RainPuddleFolder or not RainPuddleFolder.Parent then
 			RainPuddleFolder = Instance.new("Folder")
-			RainPuddleFolder.Name = "AetherRainPuddles_AntiLag"
+			RainPuddleFolder.Name = "AetherRainPuddles_AntiGlitch"
 			RainPuddleFolder.Parent = Workspace
 		end
 
-		-- Buat Part Pemancar Partikel Air Hujan 3D di Langit di Atas Karakter
+		-- Pemancar Partikel Air Hujan 3D di Langit
 		local skyEmitter = Instance.new("Part")
 		skyEmitter.Name = "AetherRainSkyEmitter"
 		skyEmitter.Anchored = true
@@ -1087,40 +1013,40 @@ return function(AetherLib)
 		skyEmitter.CanQuery = false
 		skyEmitter.CanTouch = false
 		skyEmitter.Transparency = 1
-		skyEmitter.Size = Vector3.new(90, 1, 90)
+		skyEmitter.Size = Vector3.new(95, 1, 95)
 		skyEmitter.Parent = Workspace
 		RainEmitterPart = skyEmitter
 
 		local rainParticles = Instance.new("ParticleEmitter")
 		rainParticles.Name = "RainWaterParticles3D"
-		rainParticles.Color = ColorSequence.new(Color3.fromRGB(180, 220, 255))
-		rainParticles.Size = NumberSequence.new(0.22)
+		rainParticles.Color = ColorSequence.new(Color3.fromRGB(185, 225, 255))
+		rainParticles.Size = NumberSequence.new(0.20)
 		rainParticles.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.2),
-			NumberSequenceKeypoint.new(0.8, 0.35),
+			NumberSequenceKeypoint.new(0, 0.25),
+			NumberSequenceKeypoint.new(0.85, 0.40),
 			NumberSequenceKeypoint.new(1, 1)
 		})
 		rainParticles.Lifetime = NumberRange.new(0.6, 1.0)
-		rainParticles.Rate = 180
-		rainParticles.Speed = NumberRange.new(55, 75)
+		rainParticles.Rate = 160
+		rainParticles.Speed = NumberRange.new(55, 72)
 		rainParticles.EmissionDirection = Enum.NormalId.Bottom
 		rainParticles.Parent = skyEmitter
 
 		local drops = {}
-		for _ = 1, 55 do
+		for _ = 1, 50 do
 			local d = Instance.new("Frame")
-			d.Size = UDim2.new(0, 2, 0, math.random(14, 26))
+			d.Size = UDim2.new(0, 2, 0, math.random(14, 24))
 			d.Position = UDim2.new(math.random(), 0, math.random(), 0)
 			d.BackgroundColor3 = Color3.fromRGB(175, 215, 255)
-			d.BackgroundTransparency = math.random(25, 55) / 100
+			d.BackgroundTransparency = math.random(30, 55) / 100
 			d.BorderSizePixel = 0
-			d.Rotation = 12
+			d.Rotation = 10
 			d.Parent = rFrame
 			table.insert(drops, {
 				UI = d,
 				X = math.random(),
 				Y = math.random(),
-				SpeedY = math.random(95, 155) / 100
+				SpeedY = math.random(95, 150) / 100
 			})
 		end
 
@@ -1136,7 +1062,7 @@ return function(AetherLib)
 				end
 				for _, dr in ipairs(drops) do
 					dr.Y = dr.Y + dr.SpeedY * dt
-					dr.X = (dr.X - 0.18 * dt) % 1
+					dr.X = (dr.X - 0.15 * dt) % 1
 					if dr.Y > 1.05 then
 						dr.Y = -0.06
 						dr.X = math.random()
@@ -1149,27 +1075,81 @@ return function(AetherLib)
 			end
 		end)
 
-		-- Munculkan Genangan Air + Partikel Cipratan Air di atas permukaan lantai/part secara bertahap (Anti-Lag)
+		-- Spawn Genangan Air Bulat Anti-Glitch (Raycast ke lantai datar, tanpa Glass shader glitch & tanpa Z-fighting!)
 		task.spawn(function()
+			local rayParams = RaycastParams.new()
+			rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
 			while States.RainActive and RainPuddleFolder and RainPuddleFolder.Parent do
-				local batch = 0
-				for _, obj in ipairs(Workspace:GetDescendants()) do
-					if not States.RainActive then break end
-					if obj:IsA("BasePart") and not CoveredPuddleParts[obj] then
-						if CreateWaterPuddleOnPart(obj) then
-							batch = batch + 1
-							if batch >= 40 then
-								batch = 0
-								task.wait(0.04)
+				local root = GetRootPart()
+				if root and #PuddlePositions < 45 then
+					local char = LocalPlayer.Character
+					rayParams.FilterDescendantsInstances = { char, RainPuddleFolder, skyEmitter, SnowCapFolder }
+
+					for _ = 1, 4 do
+						if not States.RainActive or #PuddlePositions >= 45 then break end
+						local ox = math.random(-75, 75)
+						local oz = math.random(-75, 75)
+						local origin = root.Position + Vector3.new(ox, 45, oz)
+						local hit = Workspace:Raycast(origin, Vector3.new(0, -110, 0), rayParams)
+
+						if hit and hit.Instance and hit.Instance:IsA("BasePart") and hit.Normal.Y > 0.92 then
+							local hitPos = hit.Position
+							-- Pastikan jarak antar genangan minimal 16 stud agar tidak pernah bertumpuk / kedap-kedip!
+							if not IsNearExistingPuddle(hitPos, 16) then
+								table.insert(PuddlePositions, hitPos)
+
+								local diameter = math.random(6, 11)
+								local puddle = Instance.new("Part")
+								puddle.Name = "AetherWaterPuddle"
+								puddle.Shape = Enum.PartType.Cylinder
+								puddle.Anchored = true
+								puddle.CanCollide = false
+								puddle.CanQuery = false
+								puddle.CanTouch = false
+								puddle.CastShadow = false
+								puddle.Material = Enum.Material.SmoothPlastic
+								puddle.Color = Color3.fromRGB(92, 165, 232)
+								puddle.Transparency = 0.32
+								puddle.Reflectance = 0.25
+								-- Cylinder di Roblox memiliki tinggi pada sumbu X: Size = (ketebalan, diameter, diameter)
+								-- Diposisikan 0.05 stud di atas titik raycast sehingga ada celah bersih dari lantai (0% Z-fighting!)
+								puddle.Size = Vector3.new(0.03, diameter, diameter)
+								puddle.CFrame = CFrame.new(hitPos + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, 0, math.rad(90))
+								puddle.Parent = RainPuddleFolder
+
+								-- Attachment di permukaan atas genangan untuk partikel cipratan air hujan
+								local splashAtt = Instance.new("Attachment")
+								splashAtt.Position = Vector3.new(0.02, 0, 0)
+								splashAtt.Parent = puddle
+
+								local splash = Instance.new("ParticleEmitter")
+								splash.Name = "WaterSplashParticles"
+								splash.Color = ColorSequence.new(Color3.fromRGB(200, 235, 255))
+								splash.Size = NumberSequence.new({
+									NumberSequenceKeypoint.new(0, 0.12),
+									NumberSequenceKeypoint.new(0.5, 0.26),
+									NumberSequenceKeypoint.new(1, 0)
+								})
+								splash.Transparency = NumberSequence.new({
+									NumberSequenceKeypoint.new(0, 0.20),
+									NumberSequenceKeypoint.new(1, 1)
+								})
+								splash.Lifetime = NumberRange.new(0.22, 0.40)
+								splash.Rate = 8
+								splash.Speed = NumberRange.new(1.5, 3.5)
+								splash.SpreadAngle = Vector2.new(35, 35)
+								splash.Acceleration = Vector3.new(0, -14, 0)
+								splash.Parent = splashAtt
 							end
 						end
 					end
 				end
-				task.wait(1.8)
+				task.wait(0.6)
 			end
 		end)
 
-		Notify("Suasana Hujan", "Hujan, genangan air, & partikel air aktif! (Ketik ;unhujan / ;uh untuk mematikan)", 2.5)
+		Notify("Suasana Hujan", "Hujan, partikel air, & genangan air bulat anti-glitch aktif!", 2.5)
 	end)
 
 	RegisterCmd("unhujan", { "uhjn", "uh", "urn" }, "Menonaktifkan efek hujan, partikel air, & menghapus semua genangan air", "unhujan (uhjn/uh)", function()
@@ -1272,7 +1252,7 @@ return function(AetherLib)
 	end)
 
 	-- =================================================================
-	-- 31 - 45. FITUR TAMBAHAN (DEX, SSPY, IY, REJOIN, SERVERHOP + 10 FITUR BARU)
+	-- 31 - 45. FITUR UTILITAS (DEX, SSPY, IY, REJOIN, SERVERHOP, ESP, FULLBRIGHT, FOV, XRAY, SPIN, ANTIAFK)
 	-- =================================================================
 	RegisterCmd("dex", { "dx" }, "Membuka Dark Dex Explorer untuk inspeksi objek game", "dex (dex/dx)", function()
 		Notify("Dex Explorer", "Memuat Dark Dex Explorer...", 2)
@@ -1315,8 +1295,6 @@ return function(AetherLib)
 		end)
 	end)
 
-	-- 10 Fitur Baru Tambahan:
-	-- (1) ESP Player & (2) UnESP Player
 	local function ClearPlayerESP()
 		States.EspPlayerActive = false
 		for plr, data in pairs(PlayerEspObjects) do
@@ -1385,7 +1363,6 @@ return function(AetherLib)
 		Notify("UnESP Player", "ESP pemain telah dimatikan.", 1.8)
 	end)
 
-	-- (3) Fullbright & (4) Unfullbright
 	RegisterCmd("fullbright", { "fb", "terang" }, "Membuat seluruh map terang maksimal tanpa bayangan gelap", "fullbright (fb/terang)", function()
 		ClearCustomLightingEffects()
 		Lighting.Ambient = Color3.fromRGB(255, 255, 255)
@@ -1411,7 +1388,6 @@ return function(AetherLib)
 		Notify("Unfullbright", "Pencahayaan dikembalikan ke normal.", 1.8)
 	end)
 
-	-- (5) FOV
 	RegisterCmd("fov", { "fv" }, "Mengatur luas pandangan kamera (FieldOfView 30 - 120)", "fov [nilai] (fov/fv)", function(args)
 		local val = math.clamp(tonumber(args[1]) or 90, 30, 120)
 		if Workspace.CurrentCamera then
@@ -1420,7 +1396,6 @@ return function(AetherLib)
 		Notify("Field of View", "FOV kamera diatur ke: " .. tostring(val), 1.8)
 	end)
 
-	-- (6) Xray & (7) Unxray
 	RegisterCmd("xray", { "xry", "xr" }, "Membuat dinding dan bangunan semi-transparan tembus pandang", "xray (xry/xr)", function()
 		States.XrayActive = true
 		for _, obj in ipairs(Workspace:GetDescendants()) do
@@ -1441,7 +1416,6 @@ return function(AetherLib)
 		Notify("Unxray", "Mode Xray telah dimatikan.", 1.8)
 	end)
 
-	-- (8) Spin & (9) Unspin
 	RegisterCmd("spin", { "spn", "sn" }, "Memutar karakter secara terus-menerus dengan kecepatan tertentu", "spin [kecepatan] (spn/sn)", function(args)
 		States.SpinSpeed = tonumber(args[1]) or 30
 		States.SpinActive = true
@@ -1461,7 +1435,6 @@ return function(AetherLib)
 		Notify("Unspin", "Putaran karakter dihentikan.", 1.8)
 	end)
 
-	-- (10) AntiAFK
 	RegisterCmd("antiafk", { "aafk", "afk" }, "Mencegah terputus dari game saat AFK", "antiafk (aafk/afk)", function()
 		States.AntiAfkActive = true
 		if not Connections.AntiAfkConn and LocalPlayer and LocalPlayer.Idled then
@@ -1476,5 +1449,121 @@ return function(AetherLib)
 			end)
 		end
 		Notify("Anti-AFK", "Anti-AFK aktif! Karakter aman dari kick AFK.", 2)
+	end)
+
+	-- =================================================================
+	-- 46 - 55. SEPULUH (10) FITUR BARU UPDATE v6.5.5!
+	-- =================================================================
+
+	-- 46. Freeze (frz / fz)
+	RegisterCmd("freeze", { "frz", "fz" }, "Membekukan posisi karakter di tempat (Anchored)", "freeze (frz/fz)", function()
+		local root = GetRootPart()
+		if root then
+			root.Anchored = true
+			Notify("Freeze", "Karakter dibekukan di tempat!", 1.8)
+		end
+	end)
+
+	-- 47. Unfreeze (ufrz / ufz)
+	RegisterCmd("unfreeze", { "ufrz", "ufz" }, "Melepaskan pembekuan posisi karakter", "unfreeze (ufrz/ufz)", function()
+		local root = GetRootPart()
+		if root then
+			root.Anchored = false
+			Notify("Unfreeze", "Pembekuan karakter dilepaskan!", 1.8)
+		end
+	end)
+
+	-- 48. Invisible (invis / inv)
+	RegisterCmd("invisible", { "invis", "inv" }, "Menyembunyikan karakter menjadi transparan", "invisible (invis/inv)", function()
+		if LocalPlayer and LocalPlayer.Character then
+			for _, obj in ipairs(LocalPlayer.Character:GetDescendants()) do
+				if obj:IsA("BasePart") or obj:IsA("Decal") then
+					pcall(function() obj.Transparency = 1 end)
+				end
+			end
+			Notify("Invisible", "Mode transparan karakter aktif!", 1.8)
+		end
+	end)
+
+	-- 49. Uninvisible (uninvis / uinv)
+	RegisterCmd("uninvisible", { "uninvis", "uinv" }, "Memunculkan kembali karakter seperti semula", "uninvisible (uninvis/uinv)", function()
+		if LocalPlayer and LocalPlayer.Character then
+			for _, obj in ipairs(LocalPlayer.Character:GetDescendants()) do
+				if (obj:IsA("BasePart") or obj:IsA("Decal")) and obj.Name ~= "HumanoidRootPart" then
+					pcall(function() obj.Transparency = 0 end)
+				end
+			end
+			Notify("Uninvisible", "Karakter kembali terlihat normal.", 1.8)
+		end
+	end)
+
+	-- 50. MaxZoom (mzm / mz)
+	RegisterCmd("maxzoom", { "mzm", "mz" }, "Mengatur jarak maksimum zoom out kamera (default 10000)", "maxzoom [nilai] (mzm/mz)", function(args)
+		local val = tonumber(args[1]) or 10000
+		if LocalPlayer then
+			LocalPlayer.CameraMaxZoomDistance = math.max(val, 16)
+			Notify("MaxZoom", "Jarak zoom kamera diatur ke: " .. tostring(val), 1.8)
+		end
+	end)
+
+	-- 51. BTools (btl / bt)
+	RegisterCmd("btools", { "btl", "bt" }, "Memberikan alat BTools (Move, Clone, Destroy) ke Backpack", "btools (btl/bt)", function()
+		local bp = LocalPlayer and LocalPlayer:FindFirstChildOfClass("Backpack")
+		if bp then
+			for i = 1, 4 do
+				pcall(function()
+					local hb = Instance.new("HopperBin")
+					hb.BinType = i
+					hb.Parent = bp
+				end)
+			end
+			Notify("BTools", "BTools berhasil ditambahkan ke Backpack!", 2)
+		end
+	end)
+
+	-- 52. GetTools (gtl / gt)
+	RegisterCmd("gettools", { "gtl", "gt" }, "Mengambil seluruh Tool yang ada di map ke dalam Backpack", "gettools (gtl/gt)", function()
+		local bp = LocalPlayer and LocalPlayer:FindFirstChildOfClass("Backpack")
+		local count = 0
+		if bp then
+			for _, item in ipairs(Workspace:GetDescendants()) do
+				if (item:IsA("Tool") or item:IsA("HopperBin")) and not IsCharacterPart(item) then
+					pcall(function()
+						item.Parent = bp
+						count = count + 1
+					end)
+				end
+			end
+		end
+		Notify("GetTools", tostring(count) .. " Tool berhasil diambil ke Backpack!", 2)
+	end)
+
+	-- 53. Sit (duduk / st2)
+	RegisterCmd("sit", { "duduk", "st2" }, "Membuat karakter langsung duduk di tempat", "sit (duduk/st2)", function()
+		local hum = GetHumanoid()
+		if hum then
+			hum.Sit = true
+			Notify("Sit", "Karakter duduk di tempat.", 1.8)
+		end
+	end)
+
+	-- 54. Reset (rst / re)
+	RegisterCmd("reset", { "rst", "re" }, "Respawn / mereset karakter dengan cepat", "reset (rst/re)", function()
+		local hum = GetHumanoid()
+		if hum then
+			hum.Health = 0
+			Notify("Reset", "Karakter di-reset!", 1.8)
+		end
+	end)
+
+	-- 55. FPSCap (fps / fc)
+	RegisterCmd("fpscap", { "fps", "fc" }, "Membuka / mengatur batas maksimum FPS (default 240)", "fpscap [nilai] (fps/fc)", function(args)
+		local cap = tonumber(args[1]) or 240
+		if type(setfpscap) == "function" then
+			pcall(setfpscap, cap)
+			Notify("FPS Cap", "Batas FPS diatur ke: " .. tostring(cap) .. " FPS!", 2)
+		else
+			Notify("FPS Cap", "Target FPS diset ke: " .. tostring(cap) .. " FPS", 2)
+		end
 	end)
 end
